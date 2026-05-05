@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ElectronicJournal.Repositories;
 using ElectronicJournal.Services;
 
 namespace ElectronicJournal.ViewModels;
@@ -20,6 +21,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool isDatabaseAvailable;
 
     [ObservableProperty]
+    private string currentPeriodName = "Не задан";
+
+    [ObservableProperty]
+    private string operationStatus = "Готово";
+
+    [ObservableProperty]
     private PageViewModelBase? currentPage;
 
     [ObservableProperty]
@@ -35,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(DatabaseService databaseService)
     {
         var health = databaseService.CheckConnection();
+        var settingsRepository = new SettingsRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -42,6 +50,12 @@ public partial class MainWindowViewModel : ViewModelBase
         DatabaseStatus = health.IsAvailable
             ? $"База данных подключена. Найдено таблиц: {health.TableCount}."
             : $"Ошибка подключения к базе данных: {health.ErrorMessage}";
+        CurrentPeriodName = health.IsAvailable
+            ? settingsRepository.GetValue("Текущий учебный период") ?? "Не задан"
+            : "Недоступен";
+        OperationStatus = health.IsAvailable
+            ? "Данные загружены. Выберите раздел в левом меню."
+            : "Ошибка: база данных недоступна.";
 
         InitializeNavigation();
     }
@@ -51,6 +65,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (value is not null)
         {
             CurrentPage = value.Page;
+            OperationStatus = $"Открыт раздел: {value.Title}";
         }
     }
 
