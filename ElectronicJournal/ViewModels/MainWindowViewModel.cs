@@ -148,7 +148,7 @@ public partial class MainWindowViewModel : ViewModelBase
             new StatisticsPageViewModel(groupRepository, settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Уведомления",
-            new PlaceholderPageViewModel("Уведомления", "Уведомления кураторам о задолженностях и проблемах.")));
+            new NotificationsPageViewModel(notificationRepository)));
         NavigationItems.Add(new NavigationItem(
             "Настройки",
             new PlaceholderPageViewModel("Настройки", "Параметры системы и текущий учебный период.")));
