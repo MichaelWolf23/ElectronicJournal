@@ -141,5 +141,28 @@ public sealed class LessonRepository : RepositoryBase
 
         return lessons;
     }
+
+    public List<LookupItem> GetClassroomLookups()
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT classroom_id, classroom_name
+            FROM classrooms
+            ORDER BY classroom_name;
+            """;
+
+        using var reader = command.ExecuteReader();
+        var classrooms = new List<LookupItem>();
+
+        while (reader.Read())
+        {
+            classrooms.Add(new LookupItem(
+                reader.GetInt32("classroom_id"),
+                reader.GetString("classroom_name")));
+        }
+
+        return classrooms;
+    }
 }
 

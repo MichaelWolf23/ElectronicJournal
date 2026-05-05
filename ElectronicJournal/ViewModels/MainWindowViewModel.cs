@@ -131,7 +131,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 subjectRepository)));
         NavigationItems.Add(new NavigationItem(
             "Занятия",
-            new PlaceholderPageViewModel("Занятия", "Темы занятий, расписание, группы, предметы и аудитории.")));
+            new LessonsPageViewModel(lessonRepository, assignmentRepository)));
         NavigationItems.Add(new NavigationItem(
             "Должники",
             new PlaceholderPageViewModel("Должники", "Студенты с оценками ниже минимальной положительной.")));
