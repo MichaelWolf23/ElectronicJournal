@@ -1,0 +1,164 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:entities="using:ElectronicJournal.Models.Entities"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.GradesPageView"
+             x:DataType="vm:GradesPageViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+        <Grid ColumnDefinitions="*,*,*,140,140" ColumnSpacing="10">
+            <ComboBox ItemsSource="{Binding Groups}"
+                      SelectedItem="{Binding SelectedGroupFilter}"
+                      PlaceholderText="Группа">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="entities:Group">
+                        <TextBlock Text="{Binding GroupName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding Subjects}"
+                      SelectedItem="{Binding SelectedSubjectFilter}"
+                      PlaceholderText="Предмет">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="entities:Subject">
+                        <TextBlock Text="{Binding SubjectName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <ComboBox Grid.Column="2"
+                      ItemsSource="{Binding Students}"
+                      SelectedItem="{Binding SelectedStudentFilter}"
+                      PlaceholderText="Студент">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="dto:LookupItem">
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Button Grid.Column="3"
+                    Content="Сбросить"
+                    Command="{Binding ClearFiltersCommand}"/>
+            <Button Grid.Column="4"
+                    Content="Обновить"
+                    Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,340"
+              ColumnSpacing="16">
+            <DataGrid ItemsSource="{Binding Grades}"
+                      SelectedItem="{Binding SelectedGrade}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderBrush="#D0D7DE"
+                      BorderThickness="1">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
+                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
+                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
+                    <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding GradeType}" Width="*"/>
+                    <DataGridTextColumn Header="Вес" Binding="{Binding GradeWeight}" Width="70"/>
+                    <DataGridTextColumn Header="Оценка" Binding="{Binding GradeValue}" Width="80"/>
+                    <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="110"/>
+                    <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1"
+                    Padding="18"
+                    BorderBrush="#D0D7DE"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="#FFFFFF">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Добавить оценку"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#B42318"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <ComboBox ItemsSource="{Binding Students}"
+                              SelectedValue="{Binding SelectedStudentId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Студент">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding Assignments}"
+                              SelectedValue="{Binding SelectedAssignmentId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Группа - предмет - преподаватель">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding GradeTypes}"
+                              SelectedValue="{Binding SelectedGradeTypeId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Тип оценки">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding Lessons}"
+                              SelectedValue="{Binding SelectedLessonId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Занятие">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBox Watermark="Оценка"
+                             Text="{Binding GradeValue}"/>
+                    <TextBox Watermark="Дата, например 2026-02-10"
+                             Text="{Binding GradeDate}"/>
+                    <TextBox Watermark="Комментарий"
+                             Text="{Binding Comment}"/>
+
+                    <Button Content="Добавить оценку"
+                            Command="{Binding AddGradeCommand}"/>
+                    <Button Content="Сохранить изменения выбранной"
+                            Command="{Binding UpdateSelectedGradeCommand}"/>
+                    <TextBlock Text="{Binding EditResult}"
+                               TextWrapping="Wrap"
+                               Foreground="#57606A"/>
+
+                    <Border Padding="12"
+                            BorderBrush="#D0D7DE"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Background="#FAFBFC">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding AverageResult}"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="Рассчитать средний балл"
+                                    Command="{Binding CalculateAverageCommand}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

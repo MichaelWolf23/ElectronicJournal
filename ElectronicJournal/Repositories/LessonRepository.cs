@@ -116,5 +116,30 @@ public sealed class LessonRepository : RepositoryBase
 
         return schedule;
     }
+
+    public List<LookupItem> GetLessonLookups()
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                l.lesson_id,
+                l.lesson_date || ' — ' || l.topic AS lesson_name
+            FROM lessons l
+            ORDER BY l.lesson_date DESC, l.topic;
+            """;
+
+        using var reader = command.ExecuteReader();
+        var lessons = new List<LookupItem>();
+
+        while (reader.Read())
+        {
+            lessons.Add(new LookupItem(
+                reader.GetInt32("lesson_id"),
+                reader.GetString("lesson_name")));
+        }
+
+        return lessons;
+    }
 }
 

@@ -52,6 +52,29 @@ public sealed class StudentRepository : RepositoryBase
         return students;
     }
 
+    public List<LookupItem> GetStudentLookups()
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT student_id, full_name
+            FROM students
+            ORDER BY full_name;
+            """;
+
+        using var reader = command.ExecuteReader();
+        var students = new List<LookupItem>();
+
+        while (reader.Read())
+        {
+            students.Add(new LookupItem(
+                reader.GetInt32("student_id"),
+                reader.GetString("full_name")));
+        }
+
+        return students;
+    }
+
     public List<StudentListItem> GetStudentsByGroup(int groupId)
     {
         using var connection = DatabaseService.CreateConnection();

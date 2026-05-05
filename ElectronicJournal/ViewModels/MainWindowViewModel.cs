@@ -45,6 +45,11 @@ public partial class MainWindowViewModel : ViewModelBase
         var settingsRepository = new SettingsRepository(databaseService);
         var studentRepository = new StudentRepository(databaseService);
         var groupRepository = new GroupRepository(databaseService);
+        var subjectRepository = new SubjectRepository(databaseService);
+        var gradeRepository = new GradeRepository(databaseService);
+        var gradeTypeRepository = new GradeTypeRepository(databaseService);
+        var assignmentRepository = new AssignmentRepository(databaseService);
+        var lessonRepository = new LessonRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -59,7 +64,14 @@ public partial class MainWindowViewModel : ViewModelBase
             ? "Данные загружены. Выберите раздел в левом меню."
             : "Ошибка: база данных недоступна.";
 
-        InitializeNavigation(studentRepository, groupRepository);
+        InitializeNavigation(
+            studentRepository,
+            groupRepository,
+            subjectRepository,
+            gradeRepository,
+            gradeTypeRepository,
+            assignmentRepository,
+            lessonRepository);
     }
 
     partial void OnSelectedNavigationItemChanged(NavigationItem? value)
@@ -78,14 +90,28 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentPage = item.Page;
     }
 
-    private void InitializeNavigation(StudentRepository studentRepository, GroupRepository groupRepository)
+    private void InitializeNavigation(
+        StudentRepository studentRepository,
+        GroupRepository groupRepository,
+        SubjectRepository subjectRepository,
+        GradeRepository gradeRepository,
+        GradeTypeRepository gradeTypeRepository,
+        AssignmentRepository assignmentRepository,
+        LessonRepository lessonRepository)
     {
         NavigationItems.Add(new NavigationItem(
             "Студенты",
             new StudentsPageViewModel(studentRepository, groupRepository)));
         NavigationItems.Add(new NavigationItem(
             "Оценки",
-            new PlaceholderPageViewModel("Оценки", "Журнал оценок, добавление оценок и расчет среднего балла.")));
+            new GradesPageViewModel(
+                gradeRepository,
+                studentRepository,
+                groupRepository,
+                subjectRepository,
+                gradeTypeRepository,
+                assignmentRepository,
+                lessonRepository)));
         NavigationItems.Add(new NavigationItem(
             "Посещаемость",
             new PlaceholderPageViewModel("Посещаемость", "Отметки присутствия, отсутствия, опоздания и уважительной причины.")));
