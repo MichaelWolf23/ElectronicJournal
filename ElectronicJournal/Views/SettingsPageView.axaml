@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             x:Class="ElectronicJournal.Views.SettingsPageView"
+             x:DataType="vm:SettingsPageViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="14">
+        <Grid ColumnDefinitions="*,150" ColumnSpacing="10">
+            <StackPanel>
+                <TextBlock Text="Настройки системы"
+                           FontSize="22"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResultMessage}"
+                           Foreground="#57606A"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Button Grid.Column="1"
+                    Content="Обновить"
+                    Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,340"
+              ColumnSpacing="16">
+            <DataGrid ItemsSource="{Binding Settings}"
+                      SelectedItem="{Binding SelectedSetting}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderBrush="#D0D7DE"
+                      BorderThickness="1">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Ключ" Binding="{Binding SettingKey}" Width="2*"/>
+                    <DataGridTextColumn Header="Значение" Binding="{Binding SettingValue}" Width="*"/>
+                    <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="3*"/>
+                    <DataGridTextColumn Header="Обновлено" Binding="{Binding UpdatedAt}" Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1"
+                    Padding="18"
+                    BorderBrush="#D0D7DE"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="#FFFFFF">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Изменить настройку"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#B42318"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <TextBlock Text="Название"
+                               Foreground="#57606A"/>
+                    <TextBlock Text="{Binding SelectedSetting.SettingKey}"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Описание"
+                               Foreground="#57606A"/>
+                    <TextBlock Text="{Binding SelectedSetting.Description}"
+                               TextWrapping="Wrap"/>
+
+                    <TextBox Watermark="Значение"
+                             Text="{Binding SettingValue}"/>
+
+                    <Button Content="Сохранить"
+                            Command="{Binding SaveCommand}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

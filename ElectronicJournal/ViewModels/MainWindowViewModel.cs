@@ -151,7 +151,7 @@ public partial class MainWindowViewModel : ViewModelBase
             new NotificationsPageViewModel(notificationRepository)));
         NavigationItems.Add(new NavigationItem(
             "Настройки",
-            new PlaceholderPageViewModel("Настройки", "Параметры системы и текущий учебный период.")));
+            new SettingsPageViewModel(settingsRepository)));
 
         SelectedNavigationItem = NavigationItems[0];
         CurrentPage = SelectedNavigationItem.Page;
