@@ -3,18 +3,54 @@
         xmlns:vm="using:ElectronicJournal.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="560"
         x:Class="ElectronicJournal.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="ElectronicJournal">
+        Title="Электронный журнал"
+        Width="900"
+        Height="560"
+        MinWidth="760"
+        MinHeight="460">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid RowDefinitions="Auto,*" Margin="28">
+        <StackPanel Spacing="6">
+            <TextBlock Text="Электронный журнал"
+                       FontSize="28"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="Проверка подключения к SQLite"
+                       FontSize="15"
+                       Foreground="#666666"/>
+        </StackPanel>
 
+        <Border Grid.Row="1"
+                Margin="0,28,0,0"
+                Padding="22"
+                BorderBrush="#D0D7DE"
+                BorderThickness="1"
+                CornerRadius="8"
+                Background="#FAFBFC">
+            <StackPanel Spacing="14">
+                <TextBlock Text="{Binding DatabaseStatus}"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding DatabasePath}"
+                           TextWrapping="Wrap"
+                           Foreground="#444444"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Доступность:" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding IsDatabaseAvailable}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Количество таблиц:" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding TableCount}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
 </Window>
