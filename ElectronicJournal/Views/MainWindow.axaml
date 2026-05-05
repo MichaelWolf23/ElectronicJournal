@@ -17,40 +17,63 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*" Margin="28">
+    <Grid RowDefinitions="Auto,*" Margin="24">
         <StackPanel Spacing="6">
             <TextBlock Text="Электронный журнал"
                        FontSize="28"
                        FontWeight="SemiBold"/>
-            <TextBlock Text="Проверка подключения к SQLite"
+            <TextBlock Text="{Binding DatabaseStatus}"
                        FontSize="15"
                        Foreground="#666666"/>
         </StackPanel>
 
-        <Border Grid.Row="1"
-                Margin="0,28,0,0"
-                Padding="22"
-                BorderBrush="#D0D7DE"
-                BorderThickness="1"
-                CornerRadius="8"
-                Background="#FAFBFC">
-            <StackPanel Spacing="14">
-                <TextBlock Text="{Binding DatabaseStatus}"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding DatabasePath}"
-                           TextWrapping="Wrap"
-                           Foreground="#444444"/>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Доступность:" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding IsDatabaseAvailable}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Количество таблиц:" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding TableCount}"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
+        <Grid Grid.Row="1"
+              Margin="0,22,0,0"
+              ColumnDefinitions="220,*"
+              ColumnSpacing="18">
+            <Border Padding="12"
+                    BorderBrush="#D0D7DE"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="#FAFBFC">
+                <ListBox ItemsSource="{Binding NavigationItems}"
+                         SelectedItem="{Binding SelectedNavigationItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Title}"
+                                       Margin="8"
+                                       FontSize="15"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="16">
+                <Border Padding="14"
+                        BorderBrush="#D0D7DE"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Background="#FFFFFF">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding DatabasePath}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#444444"/>
+                        <StackPanel Orientation="Horizontal" Spacing="18">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Доступность:" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding IsDatabaseAvailable}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="Таблиц:" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding TableCount}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <ContentControl Grid.Row="1"
+                                Content="{Binding CurrentPage}"/>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
