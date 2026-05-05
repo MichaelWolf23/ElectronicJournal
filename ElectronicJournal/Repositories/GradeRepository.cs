@@ -115,6 +115,21 @@ public sealed class GradeRepository : RepositoryBase
         command.ExecuteNonQuery();
     }
 
+    public double? GetGradeValue(int gradeId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT grade_value
+            FROM grades
+            WHERE grade_id = $grade_id;
+            """;
+        command.Parameters.AddWithValue("$grade_id", gradeId);
+
+        var result = command.ExecuteScalar();
+        return result is null or DBNull ? null : Convert.ToDouble(result);
+    }
+
     public List<Grade> GetGradesByStudent(int studentId)
     {
         using var connection = DatabaseService.CreateConnection();

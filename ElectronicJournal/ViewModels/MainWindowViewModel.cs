@@ -48,6 +48,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var subjectRepository = new SubjectRepository(databaseService);
         var gradeRepository = new GradeRepository(databaseService);
         var gradeTypeRepository = new GradeTypeRepository(databaseService);
+        var gradeRetakeRepository = new GradeRetakeRepository(databaseService);
         var assignmentRepository = new AssignmentRepository(databaseService);
         var lessonRepository = new LessonRepository(databaseService);
 
@@ -70,6 +71,7 @@ public partial class MainWindowViewModel : ViewModelBase
             subjectRepository,
             gradeRepository,
             gradeTypeRepository,
+            gradeRetakeRepository,
             assignmentRepository,
             lessonRepository);
     }
@@ -96,6 +98,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SubjectRepository subjectRepository,
         GradeRepository gradeRepository,
         GradeTypeRepository gradeTypeRepository,
+        GradeRetakeRepository gradeRetakeRepository,
         AssignmentRepository assignmentRepository,
         LessonRepository lessonRepository)
     {
@@ -112,6 +115,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 gradeTypeRepository,
                 assignmentRepository,
                 lessonRepository)));
+        NavigationItems.Add(new NavigationItem(
+            "Пересдачи",
+            new RetakesPageViewModel(gradeRepository, gradeRetakeRepository)));
         NavigationItems.Add(new NavigationItem(
             "Посещаемость",
             new PlaceholderPageViewModel("Посещаемость", "Отметки присутствия, отсутствия, опоздания и уважительной причины.")));
