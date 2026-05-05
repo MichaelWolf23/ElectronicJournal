@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:entities="using:ElectronicJournal.Models.Entities"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.AttendancePageView"
+             x:DataType="vm:AttendancePageViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+        <Grid ColumnDefinitions="*,*,170,120,120" ColumnSpacing="10">
+            <ComboBox ItemsSource="{Binding Groups}"
+                      SelectedItem="{Binding SelectedGroupFilter}"
+                      PlaceholderText="Группа">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="entities:Group">
+                        <TextBlock Text="{Binding GroupName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding Subjects}"
+                      SelectedItem="{Binding SelectedSubjectFilter}"
+                      PlaceholderText="Предмет">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="entities:Subject">
+                        <TextBlock Text="{Binding SubjectName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <TextBox Grid.Column="2"
+                     Watermark="Дата"
+                     Text="{Binding DateFilter}"/>
+            <Button Grid.Column="3"
+                    Content="Сбросить"
+                    Command="{Binding ClearFiltersCommand}"/>
+            <Button Grid.Column="4"
+                    Content="Обновить"
+                    Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,340"
+              ColumnSpacing="16">
+            <DataGrid ItemsSource="{Binding AttendanceItems}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderBrush="#D0D7DE"
+                      BorderThickness="1">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Дата" Binding="{Binding LessonDate}" Width="110"/>
+                    <DataGridTextColumn Header="Тема" Binding="{Binding Topic}" Width="2*"/>
+                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
+                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
+                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
+                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="150"/>
+                    <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1"
+                    Padding="18"
+                    BorderBrush="#D0D7DE"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="#FFFFFF">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Отметить посещаемость"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#B42318"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <ComboBox ItemsSource="{Binding Lessons}"
+                              SelectedValue="{Binding SelectedLessonId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Занятие">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding Students}"
+                              SelectedValue="{Binding SelectedStudentId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Студент">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding AttendanceStatuses}"
+                              SelectedItem="{Binding SelectedStatus}"
+                              PlaceholderText="Статус"/>
+
+                    <TextBox Watermark="Комментарий"
+                             Text="{Binding Comment}"/>
+
+                    <Button Content="Сохранить"
+                            Command="{Binding SaveAttendanceCommand}"/>
+
+                    <TextBlock Text="{Binding ResultMessage}"
+                               TextWrapping="Wrap"
+                               Foreground="#57606A"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

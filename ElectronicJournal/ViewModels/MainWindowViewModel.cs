@@ -51,6 +51,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var gradeRetakeRepository = new GradeRetakeRepository(databaseService);
         var assignmentRepository = new AssignmentRepository(databaseService);
         var lessonRepository = new LessonRepository(databaseService);
+        var attendanceRepository = new AttendanceRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -73,7 +74,8 @@ public partial class MainWindowViewModel : ViewModelBase
             gradeTypeRepository,
             gradeRetakeRepository,
             assignmentRepository,
-            lessonRepository);
+            lessonRepository,
+            attendanceRepository);
     }
 
     partial void OnSelectedNavigationItemChanged(NavigationItem? value)
@@ -100,7 +102,8 @@ public partial class MainWindowViewModel : ViewModelBase
         GradeTypeRepository gradeTypeRepository,
         GradeRetakeRepository gradeRetakeRepository,
         AssignmentRepository assignmentRepository,
-        LessonRepository lessonRepository)
+        LessonRepository lessonRepository,
+        AttendanceRepository attendanceRepository)
     {
         NavigationItems.Add(new NavigationItem(
             "Студенты",
@@ -120,7 +123,12 @@ public partial class MainWindowViewModel : ViewModelBase
             new RetakesPageViewModel(gradeRepository, gradeRetakeRepository)));
         NavigationItems.Add(new NavigationItem(
             "Посещаемость",
-            new PlaceholderPageViewModel("Посещаемость", "Отметки присутствия, отсутствия, опоздания и уважительной причины.")));
+            new AttendancePageViewModel(
+                attendanceRepository,
+                lessonRepository,
+                studentRepository,
+                groupRepository,
+                subjectRepository)));
         NavigationItems.Add(new NavigationItem(
             "Занятия",
             new PlaceholderPageViewModel("Занятия", "Темы занятий, расписание, группы, предметы и аудитории.")));
