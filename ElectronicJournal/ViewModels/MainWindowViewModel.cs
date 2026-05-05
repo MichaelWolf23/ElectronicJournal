@@ -43,6 +43,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         var health = databaseService.CheckConnection();
         var settingsRepository = new SettingsRepository(databaseService);
+        var studentRepository = new StudentRepository(databaseService);
+        var groupRepository = new GroupRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -57,7 +59,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ? "Данные загружены. Выберите раздел в левом меню."
             : "Ошибка: база данных недоступна.";
 
-        InitializeNavigation();
+        InitializeNavigation(studentRepository, groupRepository);
     }
 
     partial void OnSelectedNavigationItemChanged(NavigationItem? value)
@@ -76,11 +78,11 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentPage = item.Page;
     }
 
-    private void InitializeNavigation()
+    private void InitializeNavigation(StudentRepository studentRepository, GroupRepository groupRepository)
     {
         NavigationItems.Add(new NavigationItem(
             "Студенты",
-            new PlaceholderPageViewModel("Студенты", "Список студентов, поиск, фильтр по группе и редактирование.")));
+            new StudentsPageViewModel(studentRepository, groupRepository)));
         NavigationItems.Add(new NavigationItem(
             "Оценки",
             new PlaceholderPageViewModel("Оценки", "Журнал оценок, добавление оценок и расчет среднего балла.")));

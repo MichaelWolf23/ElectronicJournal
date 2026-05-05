@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:entities="using:ElectronicJournal.Models.Entities"
+             x:Class="ElectronicJournal.Views.StudentsPageView"
+             x:DataType="vm:StudentsPageViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="14">
+        <Grid ColumnDefinitions="*,220,220" ColumnSpacing="12">
+            <TextBox Watermark="Поиск по ФИО"
+                     Text="{Binding SearchText}"/>
+
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding Groups}"
+                      SelectedItem="{Binding SelectedGroupFilter}"
+                      PlaceholderText="Фильтр по группе">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="entities:Group">
+                        <TextBlock Text="{Binding GroupName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Button Grid.Column="2"
+                    Content="Обновить"
+                    Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,330"
+              ColumnSpacing="16">
+            <DataGrid ItemsSource="{Binding Students}"
+                      SelectedItem="{Binding SelectedStudent}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderBrush="#D0D7DE"
+                      BorderThickness="1">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="2*"/>
+                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
+                    <DataGridTextColumn Header="Курс" Binding="{Binding CourseNumber}" Width="80"/>
+                    <DataGridTextColumn Header="Студ. билет" Binding="{Binding StudentCardNumber}" Width="120"/>
+                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
+                    <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="*"/>
+                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Grid.Column="1"
+                    Padding="18"
+                    BorderBrush="#D0D7DE"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="#FFFFFF">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{Binding FormTitle}"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#B42318"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <TextBox Watermark="ФИО"
+                             Text="{Binding FullName}"/>
+
+                    <ComboBox ItemsSource="{Binding Groups}"
+                              SelectedValue="{Binding SelectedGroupId}"
+                              SelectedValueBinding="{Binding GroupId}"
+                              PlaceholderText="Группа">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="entities:Group">
+                                <TextBlock Text="{Binding GroupName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBox Watermark="Номер студенческого"
+                             Text="{Binding StudentCardNumber}"/>
+                    <TextBox Watermark="Email"
+                             Text="{Binding Email}"/>
+                    <TextBox Watermark="Телефон"
+                             Text="{Binding Phone}"/>
+
+                    <ComboBox ItemsSource="{Binding StudentStatuses}"
+                              SelectedItem="{Binding Status}"
+                              PlaceholderText="Статус"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
+                        <Button Content="Сохранить"
+                                Command="{Binding SaveCommand}"/>
+                        <Button Grid.Column="1"
+                                Content="Очистить"
+                                Command="{Binding ClearFormCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
