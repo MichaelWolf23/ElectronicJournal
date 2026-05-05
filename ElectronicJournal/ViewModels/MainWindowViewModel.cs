@@ -125,10 +125,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 subjectRepository,
                 gradeTypeRepository,
                 assignmentRepository,
-                lessonRepository)));
+                lessonRepository,
+                settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Пересдачи",
-            new RetakesPageViewModel(gradeRepository, gradeRetakeRepository)));
+            new RetakesPageViewModel(gradeRepository, gradeRetakeRepository, settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Посещаемость",
             new AttendancePageViewModel(
@@ -157,7 +158,8 @@ public partial class MainWindowViewModel : ViewModelBase
             new FinalGradesPageViewModel(
                 finalGradeRepository,
                 studentRepository,
-                assignmentRepository)));
+                assignmentRepository,
+                settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Настройки",
             new SettingsPageViewModel(settingsRepository)));

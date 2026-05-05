@@ -60,6 +60,22 @@ public sealed class SettingsRepository : RepositoryBase
             : 3;
     }
 
+    public double GetMinGradeScale()
+    {
+        var value = GetValue("Минимальная оценка шкалы");
+        return double.TryParse(value, out var minGrade)
+            ? minGrade
+            : 2;
+    }
+
+    public double GetMaxGradeScale()
+    {
+        var value = GetValue("Максимальная оценка шкалы");
+        return double.TryParse(value, out var maxGrade)
+            ? maxGrade
+            : 5;
+    }
+
     public void UpdateSetting(string settingKey, string settingValue)
     {
         using var connection = DatabaseService.CreateConnection();

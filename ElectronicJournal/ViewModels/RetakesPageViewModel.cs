@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -13,6 +14,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
 {
     private readonly GradeRepository gradeRepository;
     private readonly GradeRetakeRepository gradeRetakeRepository;
+    private readonly SettingsRepository settingsRepository;
 
     [ObservableProperty]
     private ObservableCollection<GradeRetakeItem> retakes = new();
@@ -38,11 +40,15 @@ public partial class RetakesPageViewModel : PageViewModelBase
     [ObservableProperty]
     private string resultMessage = "Выберите оценку для пересдачи.";
 
-    public RetakesPageViewModel(GradeRepository gradeRepository, GradeRetakeRepository gradeRetakeRepository)
+    public RetakesPageViewModel(
+        GradeRepository gradeRepository,
+        GradeRetakeRepository gradeRetakeRepository,
+        SettingsRepository settingsRepository)
         : base("Пересдачи")
     {
         this.gradeRepository = gradeRepository;
         this.gradeRetakeRepository = gradeRetakeRepository;
+        this.settingsRepository = settingsRepository;
 
         Load();
     }
@@ -92,9 +98,15 @@ public partial class RetakesPageViewModel : PageViewModelBase
             return;
         }
 
-        if (NewValue < 0)
+        if (!IsGradeInScale(NewValue, out var gradeError))
         {
-            ResultMessage = "Новая оценка не может быть меньше нуля.";
+            ResultMessage = gradeError;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(RetakeDate) && !DateTime.TryParse(RetakeDate, out _))
+        {
+            ResultMessage = "Дата пересдачи должна быть в понятном формате, например 2026-02-10.";
             return;
         }
 
@@ -109,7 +121,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
                 SelectedGrade.GradeId,
                 currentValue,
                 NewValue,
-                string.IsNullOrWhiteSpace(RetakeDate) ? DateTime.Today.ToString("yyyy-MM-dd") : RetakeDate,
+                string.IsNullOrWhiteSpace(RetakeDate) ? DateTime.Today.ToString("yyyy-MM-dd") : RetakeDate.Trim(),
                 string.IsNullOrWhiteSpace(Reason) ? null : Reason.Trim(),
                 1,
                 string.Empty);
@@ -121,11 +133,25 @@ public partial class RetakesPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            ResultMessage = $"Не удалось сохранить пересдачу: {ex.Message}";
+            ResultMessage = $"Не удалось сохранить пересдачу: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
         finally
         {
             IsBusy = false;
         }
+    }
+
+    private bool IsGradeInScale(double value, out string error)
+    {
+        var minGrade = settingsRepository.GetMinGradeScale();
+        var maxGrade = settingsRepository.GetMaxGradeScale();
+        if (value < minGrade || value > maxGrade)
+        {
+            error = $"Оценка должна быть в пределах от {minGrade} до {maxGrade}.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
     }
 }

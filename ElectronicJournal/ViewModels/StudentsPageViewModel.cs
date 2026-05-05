@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -161,7 +162,7 @@ public partial class StudentsPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Не удалось сохранить студента: {ex.Message}";
+            ErrorMessage = $"Не удалось сохранить студента: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
         finally
         {

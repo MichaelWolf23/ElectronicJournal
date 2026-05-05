@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -141,7 +142,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            ResultMessage = $"Не удалось сохранить посещаемость: {ex.Message}";
+            ResultMessage = $"Не удалось сохранить посещаемость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 

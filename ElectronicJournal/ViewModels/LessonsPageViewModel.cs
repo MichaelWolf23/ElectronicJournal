@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -94,13 +95,19 @@ public partial class LessonsPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!string.IsNullOrWhiteSpace(LessonDate) && !DateTime.TryParse(LessonDate, out _))
+        {
+            ResultMessage = "Дата занятия должна быть в понятном формате, например 2026-02-10.";
+            return;
+        }
+
         try
         {
             var lesson = new Lesson(
                 0,
                 SelectedAssignmentId,
                 null,
-                string.IsNullOrWhiteSpace(LessonDate) ? DateTime.Today.ToString("yyyy-MM-dd") : LessonDate,
+                string.IsNullOrWhiteSpace(LessonDate) ? DateTime.Today.ToString("yyyy-MM-dd") : LessonDate.Trim(),
                 Topic.Trim(),
                 SelectedClassroomId,
                 string.IsNullOrWhiteSpace(Note) ? null : Note.Trim());
@@ -113,7 +120,7 @@ public partial class LessonsPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            ResultMessage = $"Не удалось добавить занятие: {ex.Message}";
+            ResultMessage = $"Не удалось добавить занятие: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 }

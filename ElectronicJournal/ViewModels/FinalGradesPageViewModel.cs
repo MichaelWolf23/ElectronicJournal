@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -14,6 +15,7 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
     private readonly FinalGradeRepository finalGradeRepository;
     private readonly StudentRepository studentRepository;
     private readonly AssignmentRepository assignmentRepository;
+    private readonly SettingsRepository settingsRepository;
 
     [ObservableProperty]
     private ObservableCollection<FinalGradeItem> finalGrades = new();
@@ -51,12 +53,14 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
     public FinalGradesPageViewModel(
         FinalGradeRepository finalGradeRepository,
         StudentRepository studentRepository,
-        AssignmentRepository assignmentRepository)
+        AssignmentRepository assignmentRepository,
+        SettingsRepository settingsRepository)
         : base("Итоговые оценки")
     {
         this.finalGradeRepository = finalGradeRepository;
         this.studentRepository = studentRepository;
         this.assignmentRepository = assignmentRepository;
+        this.settingsRepository = settingsRepository;
 
         Load();
     }
@@ -124,6 +128,12 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!IsGradeInScale(value, out var gradeError))
+        {
+            ResultMessage = gradeError;
+            return;
+        }
+
         try
         {
             finalGradeRepository.SaveFinalGrade(new FinalGrade(
@@ -143,7 +153,21 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            ResultMessage = $"Не удалось сохранить итоговую оценку: {ex.Message}";
+            ResultMessage = $"Не удалось сохранить итоговую оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
+    }
+
+    private bool IsGradeInScale(double value, out string error)
+    {
+        var minGrade = settingsRepository.GetMinGradeScale();
+        var maxGrade = settingsRepository.GetMaxGradeScale();
+        if (value < minGrade || value > maxGrade)
+        {
+            error = $"Итоговая оценка должна быть в пределах от {minGrade} до {maxGrade}.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
     }
 }

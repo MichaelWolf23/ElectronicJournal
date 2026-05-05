@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -19,6 +20,7 @@ public partial class GradesPageViewModel : PageViewModelBase
     private readonly GradeTypeRepository gradeTypeRepository;
     private readonly AssignmentRepository assignmentRepository;
     private readonly LessonRepository lessonRepository;
+    private readonly SettingsRepository settingsRepository;
     private List<GradeJournalItem> allGrades = new();
 
     [ObservableProperty]
@@ -88,7 +90,8 @@ public partial class GradesPageViewModel : PageViewModelBase
         SubjectRepository subjectRepository,
         GradeTypeRepository gradeTypeRepository,
         AssignmentRepository assignmentRepository,
-        LessonRepository lessonRepository)
+        LessonRepository lessonRepository,
+        SettingsRepository settingsRepository)
         : base("Оценки")
     {
         this.gradeRepository = gradeRepository;
@@ -98,6 +101,7 @@ public partial class GradesPageViewModel : PageViewModelBase
         this.gradeTypeRepository = gradeTypeRepository;
         this.assignmentRepository = assignmentRepository;
         this.lessonRepository = lessonRepository;
+        this.settingsRepository = settingsRepository;
 
         Load();
     }
@@ -164,9 +168,15 @@ public partial class GradesPageViewModel : PageViewModelBase
             return;
         }
 
-        if (GradeValue < 0)
+        if (!IsGradeInScale(GradeValue, out var gradeError))
         {
-            ErrorMessage = "Оценка не может быть меньше нуля.";
+            ErrorMessage = gradeError;
+            return;
+        }
+
+        if (!IsDateValid(GradeDate, out var dateError))
+        {
+            ErrorMessage = dateError;
             return;
         }
 
@@ -182,7 +192,7 @@ public partial class GradesPageViewModel : PageViewModelBase
                 SelectedLessonId,
                 SelectedGradeTypeId,
                 GradeValue,
-                string.IsNullOrWhiteSpace(GradeDate) ? DateTime.Today.ToString("yyyy-MM-dd") : GradeDate,
+                NormalizeDate(GradeDate),
                 string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim(),
                 1,
                 string.Empty,
@@ -196,7 +206,7 @@ public partial class GradesPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Не удалось добавить оценку: {ex.Message}";
+            ErrorMessage = $"Не удалось добавить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
         finally
         {
@@ -213,9 +223,9 @@ public partial class GradesPageViewModel : PageViewModelBase
             return;
         }
 
-        if (GradeValue < 0)
+        if (!IsGradeInScale(GradeValue, out var gradeError))
         {
-            EditResult = "Оценка не может быть меньше нуля.";
+            EditResult = gradeError;
             return;
         }
 
@@ -232,7 +242,7 @@ public partial class GradesPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            EditResult = $"Не удалось обновить оценку: {ex.Message}";
+            EditResult = $"Не удалось обновить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 
@@ -288,4 +298,33 @@ public partial class GradesPageViewModel : PageViewModelBase
 
         Grades = new ObservableCollection<GradeJournalItem>(filtered);
     }
+
+    private bool IsGradeInScale(double value, out string error)
+    {
+        var minGrade = settingsRepository.GetMinGradeScale();
+        var maxGrade = settingsRepository.GetMaxGradeScale();
+        if (value < minGrade || value > maxGrade)
+        {
+            error = $"Оценка должна быть в пределах от {minGrade} до {maxGrade}.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private static bool IsDateValid(string value, out string error)
+    {
+        if (string.IsNullOrWhiteSpace(value) || DateTime.TryParse(value, out _))
+        {
+            error = string.Empty;
+            return true;
+        }
+
+        error = "Дата оценки должна быть в понятном формате, например 2026-02-10.";
+        return false;
+    }
+
+    private static string NormalizeDate(string value) =>
+        string.IsNullOrWhiteSpace(value) ? DateTime.Today.ToString("yyyy-MM-dd") : value.Trim();
 }
