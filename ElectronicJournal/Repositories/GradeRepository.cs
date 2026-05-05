@@ -201,6 +201,8 @@ public sealed class GradeRepository : RepositoryBase
         command.CommandText = """
             SELECT
                 s.student_id,
+                g.group_id,
+                gr.assignment_id,
                 s.full_name AS student_name,
                 g.group_name,
                 sub.subject_name,
@@ -226,6 +228,8 @@ public sealed class GradeRepository : RepositoryBase
         {
             debtors.Add(new DebtorItem(
                 reader.GetInt32("student_id"),
+                reader.GetInt32("group_id"),
+                reader.GetInt32("assignment_id"),
                 reader.GetString("student_name"),
                 reader.GetString("group_name"),
                 reader.GetString("subject_name"),

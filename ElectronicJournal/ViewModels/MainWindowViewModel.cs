@@ -52,6 +52,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var assignmentRepository = new AssignmentRepository(databaseService);
         var lessonRepository = new LessonRepository(databaseService);
         var attendanceRepository = new AttendanceRepository(databaseService);
+        var notificationRepository = new NotificationRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -75,7 +76,9 @@ public partial class MainWindowViewModel : ViewModelBase
             gradeRetakeRepository,
             assignmentRepository,
             lessonRepository,
-            attendanceRepository);
+            attendanceRepository,
+            notificationRepository,
+            settingsRepository);
     }
 
     partial void OnSelectedNavigationItemChanged(NavigationItem? value)
@@ -103,7 +106,9 @@ public partial class MainWindowViewModel : ViewModelBase
         GradeRetakeRepository gradeRetakeRepository,
         AssignmentRepository assignmentRepository,
         LessonRepository lessonRepository,
-        AttendanceRepository attendanceRepository)
+        AttendanceRepository attendanceRepository,
+        NotificationRepository notificationRepository,
+        SettingsRepository settingsRepository)
     {
         NavigationItems.Add(new NavigationItem(
             "Студенты",
@@ -134,7 +139,10 @@ public partial class MainWindowViewModel : ViewModelBase
             new LessonsPageViewModel(lessonRepository, assignmentRepository)));
         NavigationItems.Add(new NavigationItem(
             "Должники",
-            new PlaceholderPageViewModel("Должники", "Студенты с оценками ниже минимальной положительной.")));
+            new DebtorsPageViewModel(
+                gradeRepository,
+                notificationRepository,
+                settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Статистика",
             new PlaceholderPageViewModel("Статистика", "Сводные показатели по группам и успеваемости.")));

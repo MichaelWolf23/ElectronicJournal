@@ -134,6 +134,23 @@ public sealed class NotificationRepository : RepositoryBase
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
+    public int? GetCuratorUserIdForGroup(int groupId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT curator_user_id
+            FROM group_curators
+            WHERE group_id = $group_id
+            ORDER BY assigned_at DESC
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$group_id", groupId);
+
+        var result = command.ExecuteScalar();
+        return result is null or DBNull ? null : Convert.ToInt32(result);
+    }
+
     public void UpdateStatus(int notificationId, string status)
     {
         using var connection = DatabaseService.CreateConnection();
