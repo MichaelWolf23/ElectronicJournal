@@ -145,7 +145,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Статистика",
-            new PlaceholderPageViewModel("Статистика", "Сводные показатели по группам и успеваемости.")));
+            new StatisticsPageViewModel(groupRepository, settingsRepository)));
         NavigationItems.Add(new NavigationItem(
             "Уведомления",
             new PlaceholderPageViewModel("Уведомления", "Уведомления кураторам о задолженностях и проблемах.")));
