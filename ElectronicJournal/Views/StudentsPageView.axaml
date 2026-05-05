@@ -42,7 +42,15 @@
                     <DataGridTextColumn Header="Студ. билет" Binding="{Binding StudentCardNumber}" Width="120"/>
                     <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
                     <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="*"/>
-                    <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="150"/>
+                    <DataGridTemplateColumn Header="Статус" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Status}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
 

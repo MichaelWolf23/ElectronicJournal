@@ -89,7 +89,15 @@
                 <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
                 <DataGridTextColumn Header="Заголовок" Binding="{Binding Title}" Width="2*"/>
                 <DataGridTextColumn Header="Текст" Binding="{Binding Message}" Width="3*"/>
-                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="120"/>
+                <DataGridTemplateColumn Header="Статус" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Status}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Прочитано" Binding="{Binding ReadAt}" Width="150"/>
             </DataGrid.Columns>
         </DataGrid>

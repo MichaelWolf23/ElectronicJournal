@@ -46,7 +46,15 @@
                 <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
                 <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
                 <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
-                <DataGridTextColumn Header="Оценка" Binding="{Binding GradeValue}" Width="90"/>
+                <DataGridTemplateColumn Header="Оценка" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding GradeValue}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="120"/>
                 <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
                 <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>

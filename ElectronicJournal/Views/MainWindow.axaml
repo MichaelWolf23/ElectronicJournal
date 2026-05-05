@@ -17,9 +17,9 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto" Background="#F6F8FA">
+    <Grid RowDefinitions="Auto,*,Auto" Background="#F3F5F7">
         <Border Grid.Row="0"
-                Padding="24,18"
+                Padding="26,18"
                 Background="#FFFFFF"
                 BorderBrush="#D0D7DE"
                 BorderThickness="0,0,0,1">
@@ -44,14 +44,15 @@
                     <TextBlock Text="{Binding CurrentPeriodName}"
                                FontSize="16"
                                FontWeight="SemiBold"
+                               Foreground="#0969DA"
                                HorizontalAlignment="Right"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <Grid Grid.Row="1"
-              Margin="24"
-              ColumnDefinitions="230,*"
+              Margin="22"
+              ColumnDefinitions="220,*"
               ColumnSpacing="18">
             <Border Padding="12"
                     BorderBrush="#D0D7DE"
@@ -69,7 +70,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Title}"
-                                           Margin="8"
+                                           Margin="10,7"
                                            FontSize="15"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -93,11 +94,11 @@
                                     Spacing="18"
                                     VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="База:" FontWeight="SemiBold"/>
+                                <TextBlock Text="База:" FontWeight="SemiBold" Foreground="#57606A"/>
                                 <TextBlock Text="{Binding IsDatabaseAvailable}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Таблиц:" FontWeight="SemiBold"/>
+                                <TextBlock Text="Таблиц:" FontWeight="SemiBold" Foreground="#57606A"/>
                                 <TextBlock Text="{Binding TableCount}"/>
                             </StackPanel>
                         </StackPanel>

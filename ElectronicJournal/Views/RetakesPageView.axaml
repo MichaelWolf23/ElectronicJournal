@@ -29,8 +29,24 @@
                     <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
                     <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
                     <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
-                    <DataGridTextColumn Header="Старая" Binding="{Binding OldValue}" Width="80"/>
-                    <DataGridTextColumn Header="Новая" Binding="{Binding NewValue}" Width="80"/>
+                    <DataGridTemplateColumn Header="Старая" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding OldValue}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding OldValue, Converter={StaticResource GradeBrushConverter}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Новая" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding NewValue}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding NewValue, Converter={StaticResource GradeBrushConverter}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Дата" Binding="{Binding RetakeDate}" Width="110"/>
                     <DataGridTextColumn Header="Причина" Binding="{Binding Reason}" Width="2*"/>
                     <DataGridTextColumn Header="Изменил" Binding="{Binding ChangedByName}" Width="2*"/>
