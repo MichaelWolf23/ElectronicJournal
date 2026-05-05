@@ -53,6 +53,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var lessonRepository = new LessonRepository(databaseService);
         var attendanceRepository = new AttendanceRepository(databaseService);
         var notificationRepository = new NotificationRepository(databaseService);
+        var finalGradeRepository = new FinalGradeRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -78,7 +79,8 @@ public partial class MainWindowViewModel : ViewModelBase
             lessonRepository,
             attendanceRepository,
             notificationRepository,
-            settingsRepository);
+            settingsRepository,
+            finalGradeRepository);
     }
 
     partial void OnSelectedNavigationItemChanged(NavigationItem? value)
@@ -108,7 +110,8 @@ public partial class MainWindowViewModel : ViewModelBase
         LessonRepository lessonRepository,
         AttendanceRepository attendanceRepository,
         NotificationRepository notificationRepository,
-        SettingsRepository settingsRepository)
+        SettingsRepository settingsRepository,
+        FinalGradeRepository finalGradeRepository)
     {
         NavigationItems.Add(new NavigationItem(
             "Студенты",
@@ -149,6 +152,12 @@ public partial class MainWindowViewModel : ViewModelBase
         NavigationItems.Add(new NavigationItem(
             "Уведомления",
             new NotificationsPageViewModel(notificationRepository)));
+        NavigationItems.Add(new NavigationItem(
+            "Итоговые",
+            new FinalGradesPageViewModel(
+                finalGradeRepository,
+                studentRepository,
+                assignmentRepository)));
         NavigationItems.Add(new NavigationItem(
             "Настройки",
             new SettingsPageViewModel(settingsRepository)));
