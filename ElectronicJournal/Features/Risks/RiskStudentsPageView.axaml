@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.RiskStudentsPageView"
+             x:DataType="vm:RiskStudentsPageViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+        <Grid ColumnDefinitions="*,*,*,Auto,Auto" ColumnSpacing="10">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Проблем" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding RiskCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding UniqueStudentCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Групп" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding AffectedGroupCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <ComboBox Grid.Column="3" Width="170" ItemsSource="{Binding GroupFilters}" SelectedItem="{Binding SelectedGroupFilter}"/>
+            <Button Grid.Column="4" Content="Сбросить" Command="{Binding ClearFiltersCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="320,*,320" ColumnSpacing="10">
+            <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+                    <TextBlock Text="Студенты риска" FontSize="17" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="1" Watermark="Поиск" Text="{Binding SearchText}"/>
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Risks}" SelectedItem="{Binding SelectedRisk}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:StudentRiskItem">
+                                <Border Padding="10" Margin="0,0,0,7" CornerRadius="8" Background="{DynamicResource DangerSoftBrush}">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            <TextBlock Text="{Binding RiskType}" Foreground="{DynamicResource DangerThemeBrush}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="{Binding RiskTitle}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding RiskDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Row="1" Padding="10" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                        <TextBlock Text="{Binding NotificationPreview}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </Border>
+                    <StackPanel Grid.Row="2" Spacing="8" VerticalAlignment="Top">
+                        <Button Content="Создать уведомление куратору" Command="{Binding CreateNotificationCommand}" IsVisible="{Binding CanCreateNotification}"/>
+                        <Button Content="Открыть карточку студента" Command="{Binding OpenStudentProfileCommand}"/>
+                        <Button Content="Обновить список" Command="{Binding LoadCommand}"/>
+                        <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Что делать" FontSize="17" FontWeight="SemiBold"/>
+                    <Border Padding="10" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                        <TextBlock Text="1. Выберите студента с риском: низкая оценка, пропуск или опоздание." TextWrapping="Wrap"/>
+                    </Border>
+                    <Border Padding="10" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                        <TextBlock Text="2. Проверьте предмет, преподавателя и дату." TextWrapping="Wrap"/>
+                    </Border>
+                    <Border Padding="10" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                        <TextBlock Text="3. Создайте уведомление куратору или разберите проблему вручную." TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

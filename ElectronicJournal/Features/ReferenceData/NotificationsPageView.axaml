@@ -1,0 +1,186 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.NotificationsPageView"
+             x:DataType="vm:NotificationsPageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Border Padding="10"
+                BorderBrush="{DynamicResource BorderThemeBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Background="{DynamicResource CardBackgroundBrush}">
+            <Grid ColumnDefinitions="*,190,150" ColumnSpacing="10">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="Центр уведомлений"
+                               FontSize="17"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResultMessage}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding StatusFilters}"
+                          SelectedItem="{Binding SelectedStatusFilter}"
+                          PlaceholderText="Статус"/>
+
+                <Button Grid.Column="2"
+                        Content="Обновить"
+                        Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*,*"
+              ColumnSpacing="12">
+            <Border Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Новые"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding NewCount}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource DangerThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Прочитано"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding ReadCount}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Закрыто"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding ClosedCount}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SuccessThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="3"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Показано"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding VisibleNotificationCount}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="300,*"
+              ColumnSpacing="10">
+            <Border Grid.Column="1"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Margin="10,8,10,6" Spacing="2">
+                        <TextBlock Text="Лента уведомлений" FontSize="16" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Notifications}"
+                              SelectedItem="{Binding SelectedNotification}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding CreatedAt}" Width="150"/>
+                            <DataGridTextColumn Header="Куратор" Binding="{Binding CuratorName}" Width="2*"/>
+                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
+                            <DataGridTextColumn Header="Заголовок" Binding="{Binding Title}" Width="2*"/>
+                            <DataGridTemplateColumn Header="Статус" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Status}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Прочитано" Binding="{Binding ReadAt}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Padding="12"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Уведомление" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerThemeBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <Border Padding="12"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Background="{DynamicResource SubtleBackgroundBrush}">
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="{Binding SelectedNotificationTitle}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedNotificationDetails}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Text="{Binding SelectedNotificationMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Изменить статус" FontWeight="SemiBold"/>
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Button Content="Новое"
+                                Command="{Binding MarkAsNewCommand}"/>
+                        <Button Grid.Column="1"
+                                Content="Прочитано"
+                                Command="{Binding MarkAsReadCommand}"/>
+                        <Button Grid.Column="2"
+                                Content="Закрыто"
+                                Command="{Binding MarkAsClosedCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

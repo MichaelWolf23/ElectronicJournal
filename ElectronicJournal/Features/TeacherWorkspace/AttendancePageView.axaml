@@ -1,0 +1,187 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:entities="using:ElectronicJournal.Models.Entities"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.AttendancePageView"
+             x:DataType="vm:AttendancePageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Border Padding="14"
+                BorderBrush="{DynamicResource BorderThemeBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Background="{DynamicResource CardBackgroundBrush}">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+                <TextBlock Text="Фильтры посещаемости"
+                           FontWeight="SemiBold"/>
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="*,*,170,120,120"
+                      ColumnSpacing="10">
+                    <ComboBox ItemsSource="{Binding Groups}"
+                              SelectedItem="{Binding SelectedGroupFilter}"
+                              PlaceholderText="Группа">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="entities:Group">
+                                <TextBlock Text="{Binding GroupName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Subjects}"
+                              SelectedItem="{Binding SelectedSubjectFilter}"
+                              PlaceholderText="Предмет">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="entities:Subject">
+                                <TextBlock Text="{Binding SubjectName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <TextBox Grid.Column="2"
+                             Watermark="Дата"
+                             Text="{Binding DateFilter}"/>
+                    <Button Grid.Column="3"
+                            Content="Сбросить"
+                            Command="{Binding ClearFiltersCommand}"/>
+                    <Button Grid.Column="4"
+                            Content="Обновить"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*,*"
+              ColumnSpacing="12">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Записей" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding VisibleAttendanceCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Присутствовали" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding PresentCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Отсутствовали" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding AbsentCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Опоздали" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding LateCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="300,*"
+              ColumnSpacing="10">
+            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Margin="10,8,10,6" Spacing="2">
+                        <TextBlock Text="Журнал посещаемости" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding AttendanceSummary}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding AttendanceItems}"
+                              SelectedItem="{Binding SelectedAttendanceItem}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding LessonDate}" Width="110"/>
+                            <DataGridTextColumn Header="Тема" Binding="{Binding Topic}" Width="2*"/>
+                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
+                            <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
+                            <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="150"/>
+                            <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Padding="12"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Посещаемость"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+                    <Border Padding="9"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Background="{DynamicResource SubtleBackgroundBrush}">
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="{Binding SelectedAttendanceTitle}"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedAttendanceDetails}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Text="{Binding SelectedAttendanceComment}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Отметка"
+                               FontSize="16"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerThemeBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <ComboBox ItemsSource="{Binding Lessons}"
+                              SelectedValue="{Binding SelectedLessonId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Занятие">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding Students}"
+                              SelectedValue="{Binding SelectedStudentId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="Студент">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LookupItem">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <ComboBox ItemsSource="{Binding AttendanceStatuses}"
+                              SelectedItem="{Binding SelectedStatus}"
+                              PlaceholderText="Статус"/>
+
+                    <TextBox Watermark="Комментарий"
+                             Text="{Binding Comment}"/>
+
+                    <Button Content="Сохранить"
+                            Command="{Binding SaveAttendanceCommand}"/>
+
+                    <TextBlock Text="{Binding ResultMessage}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

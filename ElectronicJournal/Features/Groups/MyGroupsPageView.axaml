@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.MyGroupsPageView"
+             x:DataType="vm:MyGroupsPageViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+        <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="10">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding TotalStudents}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Должников" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding TotalDebtors}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Средний" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding AverageText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Button Grid.Column="3" Content="Обновить" Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="300,*,320" ColumnSpacing="10">
+            <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                    <TextBlock Text="Группы" FontSize="17" FontWeight="SemiBold"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:GroupStatisticsItem">
+                                <Border Padding="10" Margin="0,0,0,7" CornerRadius="8" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" Background="{DynamicResource SubtleBackgroundBrush}">
+                                    <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding GroupName}" FontSize="16" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding AverageGrade, StringFormat={}{0:F2}}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="Bold"/>
+                                        </Grid>
+                                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <TextBlock Text="{Binding StudentCount, StringFormat=Студентов: {0}}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding DebtorCount, StringFormat=Долги: {0}}" Foreground="{DynamicResource DangerThemeBrush}" FontWeight="SemiBold"/>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding GroupTitle}" FontSize="19" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding GroupDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Students}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:StudentListItem">
+                                <Border Padding="9" Margin="0,0,0,6" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding StudentCardNumber, StringFormat=Билет: {0}}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*,Auto,*" RowSpacing="8">
+                    <TextBlock Text="Риски группы" FontSize="17" FontWeight="SemiBold"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding GroupDebts}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:DebtorItem">
+                                <Border Padding="9" Margin="0,0,0,6" CornerRadius="8" Background="{DynamicResource DangerSoftBrush}">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="{Binding GradeValue, StringFormat=Оценка: {0}}" Foreground="{DynamicResource DangerThemeBrush}" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Grid.Row="2" Text="Уведомления" FontSize="17" FontWeight="SemiBold"/>
+                    <ListBox Grid.Row="3" ItemsSource="{Binding Notifications}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:CuratorNotificationItem">
+                                <Border Padding="9" Margin="0,0,0,6" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding StudentName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="{Binding Status}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

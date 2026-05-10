@@ -1,0 +1,135 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.RetakesPageView"
+             x:DataType="vm:RetakesPageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Grid ColumnDefinitions="*,140" ColumnSpacing="10">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="История пересдач" FontSize="17" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Пересдач" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding RetakeCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Оценок доступно" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding AvailableGradeCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,300"
+              ColumnSpacing="10">
+            <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Margin="16,14,16,10" Spacing="2">
+                        <TextBlock Text="Журнал пересдач" FontSize="19" FontWeight="SemiBold"/>
+                        <TextBlock Text="Здесь сохраняется история исправления оценок." TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Retakes}"
+                      SelectedItem="{Binding SelectedRetake}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
+                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
+                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
+                    <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
+                    <DataGridTemplateColumn Header="Старая" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding OldValue}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding OldValue, Converter={StaticResource GradeBrushConverter}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Новая" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding NewValue}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding NewValue, Converter={StaticResource GradeBrushConverter}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Дата" Binding="{Binding RetakeDate}" Width="110"/>
+                    <DataGridTextColumn Header="Причина" Binding="{Binding Reason}" Width="2*"/>
+                    <DataGridTextColumn Header="Изменил" Binding="{Binding ChangedByName}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Padding="12"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Выбранная пересдача" FontSize="19" FontWeight="SemiBold"/>
+                    <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="{Binding SelectedRetakeTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedRetakeDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Добавить пересдачу"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerThemeBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <ComboBox ItemsSource="{Binding Grades}"
+                              SelectedItem="{Binding SelectedGrade}"
+                              PlaceholderText="Оценка для пересдачи">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:GradeJournalItem">
+                                <TextBlock Text="{Binding StudentName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Текущая оценка:" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding OldValue}"/>
+                    </StackPanel>
+
+                    <TextBox Watermark="Новая оценка"
+                             Text="{Binding NewValue}"/>
+                    <TextBox Watermark="Дата пересдачи, например 2026-02-20"
+                             Text="{Binding RetakeDate}"/>
+                    <TextBox Watermark="Причина"
+                             Text="{Binding Reason}"/>
+
+                    <Button Content="Сохранить пересдачу"
+                            Command="{Binding AddRetakeCommand}"/>
+
+                    <TextBlock Text="{Binding ResultMessage}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.LessonJournalPageView"
+             x:DataType="vm:LessonJournalPageViewModel">
+    <Grid ColumnDefinitions="280,*,300" ColumnSpacing="10">
+        <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <TextBlock Text="Занятие" FontSize="17" FontWeight="SemiBold"/>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Lessons}" SelectedItem="{Binding SelectedLesson}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:LessonJournalLessonItem">
+                            <Border Padding="9" Margin="0,0,0,6" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding LessonDate}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="1" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding LessonTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding LessonDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ListBox Grid.Row="1" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:StudentListItem">
+                            <Border Padding="10" Margin="0,0,0,6" CornerRadius="8" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" Background="{DynamicResource SubtleBackgroundBrush}">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding FullName}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding StudentCardNumber, StringFormat=Билет: {0}}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Padding="7,4" CornerRadius="6" Background="{DynamicResource PillBackgroundBrush}" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Status}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <StackPanel Spacing="9">
+                <TextBlock Text="Отметка студента" FontSize="17" FontWeight="SemiBold"/>
+                <Border Padding="9" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                    <TextBlock Text="{Binding StudentDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </Border>
+
+                <TextBlock Text="Посещаемость" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding AttendanceStatuses}" SelectedItem="{Binding SelectedStatus}"/>
+                <Button Content="Сохранить посещаемость" Command="{Binding SaveAttendanceCommand}"/>
+
+                <TextBlock Text="Оценка" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                <ComboBox ItemsSource="{Binding GradeTypes}" SelectedItem="{Binding SelectedGradeType}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:LookupItem">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBox Watermark="Оценка" Text="{Binding GradeValue}"/>
+                <TextBox Watermark="Комментарий" Text="{Binding Comment}"/>
+                <Button Content="Сохранить оценку" Command="{Binding SaveGradeCommand}"/>
+                <Button Content="Сохранить все" Command="{Binding SaveBothCommand}"/>
+
+                <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

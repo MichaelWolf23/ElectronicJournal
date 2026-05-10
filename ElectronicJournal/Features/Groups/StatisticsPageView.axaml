@@ -1,0 +1,198 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             x:Class="ElectronicJournal.Views.StatisticsPageView"
+             x:DataType="vm:StatisticsPageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Border Padding="10"
+                BorderBrush="{DynamicResource BorderThemeBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Background="{DynamicResource CardBackgroundBrush}">
+            <Grid ColumnDefinitions="*,170" ColumnSpacing="10">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="Аналитика групп"
+                               FontSize="17"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResultMessage}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="Обновить"
+                        Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*,*,*,*,*"
+              ColumnSpacing="12">
+            <Border Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Студентов"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding TotalStudents}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Средний балл"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding AverageGrade, StringFormat={}{0:F2}}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SuccessThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Должников"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding TotalDebtors}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource DangerThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="3"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Порог"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding MinPositiveGrade}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="4"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Групп с риском"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding RiskGroupCount}"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource WarningThemeBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="5"
+                    Padding="14"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel>
+                    <TextBlock Text="Лучшая группа"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding BestGroupText}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SuccessThemeBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,300"
+              ColumnSpacing="10">
+            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Margin="16,14,16,10" Spacing="2">
+                        <TextBlock Text="Группы и успеваемость" FontSize="19" FontWeight="SemiBold"/>
+                        <TextBlock Text="Выберите группу, чтобы увидеть краткий анализ справа."
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   Foreground="{DynamicResource DangerThemeBrush}"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding GroupStatistics}"
+                              SelectedItem="{Binding SelectedGroupStatistics}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="2*"/>
+                            <DataGridTextColumn Header="Студентов" Binding="{Binding StudentCount}" Width="*"/>
+                            <DataGridTextColumn Header="Средний балл" Binding="{Binding AverageGrade, StringFormat={}{0:F2}}" Width="*"/>
+                            <DataGridTextColumn Header="Должников" Binding="{Binding DebtorCount}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Padding="12"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Анализ выбранной группы"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+                    <Border Padding="12"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Background="{DynamicResource SubtleBackgroundBrush}">
+                        <StackPanel Spacing="7">
+                            <TextBlock Text="{Binding SelectedGroupTitle}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedGroupDetails}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Text="{Binding SelectedGroupRisk}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource WarningThemeBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Эта вкладка помогает куратору быстро понять, где нужна работа с успеваемостью."
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

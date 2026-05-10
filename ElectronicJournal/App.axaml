@@ -3,7 +3,8 @@
              x:Class="ElectronicJournal.App"
              xmlns:local="using:ElectronicJournal"
              xmlns:utilities="using:ElectronicJournal.Utilities"
-             RequestedThemeVariant="Default">
+             xmlns:media="using:Avalonia.Media"
+             RequestedThemeVariant="Light">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
@@ -11,47 +12,122 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <utilities:GradeBrushConverter x:Key="GradeBrushConverter"/>
-        <utilities:StatusBrushConverter x:Key="StatusBrushConverter"/>
+        <ResourceDictionary>
+            <utilities:GradeBrushConverter x:Key="GradeBrushConverter"/>
+            <utilities:StatusBrushConverter x:Key="StatusBrushConverter"/>
+
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <media:SolidColorBrush x:Key="AppBackgroundBrush" Color="#F4F6F8"/>
+                    <media:SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
+                    <media:SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FFFFFF"/>
+                    <media:SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#F8FAFC"/>
+                    <media:SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#FFFFFF"/>
+                    <media:SolidColorBrush x:Key="SelectionBackgroundBrush" Color="#E8F2FF"/>
+                    <media:SolidColorBrush x:Key="HoverBackgroundBrush" Color="#F0F4F8"/>
+                    <media:SolidColorBrush x:Key="PillBackgroundBrush" Color="#EEF2F7"/>
+                    <media:SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
+                    <media:SolidColorBrush x:Key="BorderThemeBrush" Color="#D8DEE7"/>
+                    <media:SolidColorBrush x:Key="PrimaryTextBrush" Color="#24292F"/>
+                    <media:SolidColorBrush x:Key="SecondaryTextBrush" Color="#5C6673"/>
+                    <media:SolidColorBrush x:Key="MutedTextBrush" Color="#737D8C"/>
+                    <media:SolidColorBrush x:Key="AccentThemeBrush" Color="#0B66C3"/>
+                    <media:SolidColorBrush x:Key="AccentSoftBrush" Color="#E8F2FF"/>
+                    <media:SolidColorBrush x:Key="SuccessThemeBrush" Color="#148A42"/>
+                    <media:SolidColorBrush x:Key="SuccessSoftBrush" Color="#E9F8EF"/>
+                    <media:SolidColorBrush x:Key="WarningThemeBrush" Color="#9A6700"/>
+                    <media:SolidColorBrush x:Key="WarningSoftBrush" Color="#FFF7D6"/>
+                    <media:SolidColorBrush x:Key="DangerThemeBrush" Color="#C7372F"/>
+                    <media:SolidColorBrush x:Key="DangerSoftBrush" Color="#FFF0F0"/>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <media:SolidColorBrush x:Key="AppBackgroundBrush" Color="#11151B"/>
+                    <media:SolidColorBrush x:Key="CardBackgroundBrush" Color="#1B2129"/>
+                    <media:SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#171C24"/>
+                    <media:SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#222A34"/>
+                    <media:SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#171C24"/>
+                    <media:SolidColorBrush x:Key="SelectionBackgroundBrush" Color="#17324D"/>
+                    <media:SolidColorBrush x:Key="HoverBackgroundBrush" Color="#252E39"/>
+                    <media:SolidColorBrush x:Key="PillBackgroundBrush" Color="#26303B"/>
+                    <media:SolidColorBrush x:Key="InputBackgroundBrush" Color="#161B22"/>
+                    <media:SolidColorBrush x:Key="BorderThemeBrush" Color="#384452"/>
+                    <media:SolidColorBrush x:Key="PrimaryTextBrush" Color="#E6EDF3"/>
+                    <media:SolidColorBrush x:Key="SecondaryTextBrush" Color="#A7B0BA"/>
+                    <media:SolidColorBrush x:Key="MutedTextBrush" Color="#7F8A99"/>
+                    <media:SolidColorBrush x:Key="AccentThemeBrush" Color="#6CB6FF"/>
+                    <media:SolidColorBrush x:Key="AccentSoftBrush" Color="#17324D"/>
+                    <media:SolidColorBrush x:Key="SuccessThemeBrush" Color="#7EE787"/>
+                    <media:SolidColorBrush x:Key="SuccessSoftBrush" Color="#173B26"/>
+                    <media:SolidColorBrush x:Key="WarningThemeBrush" Color="#D29922"/>
+                    <media:SolidColorBrush x:Key="WarningSoftBrush" Color="#3D3214"/>
+                    <media:SolidColorBrush x:Key="DangerThemeBrush" Color="#FF8A8A"/>
+                    <media:SolidColorBrush x:Key="DangerSoftBrush" Color="#472020"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
   
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
 
         <Style Selector="Window">
             <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
 
         <Style Selector="Button">
-            <Setter Property="MinHeight" Value="36"/>
-            <Setter Property="Padding" Value="14,7"/>
-            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="{DynamicResource PillBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderThemeBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentThemeBrush}"/>
         </Style>
 
         <Style Selector="TextBox">
-            <Setter Property="MinHeight" Value="36"/>
-            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderThemeBrush}"/>
         </Style>
 
         <Style Selector="ComboBox">
-            <Setter Property="MinHeight" Value="36"/>
-            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderThemeBrush}"/>
+        </Style>
+
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="TabItem">
+            <Setter Property="Padding" Value="9,5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
         <Style Selector="DataGrid">
-            <Setter Property="RowHeight" Value="34"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-            <Setter Property="BorderBrush" Value="#D0D7DE"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderThemeBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Background" Value="#FFFFFF"/>
-        </Style>
-
-        <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="#F6F8FA"/>
-            <Setter Property="Foreground" Value="#24292F"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
         </Style>
 
         <Style Selector="ListBox">
@@ -60,9 +136,18 @@
         </Style>
 
         <Style Selector="ListBoxItem">
-            <Setter Property="MinHeight" Value="38"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="MinHeight" Value="42"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="3"/>
+        </Style>
+
+        <Style Selector="ListBoxItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+        </Style>
+
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="{DynamicResource SelectionBackgroundBrush}"/>
         </Style>
     </Application.Styles>
 </Application>

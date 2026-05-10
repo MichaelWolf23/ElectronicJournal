@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             x:Class="ElectronicJournal.Views.SettingsPageView"
+             x:DataType="vm:SettingsPageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Grid ColumnDefinitions="*,150" ColumnSpacing="10">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="Настройки системы" FontSize="17" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Параметров" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding SettingCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Период" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding CurrentPeriod}" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Шкала оценок" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding GradeScaleText}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,300"
+              ColumnSpacing="10">
+            <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+                <Grid RowDefinitions="Auto,*">
+                    <StackPanel Margin="16,14,16,10" Spacing="2">
+                        <TextBlock Text="Системные параметры" FontSize="19" FontWeight="SemiBold"/>
+                        <TextBlock Text="Настройки влияют на расчет оценок, текущий период и поведение журнала." TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Settings}" SelectedItem="{Binding SelectedSetting}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Ключ" Binding="{Binding SettingKey}" Width="2*"/>
+                            <DataGridTextColumn Header="Значение" Binding="{Binding SettingValue}" Width="*"/>
+                            <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="3*"/>
+                            <DataGridTextColumn Header="Обновлено" Binding="{Binding UpdatedAt}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Padding="12"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Background="{DynamicResource CardBackgroundBrush}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Изменить настройку"
+                               FontSize="19"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerThemeBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <TextBlock Text="Название"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding SelectedSetting.SettingKey}"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Описание"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="{Binding SelectedSetting.Description}"
+                               TextWrapping="Wrap"/>
+
+                    <TextBox Watermark="Значение"
+                             Text="{Binding SettingValue}"/>
+
+                    <Button Content="Сохранить"
+                            Command="{Binding SaveCommand}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

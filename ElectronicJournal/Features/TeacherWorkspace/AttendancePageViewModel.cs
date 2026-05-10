@@ -1,0 +1,274 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using ElectronicJournal.Models.Dto;
+using ElectronicJournal.Models.Entities;
+using ElectronicJournal.Repositories;
+using ElectronicJournal.Utilities;
+
+namespace ElectronicJournal.ViewModels;
+
+public partial class AttendancePageViewModel : PageViewModelBase
+{
+    private readonly AttendanceRepository attendanceRepository;
+    private readonly LessonRepository lessonRepository;
+    private readonly StudentRepository studentRepository;
+    private readonly GroupRepository groupRepository;
+    private readonly SubjectRepository subjectRepository;
+    private readonly AuthenticatedUser currentUser;
+    private List<AttendanceJournalItem> allAttendance = new();
+
+    [ObservableProperty]
+    private ObservableCollection<AttendanceJournalItem> attendanceItems = new();
+
+    [ObservableProperty]
+    private AttendanceJournalItem? selectedAttendanceItem;
+
+    [ObservableProperty]
+    private ObservableCollection<LookupItem> lessons = new();
+
+    [ObservableProperty]
+    private ObservableCollection<LookupItem> students = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Group> groups = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Subject> subjects = new();
+
+    [ObservableProperty]
+    private Group? selectedGroupFilter;
+
+    [ObservableProperty]
+    private Subject? selectedSubjectFilter;
+
+    [ObservableProperty]
+    private string dateFilter = string.Empty;
+
+    [ObservableProperty]
+    private int selectedLessonId;
+
+    [ObservableProperty]
+    private int selectedStudentId;
+
+    [ObservableProperty]
+    private string selectedStatus = AttendanceStatuses[0];
+
+    [ObservableProperty]
+    private string comment = string.Empty;
+
+    [ObservableProperty]
+    private string resultMessage = "Выберите занятие и студента.";
+
+    [ObservableProperty]
+    private int visibleAttendanceCount;
+
+    [ObservableProperty]
+    private int presentCount;
+
+    [ObservableProperty]
+    private int absentCount;
+
+    [ObservableProperty]
+    private int lateCount;
+
+    [ObservableProperty]
+    private string attendanceSummary = "Журнал посещаемости загружается.";
+
+    [ObservableProperty]
+    private string selectedAttendanceTitle = "Выберите запись";
+
+    [ObservableProperty]
+    private string selectedAttendanceDetails = "После выбора строки здесь появятся детали посещаемости.";
+
+    [ObservableProperty]
+    private string selectedAttendanceComment = "Комментарий не выбран.";
+
+    public static IReadOnlyList<string> AttendanceStatuses { get; } =
+    [
+        "Присутствовал",
+        "Отсутствовал",
+        "Опоздал",
+        "Уважительная причина"
+    ];
+
+    public AttendancePageViewModel(
+        AttendanceRepository attendanceRepository,
+        LessonRepository lessonRepository,
+        StudentRepository studentRepository,
+        GroupRepository groupRepository,
+        SubjectRepository subjectRepository,
+        AuthenticatedUser currentUser)
+        : base("Посещаемость")
+    {
+        this.attendanceRepository = attendanceRepository;
+        this.lessonRepository = lessonRepository;
+        this.studentRepository = studentRepository;
+        this.groupRepository = groupRepository;
+        this.subjectRepository = subjectRepository;
+        this.currentUser = currentUser;
+
+        Load();
+    }
+
+    partial void OnSelectedGroupFilterChanged(Group? value) => ApplyFilters();
+
+    partial void OnSelectedSubjectFilterChanged(Subject? value) => ApplyFilters();
+
+    partial void OnDateFilterChanged(string value) => ApplyFilters();
+
+    partial void OnSelectedAttendanceItemChanged(AttendanceJournalItem? value)
+    {
+        if (value is null)
+        {
+            SelectedAttendanceTitle = "Выберите запись";
+            SelectedAttendanceDetails = "После выбора строки здесь появятся детали посещаемости.";
+            SelectedAttendanceComment = "Комментарий не выбран.";
+            return;
+        }
+
+        SelectedAttendanceTitle = $"{value.StudentName} - {value.Status}";
+        SelectedAttendanceDetails =
+            $"{value.LessonDate}, {value.GroupName}, {value.SubjectName}. Тема: {value.Topic}.";
+        SelectedAttendanceComment = string.IsNullOrWhiteSpace(value.Comment)
+            ? "Комментарий не указан."
+            : value.Comment;
+    }
+
+    [RelayCommand]
+    private void Load()
+    {
+        try
+        {
+            IsBusy = true;
+            ErrorMessage = null;
+
+            allAttendance = LoadAttendanceForCurrentUser();
+            Lessons = new ObservableCollection<LookupItem>(LoadLessonLookupsForCurrentUser());
+            Students = new ObservableCollection<LookupItem>(LoadStudentLookupsForCurrentUser());
+            Groups = new ObservableCollection<Group>(LoadGroupsForCurrentUser());
+            Subjects = new ObservableCollection<Subject>(subjectRepository.GetAll());
+
+            SelectedLessonId = Lessons.FirstOrDefault()?.Id ?? 0;
+            SelectedStudentId = Students.FirstOrDefault()?.Id ?? 0;
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Не удалось загрузить посещаемость: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void SaveAttendance()
+    {
+        if (SelectedLessonId == 0 || SelectedStudentId == 0)
+        {
+            ResultMessage = "Выберите занятие и студента.";
+            return;
+        }
+
+        try
+        {
+            attendanceRepository.UpsertAttendance(
+                SelectedLessonId,
+                SelectedStudentId,
+                SelectedStatus,
+                string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim());
+
+            ResultMessage = "Посещаемость сохранена.";
+            Comment = string.Empty;
+            allAttendance = LoadAttendanceForCurrentUser();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось сохранить посещаемость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        SelectedGroupFilter = null;
+        SelectedSubjectFilter = null;
+        DateFilter = string.Empty;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<AttendanceJournalItem> filtered = allAttendance;
+
+        if (SelectedGroupFilter is not null)
+        {
+            filtered = filtered.Where(item => item.GroupName == SelectedGroupFilter.GroupName);
+        }
+
+        if (SelectedSubjectFilter is not null)
+        {
+            filtered = filtered.Where(item => item.SubjectName == SelectedSubjectFilter.SubjectName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(DateFilter))
+        {
+            filtered = filtered.Where(item => item.LessonDate.Contains(DateFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var visibleItems = filtered.ToList();
+        AttendanceItems = new ObservableCollection<AttendanceJournalItem>(visibleItems);
+        UpdateSummary(visibleItems);
+    }
+
+    private List<AttendanceJournalItem> LoadAttendanceForCurrentUser()
+    {
+        return currentUser.RoleName == "Преподаватель"
+            ? attendanceRepository.GetAttendanceJournalForTeacher(currentUser.UserId)
+            : attendanceRepository.GetAttendanceJournal();
+    }
+
+    private List<LookupItem> LoadLessonLookupsForCurrentUser()
+    {
+        return currentUser.RoleName == "Преподаватель"
+            ? lessonRepository.GetLessonLookupsForTeacher(currentUser.UserId)
+            : lessonRepository.GetLessonLookups();
+    }
+
+    private List<LookupItem> LoadStudentLookupsForCurrentUser()
+    {
+        return currentUser.RoleName switch
+        {
+            "Преподаватель" => studentRepository.GetStudentLookupsForTeacher(currentUser.UserId),
+            "Куратор группы" => studentRepository.GetStudentLookupsForCurator(currentUser.UserId),
+            _ => studentRepository.GetStudentLookups()
+        };
+    }
+
+    private List<Group> LoadGroupsForCurrentUser()
+    {
+        return currentUser.RoleName switch
+        {
+            "Преподаватель" => groupRepository.GetGroupsForTeacher(currentUser.UserId),
+            "Куратор группы" => groupRepository.GetGroupsForCurator(currentUser.UserId),
+            _ => groupRepository.GetAll()
+        };
+    }
+
+    private void UpdateSummary(IReadOnlyCollection<AttendanceJournalItem> visibleItems)
+    {
+        VisibleAttendanceCount = visibleItems.Count;
+        PresentCount = visibleItems.Count(item => item.Status == "Присутствовал");
+        AbsentCount = visibleItems.Count(item => item.Status == "Отсутствовал");
+        LateCount = visibleItems.Count(item => item.Status == "Опоздал");
+        AttendanceSummary = visibleItems.Count == 0
+            ? "По выбранным фильтрам записей посещаемости нет."
+            : $"Показано записей: {VisibleAttendanceCount}. Присутствовали: {PresentCount}. Отсутствовали: {AbsentCount}.";
+    }
+}
