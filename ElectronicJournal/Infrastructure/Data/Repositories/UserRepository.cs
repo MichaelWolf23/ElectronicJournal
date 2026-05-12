@@ -126,6 +126,33 @@ public sealed class UserRepository : RepositoryBase
         return roles;
     }
 
+    public List<LookupItem> GetActiveUserLookupsByRole(string roleName)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT u.user_id, u.full_name
+            FROM users u
+            JOIN roles r ON r.role_id = u.role_id
+            WHERE r.role_name = $role_name
+              AND u.is_active = 1
+            ORDER BY u.full_name;
+            """;
+        command.Parameters.AddWithValue("$role_name", roleName);
+
+        using var reader = command.ExecuteReader();
+        var users = new List<LookupItem>();
+
+        while (reader.Read())
+        {
+            users.Add(new LookupItem(
+                reader.GetInt32("user_id"),
+                reader.GetString("full_name")));
+        }
+
+        return users;
+    }
+
     public int CreateUser(User user)
     {
         using var connection = DatabaseService.CreateConnection();
@@ -196,6 +223,36 @@ public sealed class UserRepository : RepositoryBase
             """;
         command.Parameters.AddWithValue("$user_id", userId);
         command.Parameters.AddWithValue("$password_hash", passwordHash);
+        command.ExecuteNonQuery();
+    }
+
+    public int CountUserReferences(int userId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                (SELECT COUNT(*) FROM teacher_assignments WHERE teacher_user_id = $user_id) +
+                (SELECT COUNT(*) FROM group_curators WHERE curator_user_id = $user_id) +
+                (SELECT COUNT(*) FROM grades WHERE created_by_user_id = $user_id) +
+                (SELECT COUNT(*) FROM grade_retakes WHERE changed_by_user_id = $user_id) +
+                (SELECT COUNT(*) FROM final_grades WHERE approved_by_user_id = $user_id) +
+                (SELECT COUNT(*) FROM curator_notifications WHERE curator_user_id = $user_id);
+            """;
+        command.Parameters.AddWithValue("$user_id", userId);
+
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public void DeleteUser(int userId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM users
+            WHERE user_id = $user_id;
+            """;
+        command.Parameters.AddWithValue("$user_id", userId);
         command.ExecuteNonQuery();
     }
 }

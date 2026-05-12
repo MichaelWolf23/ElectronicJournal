@@ -61,6 +61,18 @@ public sealed class FinalGradeRepository : RepositoryBase
         return finalGrades;
     }
 
+    public List<FinalGradeItem> GetFinalGradesForTeacher(int teacherUserId)
+    {
+        return GetFinalGradesByScope("ta.teacher_user_id = $user_id", teacherUserId);
+    }
+
+    public List<FinalGradeItem> GetFinalGradesForCurator(int curatorUserId)
+    {
+        return GetFinalGradesByScope(
+            "EXISTS (SELECT 1 FROM group_curators gc WHERE gc.group_id = g.group_id AND gc.curator_user_id = $user_id)",
+            curatorUserId);
+    }
+
     public List<LookupItem> GetPeriodLookups()
     {
         using var connection = DatabaseService.CreateConnection();
@@ -103,6 +115,23 @@ public sealed class FinalGradeRepository : RepositoryBase
         return result is null or DBNull ? null : Convert.ToDouble(result);
     }
 
+    public bool CanStudentUseAssignment(int studentId, int assignmentId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM students s
+            JOIN teacher_assignments ta ON ta.group_id = s.group_id
+            WHERE s.student_id = $student_id
+              AND ta.assignment_id = $assignment_id;
+            """;
+        command.Parameters.AddWithValue("$student_id", studentId);
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
     public void SaveFinalGrade(FinalGrade finalGrade)
     {
         using var connection = DatabaseService.CreateConnection();
@@ -142,5 +171,66 @@ public sealed class FinalGradeRepository : RepositoryBase
         command.Parameters.AddWithValue("$comment", (object?)finalGrade.Comment ?? DBNull.Value);
         command.Parameters.AddWithValue("$approved_by_user_id", (object?)finalGrade.ApprovedByUserId ?? DBNull.Value);
         command.ExecuteNonQuery();
+    }
+
+    public void DeleteFinalGrade(int finalGradeId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM final_grades
+            WHERE final_grade_id = $final_grade_id;
+            """;
+        command.Parameters.AddWithValue("$final_grade_id", finalGradeId);
+        command.ExecuteNonQuery();
+    }
+
+    private List<FinalGradeItem> GetFinalGradesByScope(string scopeWhere, int userId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT
+                fg.final_grade_id,
+                s.full_name AS student_name,
+                g.group_name,
+                sub.subject_name,
+                u.full_name AS teacher_name,
+                ap.period_name,
+                fg.final_value,
+                fg.calculated_average,
+                fg.comment,
+                fg.approved_at
+            FROM final_grades fg
+            JOIN students s ON s.student_id = fg.student_id
+            JOIN groups g ON g.group_id = s.group_id
+            JOIN teacher_assignments ta ON ta.assignment_id = fg.assignment_id
+            JOIN subjects sub ON sub.subject_id = ta.subject_id
+            JOIN users u ON u.user_id = ta.teacher_user_id
+            JOIN academic_periods ap ON ap.period_id = fg.period_id
+            WHERE {scopeWhere}
+            ORDER BY ap.period_name DESC, g.group_name, s.full_name, sub.subject_name;
+            """;
+        command.Parameters.AddWithValue("$user_id", userId);
+
+        using var reader = command.ExecuteReader();
+        var finalGrades = new List<FinalGradeItem>();
+
+        while (reader.Read())
+        {
+            finalGrades.Add(new FinalGradeItem(
+                reader.GetInt32("final_grade_id"),
+                reader.GetString("student_name"),
+                reader.GetString("group_name"),
+                reader.GetString("subject_name"),
+                reader.GetString("teacher_name"),
+                reader.GetString("period_name"),
+                reader.GetDouble("final_value"),
+                reader.GetNullableDouble("calculated_average"),
+                reader.GetNullableString("comment"),
+                reader.GetNullableString("approved_at")));
+        }
+
+        return finalGrades;
     }
 }

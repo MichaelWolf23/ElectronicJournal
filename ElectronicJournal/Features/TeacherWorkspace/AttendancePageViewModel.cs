@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -120,6 +122,8 @@ public partial class AttendancePageViewModel : PageViewModelBase
 
     partial void OnDateFilterChanged(string value) => ApplyFilters();
 
+    partial void OnSelectedLessonIdChanged(int value) => RefreshStudentsForSelectedLesson();
+
     partial void OnSelectedAttendanceItemChanged(AttendanceJournalItem? value)
     {
         if (value is null)
@@ -148,12 +152,11 @@ public partial class AttendancePageViewModel : PageViewModelBase
 
             allAttendance = LoadAttendanceForCurrentUser();
             Lessons = new ObservableCollection<LookupItem>(LoadLessonLookupsForCurrentUser());
-            Students = new ObservableCollection<LookupItem>(LoadStudentLookupsForCurrentUser());
             Groups = new ObservableCollection<Group>(LoadGroupsForCurrentUser());
-            Subjects = new ObservableCollection<Subject>(subjectRepository.GetAll());
+            Subjects = new ObservableCollection<Subject>(LoadSubjectsForCurrentUser());
 
             SelectedLessonId = Lessons.FirstOrDefault()?.Id ?? 0;
-            SelectedStudentId = Students.FirstOrDefault()?.Id ?? 0;
+            RefreshStudentsForSelectedLesson();
             ApplyFilters();
         }
         catch (Exception ex)
@@ -163,6 +166,37 @@ public partial class AttendancePageViewModel : PageViewModelBase
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedAttendance()
+    {
+        if (SelectedAttendanceItem is null)
+        {
+            ResultMessage = "Сначала выберите запись посещаемости.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить посещаемость",
+            $"Удалить отметку посещаемости: {SelectedAttendanceItem.StudentName}, {SelectedAttendanceItem.LessonDate}?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            attendanceRepository.DeleteAttendance(SelectedAttendanceItem.AttendanceId);
+            SelectedAttendanceItem = null;
+            allAttendance = LoadAttendanceForCurrentUser();
+            ApplyFilters();
+            ResultMessage = "Отметка посещаемости удалена.";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить отметку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 
@@ -177,6 +211,12 @@ public partial class AttendancePageViewModel : PageViewModelBase
 
         try
         {
+            if (!CanUseSelectedAttendanceScope(out var scopeError))
+            {
+                ResultMessage = scopeError;
+                return;
+            }
+
             attendanceRepository.UpsertAttendance(
                 SelectedLessonId,
                 SelectedStudentId,
@@ -251,6 +291,19 @@ public partial class AttendancePageViewModel : PageViewModelBase
         };
     }
 
+    private void RefreshStudentsForSelectedLesson()
+    {
+        var currentStudentId = SelectedStudentId;
+        var lessonStudents = SelectedLessonId > 0
+            ? studentRepository.GetStudentLookupsForLesson(SelectedLessonId)
+            : LoadStudentLookupsForCurrentUser();
+
+        Students = new ObservableCollection<LookupItem>(lessonStudents);
+        SelectedStudentId = Students.Any(student => student.Id == currentStudentId)
+            ? currentStudentId
+            : Students.FirstOrDefault()?.Id ?? 0;
+    }
+
     private List<Group> LoadGroupsForCurrentUser()
     {
         return currentUser.RoleName switch
@@ -259,6 +312,47 @@ public partial class AttendancePageViewModel : PageViewModelBase
             "Куратор группы" => groupRepository.GetGroupsForCurator(currentUser.UserId),
             _ => groupRepository.GetAll()
         };
+    }
+
+    private List<Subject> LoadSubjectsForCurrentUser()
+    {
+        return currentUser.RoleName switch
+        {
+            "Преподаватель" => subjectRepository.GetSubjectsForTeacher(currentUser.UserId),
+            "Куратор группы" => subjectRepository.GetSubjectsForCurator(currentUser.UserId),
+            _ => subjectRepository.GetAll()
+        };
+    }
+
+    private bool CanUseSelectedAttendanceScope(out string error)
+    {
+        if (!Lessons.Any(lesson => lesson.Id == SelectedLessonId))
+        {
+            error = "Выбранное занятие недоступно текущему пользователю.";
+            return false;
+        }
+
+        if (!Students.Any(student => student.Id == SelectedStudentId))
+        {
+            error = "Выбранный студент недоступен текущему пользователю.";
+            return false;
+        }
+
+        if (currentUser.RoleName == "Преподаватель" &&
+            !attendanceRepository.CanTeacherAccessLesson(SelectedLessonId, currentUser.UserId))
+        {
+            error = "Преподаватель может отмечать посещаемость только на своих занятиях.";
+            return false;
+        }
+
+        if (!attendanceRepository.CanStudentAttendLesson(SelectedLessonId, SelectedStudentId))
+        {
+            error = "Студент не относится к группе выбранного занятия.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
     }
 
     private void UpdateSummary(IReadOnlyCollection<AttendanceJournalItem> visibleItems)

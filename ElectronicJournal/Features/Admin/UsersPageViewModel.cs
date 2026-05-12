@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
@@ -14,6 +16,7 @@ namespace ElectronicJournal.ViewModels;
 public partial class UsersPageViewModel : PageViewModelBase
 {
     private readonly UserRepository userRepository;
+    private List<UserListItem> allUsers = new();
 
     [ObservableProperty]
     private ObservableCollection<UserListItem> users = new();
@@ -46,6 +49,9 @@ public partial class UsersPageViewModel : PageViewModelBase
     private bool isActive = true;
 
     [ObservableProperty]
+    private string searchText = string.Empty;
+
+    [ObservableProperty]
     private string resultMessage = "Выберите пользователя или создайте нового.";
 
     [ObservableProperty]
@@ -66,6 +72,8 @@ public partial class UsersPageViewModel : PageViewModelBase
         this.userRepository = userRepository;
         Load();
     }
+
+    partial void OnSearchTextChanged(string value) => ApplyFilter();
 
     partial void OnSelectedUserChanged(UserListItem? value)
     {
@@ -91,10 +99,11 @@ public partial class UsersPageViewModel : PageViewModelBase
         {
             ErrorMessage = null;
             Roles = new ObservableCollection<Role>(userRepository.GetRoles());
-            Users = new ObservableCollection<UserListItem>(userRepository.GetUsers());
-            UserCount = Users.Count;
-            ActiveUserCount = Users.Count(user => user.IsActive);
-            InactiveUserCount = Users.Count - ActiveUserCount;
+            allUsers = userRepository.GetUsers();
+            ApplyFilter();
+            UserCount = allUsers.Count;
+            ActiveUserCount = allUsers.Count(user => user.IsActive);
+            InactiveUserCount = allUsers.Count - ActiveUserCount;
             SelectedRoleId = Roles.FirstOrDefault()?.RoleId ?? 0;
         }
         catch (Exception ex)
@@ -121,6 +130,18 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (SelectedUser is null && string.IsNullOrWhiteSpace(Password))
         {
             ResultMessage = "Для нового пользователя нужен пароль.";
+            return;
+        }
+
+        if (!InputValidator.IsEmailValid(Email))
+        {
+            ResultMessage = "Email указан некорректно.";
+            return;
+        }
+
+        if (!InputValidator.IsPhoneValid(Phone))
+        {
+            ResultMessage = "Телефон должен содержать от 10 до 15 цифр.";
             return;
         }
 
@@ -199,6 +220,58 @@ public partial class UsersPageViewModel : PageViewModelBase
         Save();
     }
 
+    [RelayCommand]
+    private async Task DeleteSelectedUser()
+    {
+        if (SelectedUser is null)
+        {
+            ResultMessage = "Сначала выберите пользователя.";
+            return;
+        }
+
+        var references = userRepository.CountUserReferences(SelectedUser.UserId);
+        if (references > 0)
+        {
+            ResultMessage = "Пользователь связан с журналом. Его можно отключить, но нельзя удалить без потери истории.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить пользователя",
+            $"Удалить пользователя {SelectedUser.FullName}? Это действие нельзя отменить.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            userRepository.DeleteUser(SelectedUser.UserId);
+            ClearForm();
+            Load();
+            ResultMessage = "Пользователь удален.";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить пользователя: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
     private static string? NullIfWhiteSpace(string value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private void ApplyFilter()
+    {
+        var query = SearchText.Trim();
+        var filtered = string.IsNullOrWhiteSpace(query)
+            ? allUsers
+            : allUsers.Where(user =>
+                user.FullName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                user.Username.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                user.RoleName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                user.Email?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
+                user.Phone?.Contains(query, StringComparison.OrdinalIgnoreCase) == true).ToList();
+
+        Users = new ObservableCollection<UserListItem>(filtered);
+    }
 }

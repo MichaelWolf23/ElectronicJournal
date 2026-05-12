@@ -15,48 +15,54 @@
         <ResourceDictionary>
             <utilities:GradeBrushConverter x:Key="GradeBrushConverter"/>
             <utilities:StatusBrushConverter x:Key="StatusBrushConverter"/>
+            <utilities:WidthThresholdConverter x:Key="WideTableConverter" Threshold="760"/>
+            <utilities:WidthThresholdConverter x:Key="CompactTableConverter" Threshold="760" IsLessThan="True"/>
+            <utilities:NumberStateConverter x:Key="HasDataConverter"/>
+            <utilities:NumberStateConverter x:Key="NoDataConverter" IsZero="True"/>
 
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
-                    <media:SolidColorBrush x:Key="AppBackgroundBrush" Color="#F4F6F8"/>
+                    <media:SolidColorBrush x:Key="AppBackgroundBrush" Color="#FAFBFC"/>
                     <media:SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
                     <media:SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FFFFFF"/>
-                    <media:SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#F8FAFC"/>
+                    <media:SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#F3F6FA"/>
                     <media:SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#FFFFFF"/>
-                    <media:SolidColorBrush x:Key="SelectionBackgroundBrush" Color="#E8F2FF"/>
-                    <media:SolidColorBrush x:Key="HoverBackgroundBrush" Color="#F0F4F8"/>
-                    <media:SolidColorBrush x:Key="PillBackgroundBrush" Color="#EEF2F7"/>
+                    <media:SolidColorBrush x:Key="SelectionBackgroundBrush" Color="#EAF2FF"/>
+                    <media:SolidColorBrush x:Key="HoverBackgroundBrush" Color="#F1F5F9"/>
+                    <media:SolidColorBrush x:Key="PillBackgroundBrush" Color="#EEF4FF"/>
                     <media:SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
-                    <media:SolidColorBrush x:Key="BorderThemeBrush" Color="#D8DEE7"/>
-                    <media:SolidColorBrush x:Key="PrimaryTextBrush" Color="#24292F"/>
-                    <media:SolidColorBrush x:Key="SecondaryTextBrush" Color="#5C6673"/>
-                    <media:SolidColorBrush x:Key="MutedTextBrush" Color="#737D8C"/>
-                    <media:SolidColorBrush x:Key="AccentThemeBrush" Color="#0B66C3"/>
-                    <media:SolidColorBrush x:Key="AccentSoftBrush" Color="#E8F2FF"/>
-                    <media:SolidColorBrush x:Key="SuccessThemeBrush" Color="#148A42"/>
+                    <media:SolidColorBrush x:Key="BorderThemeBrush" Color="#E6EAF0"/>
+                    <media:SolidColorBrush x:Key="StrongBorderBrush" Color="#D4DCE7"/>
+                    <media:SolidColorBrush x:Key="PrimaryTextBrush" Color="#0F172A"/>
+                    <media:SolidColorBrush x:Key="SecondaryTextBrush" Color="#475569"/>
+                    <media:SolidColorBrush x:Key="MutedTextBrush" Color="#64748B"/>
+                    <media:SolidColorBrush x:Key="AccentThemeBrush" Color="#2563EB"/>
+                    <media:SolidColorBrush x:Key="AccentSoftBrush" Color="#EFF6FF"/>
+                    <media:SolidColorBrush x:Key="SuccessThemeBrush" Color="#16803C"/>
                     <media:SolidColorBrush x:Key="SuccessSoftBrush" Color="#E9F8EF"/>
-                    <media:SolidColorBrush x:Key="WarningThemeBrush" Color="#9A6700"/>
-                    <media:SolidColorBrush x:Key="WarningSoftBrush" Color="#FFF7D6"/>
-                    <media:SolidColorBrush x:Key="DangerThemeBrush" Color="#C7372F"/>
-                    <media:SolidColorBrush x:Key="DangerSoftBrush" Color="#FFF0F0"/>
+                    <media:SolidColorBrush x:Key="WarningThemeBrush" Color="#B45309"/>
+                    <media:SolidColorBrush x:Key="WarningSoftBrush" Color="#FFF7ED"/>
+                    <media:SolidColorBrush x:Key="DangerThemeBrush" Color="#DC2626"/>
+                    <media:SolidColorBrush x:Key="DangerSoftBrush" Color="#FEF2F2"/>
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Dark">
-                    <media:SolidColorBrush x:Key="AppBackgroundBrush" Color="#11151B"/>
-                    <media:SolidColorBrush x:Key="CardBackgroundBrush" Color="#1B2129"/>
-                    <media:SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#171C24"/>
-                    <media:SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#222A34"/>
-                    <media:SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#171C24"/>
-                    <media:SolidColorBrush x:Key="SelectionBackgroundBrush" Color="#17324D"/>
-                    <media:SolidColorBrush x:Key="HoverBackgroundBrush" Color="#252E39"/>
-                    <media:SolidColorBrush x:Key="PillBackgroundBrush" Color="#26303B"/>
-                    <media:SolidColorBrush x:Key="InputBackgroundBrush" Color="#161B22"/>
-                    <media:SolidColorBrush x:Key="BorderThemeBrush" Color="#384452"/>
-                    <media:SolidColorBrush x:Key="PrimaryTextBrush" Color="#E6EDF3"/>
-                    <media:SolidColorBrush x:Key="SecondaryTextBrush" Color="#A7B0BA"/>
-                    <media:SolidColorBrush x:Key="MutedTextBrush" Color="#7F8A99"/>
-                    <media:SolidColorBrush x:Key="AccentThemeBrush" Color="#6CB6FF"/>
-                    <media:SolidColorBrush x:Key="AccentSoftBrush" Color="#17324D"/>
+                    <media:SolidColorBrush x:Key="AppBackgroundBrush" Color="#0B1120"/>
+                    <media:SolidColorBrush x:Key="CardBackgroundBrush" Color="#111827"/>
+                    <media:SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#0F172A"/>
+                    <media:SolidColorBrush x:Key="SubtleBackgroundBrush" Color="#172033"/>
+                    <media:SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#0F172A"/>
+                    <media:SolidColorBrush x:Key="SelectionBackgroundBrush" Color="#1E3A5F"/>
+                    <media:SolidColorBrush x:Key="HoverBackgroundBrush" Color="#1E293B"/>
+                    <media:SolidColorBrush x:Key="PillBackgroundBrush" Color="#172554"/>
+                    <media:SolidColorBrush x:Key="InputBackgroundBrush" Color="#0F172A"/>
+                    <media:SolidColorBrush x:Key="BorderThemeBrush" Color="#263244"/>
+                    <media:SolidColorBrush x:Key="StrongBorderBrush" Color="#334155"/>
+                    <media:SolidColorBrush x:Key="PrimaryTextBrush" Color="#F8FAFC"/>
+                    <media:SolidColorBrush x:Key="SecondaryTextBrush" Color="#CBD5E1"/>
+                    <media:SolidColorBrush x:Key="MutedTextBrush" Color="#94A3B8"/>
+                    <media:SolidColorBrush x:Key="AccentThemeBrush" Color="#60A5FA"/>
+                    <media:SolidColorBrush x:Key="AccentSoftBrush" Color="#172554"/>
                     <media:SolidColorBrush x:Key="SuccessThemeBrush" Color="#7EE787"/>
                     <media:SolidColorBrush x:Key="SuccessSoftBrush" Color="#173B26"/>
                     <media:SolidColorBrush x:Key="WarningThemeBrush" Color="#D29922"/>
@@ -80,8 +86,8 @@
 
         <Style Selector="Button">
             <Setter Property="MinHeight" Value="30"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Background" Value="{DynamicResource PillBackgroundBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -95,7 +101,7 @@
         </Style>
 
         <Style Selector="TextBox">
-            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="MinHeight" Value="32"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8,5"/>
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
@@ -104,7 +110,7 @@
         </Style>
 
         <Style Selector="ComboBox">
-            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="MinHeight" Value="32"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
@@ -124,6 +130,7 @@
         <Style Selector="DataGrid">
             <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
             <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="CanUserResizeColumns" Value="True"/>
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderThemeBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -136,10 +143,10 @@
         </Style>
 
         <Style Selector="ListBoxItem">
-            <Setter Property="MinHeight" Value="42"/>
-            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="MinHeight" Value="38"/>
+            <Setter Property="Margin" Value="0"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="3"/>
+            <Setter Property="Padding" Value="2"/>
         </Style>
 
         <Style Selector="ListBoxItem:pointerover">

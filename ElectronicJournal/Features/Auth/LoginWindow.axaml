@@ -4,192 +4,94 @@
         xmlns:entities="using:ElectronicJournal.Models.Entities"
         x:Class="ElectronicJournal.Views.LoginWindow"
         x:DataType="vm:LoginWindowViewModel"
-        Title="Вход в электронный журнал"
-        Width="720"
+        Title="Вход"
+        Width="520"
         Height="560"
-        MinWidth="520"
-        MinHeight="460"
-        WindowStartupLocation="CenterScreen">
+        MinWidth="440"
+        MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False">
 
-    <Border Padding="14" Background="{DynamicResource AppBackgroundBrush}">
-        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
-            <Grid MinWidth="560"
-                  RowDefinitions="Auto,Auto"
-                  RowSpacing="10"
-                  ColumnDefinitions="220,*"
-                  ColumnSpacing="12">
-                <Border Grid.RowSpan="2"
-                        Padding="10"
-                        CornerRadius="8"
-                        Background="{DynamicResource AccentThemeBrush}">
-                    <Grid RowDefinitions="Auto,*,Auto">
-                        <StackPanel Spacing="10">
-                            <Border Width="42"
-                                    Height="42"
-                                    CornerRadius="9"
-                                    HorizontalAlignment="Left"
-                                    Background="White">
-                                <TextBlock Text="Ж"
-                                           FontSize="17"
-                                           FontWeight="Bold"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           Foreground="{DynamicResource AccentThemeBrush}"/>
-                            </Border>
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
+        <Border Width="360"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="0">
+            <Grid RowDefinitions="Auto,Auto,Auto"
+                  RowSpacing="20">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Электронный журнал"
+                                   FontSize="24"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="Вход в систему"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="{Binding ThemeButtonText}"
+                            VerticalAlignment="Top"
+                            Command="{Binding ToggleThemeCommand}"/>
+                </Grid>
 
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Электронный журнал"
-                                           FontSize="23"
-                                           FontWeight="SemiBold"
-                                           Foreground="White"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="Оценки, посещаемость, уведомления."
-                                           Foreground="#E7F1FF"
-                                           TextWrapping="Wrap"/>
+                <TabControl Grid.Row="1">
+                    <TabItem Header="Вход">
+                        <StackPanel Spacing="12"
+                                    Margin="0,18,0,0">
+                            <TextBox Watermark="Логин"
+                                     Text="{Binding LoginUsername}"/>
+                            <TextBox Watermark="Пароль"
+                                     PasswordChar="*"
+                                     Text="{Binding LoginPassword}"/>
+                            <Button Content="Войти"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding LoginCommand}"/>
+                        </StackPanel>
+                    </TabItem>
+
+                    <TabItem Header="Регистрация">
+                        <ScrollViewer MaxHeight="300"
+                                      Margin="0,18,0,0"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Spacing="12">
+                                <ComboBox ItemsSource="{Binding Roles}"
+                                          SelectedValue="{Binding SelectedRoleId}"
+                                          SelectedValueBinding="{Binding RoleId}"
+                                          PlaceholderText="Роль">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="entities:Role">
+                                            <TextBlock Text="{Binding RoleName}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBox Watermark="ФИО"
+                                         Text="{Binding FullName}"/>
+                                <TextBox Watermark="Логин"
+                                         Text="{Binding RegisterUsername}"/>
+                                <TextBox Watermark="Пароль"
+                                         PasswordChar="*"
+                                         Text="{Binding RegisterPassword}"/>
+                                <TextBox Watermark="Повторите пароль"
+                                         PasswordChar="*"
+                                         Text="{Binding RegisterPasswordRepeat}"/>
+                                <TextBox Watermark="Email"
+                                         Text="{Binding Email}"/>
+                                <TextBox Watermark="Телефон"
+                                         Text="{Binding Phone}"/>
+                                <Button Content="Зарегистрироваться"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding RegisterCommand}"/>
                             </StackPanel>
-                        </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
 
-                        <StackPanel Grid.Row="1"
-                                    Spacing="7"
-                                    VerticalAlignment="Center">
-                            <Border Padding="9"
-                                    CornerRadius="7"
-                                    Background="#1F000000">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Ролевой доступ"
-                                               FontWeight="SemiBold"
-                                               Foreground="White"/>
-                                </StackPanel>
-                            </Border>
-                            <Border Padding="9"
-                                    CornerRadius="7"
-                                    Background="#1F000000">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="SQLite-база"
-                                               FontWeight="SemiBold"
-                                               Foreground="White"/>
-                                </StackPanel>
-                            </Border>
-                            <Border Padding="9"
-                                    CornerRadius="7"
-                                    Background="#1F000000">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="Готово к демонстрации"
-                                               FontWeight="SemiBold"
-                                               Foreground="White"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-
-                        <Button Grid.Row="2"
-                                Content="{Binding ThemeButtonText}"
-                                HorizontalAlignment="Left"
-                                Command="{Binding ToggleThemeCommand}"/>
-                    </Grid>
-                </Border>
-
-                <Border Grid.Column="1"
-                        Padding="14"
-                        BorderBrush="{DynamicResource BorderThemeBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Background="{DynamicResource HeaderBackgroundBrush}">
-                    <Grid ColumnDefinitions="*" ColumnSpacing="0">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Вход"
-                                       FontSize="21"
-                                       FontWeight="SemiBold"/>
-                            <TextBlock Text="Выберите вход или регистрацию."
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <Border Grid.Row="1"
-                        Grid.Column="1"
-                        Padding="14"
-                        Background="{DynamicResource CardBackgroundBrush}"
-                        BorderBrush="{DynamicResource BorderThemeBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8">
-                    <Grid RowDefinitions="*,Auto" RowSpacing="8">
-                        <TabControl>
-                            <TabItem Header="Вход">
-                                <StackPanel Spacing="8" Margin="0,10,0,0">
-                                    <TextBox Watermark="Логин"
-                                             Text="{Binding LoginUsername}"/>
-                                    <TextBox Watermark="Пароль"
-                                             PasswordChar="*"
-                                             Text="{Binding LoginPassword}"/>
-                                    <Button Content="Войти"
-                                            HorizontalAlignment="Stretch"
-                                            Command="{Binding LoginCommand}"/>
-                                    <Border Padding="9"
-                                            CornerRadius="7"
-                                            BorderBrush="{DynamicResource BorderThemeBrush}"
-                                            BorderThickness="1"
-                                            Background="{DynamicResource AccentSoftBrush}">
-                                        <TextBlock Text="Тестовый вход: admin/admin, ivanova/ivanova, petrov/petrov."
-                                                   Foreground="{DynamicResource AccentThemeBrush}"
-                                                   FontWeight="SemiBold"
-                                                   TextWrapping="Wrap"/>
-                                    </Border>
-                                </StackPanel>
-                            </TabItem>
-
-                            <TabItem Header="Регистрация">
-                                <StackPanel Spacing="8" Margin="0,10,0,0">
-                                    <ComboBox ItemsSource="{Binding Roles}"
-                                              SelectedValue="{Binding SelectedRoleId}"
-                                              SelectedValueBinding="{Binding RoleId}"
-                                              PlaceholderText="Роль">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate x:DataType="entities:Role">
-                                                <TextBlock Text="{Binding RoleName}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                    <TextBox Watermark="ФИО"
-                                             Text="{Binding FullName}"/>
-                                    <TextBox Watermark="Логин"
-                                             Text="{Binding RegisterUsername}"/>
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                        <TextBox Watermark="Пароль"
-                                                 PasswordChar="*"
-                                                 Text="{Binding RegisterPassword}"/>
-                                        <TextBox Grid.Column="1"
-                                                 Watermark="Повторите пароль"
-                                                 PasswordChar="*"
-                                                 Text="{Binding RegisterPasswordRepeat}"/>
-                                    </Grid>
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                        <TextBox Watermark="Email"
-                                                 Text="{Binding Email}"/>
-                                        <TextBox Grid.Column="1"
-                                                 Watermark="Телефон"
-                                                 Text="{Binding Phone}"/>
-                                    </Grid>
-                                    <Button Content="Зарегистрироваться"
-                                            HorizontalAlignment="Stretch"
-                                            Command="{Binding RegisterCommand}"/>
-                                </StackPanel>
-                            </TabItem>
-                        </TabControl>
-
-                        <Border Grid.Row="1"
-                                Padding="9"
-                                CornerRadius="7"
-                                Background="{DynamicResource PillBackgroundBrush}">
-                            <TextBlock Text="{Binding Message}"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       TextWrapping="Wrap"/>
-                        </Border>
-                    </Grid>
-                </Border>
+                <TextBlock Grid.Row="2"
+                           Text="{Binding Message}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           TextWrapping="Wrap"
+                           MinHeight="38"/>
             </Grid>
-        </ScrollViewer>
-    </Border>
+        </Border>
+    </Grid>
 </Window>

@@ -213,6 +213,67 @@ public sealed class LessonRepository : RepositoryBase
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
+    public bool LessonExists(int assignmentId, string lessonDate, string topic)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM lessons
+            WHERE assignment_id = $assignment_id
+              AND lesson_date = $lesson_date
+              AND lower(topic) = lower($topic);
+            """;
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+        command.Parameters.AddWithValue("$lesson_date", lessonDate);
+        command.Parameters.AddWithValue("$topic", topic.Trim());
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
+    public void DeleteLesson(int lessonId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+
+        using (var detachGrades = connection.CreateCommand())
+        {
+            detachGrades.Transaction = transaction;
+            detachGrades.CommandText = """
+                UPDATE grades
+                SET lesson_id = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE lesson_id = $lesson_id;
+                """;
+            detachGrades.Parameters.AddWithValue("$lesson_id", lessonId);
+            detachGrades.ExecuteNonQuery();
+        }
+
+        using (var deleteAttendance = connection.CreateCommand())
+        {
+            deleteAttendance.Transaction = transaction;
+            deleteAttendance.CommandText = """
+                DELETE FROM attendance
+                WHERE lesson_id = $lesson_id;
+                """;
+            deleteAttendance.Parameters.AddWithValue("$lesson_id", lessonId);
+            deleteAttendance.ExecuteNonQuery();
+        }
+
+        using (var deleteLesson = connection.CreateCommand())
+        {
+            deleteLesson.Transaction = transaction;
+            deleteLesson.CommandText = """
+                DELETE FROM lessons
+                WHERE lesson_id = $lesson_id;
+                """;
+            deleteLesson.Parameters.AddWithValue("$lesson_id", lessonId);
+            deleteLesson.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
     public List<ScheduleItem> GetSchedule()
     {
         using var connection = DatabaseService.CreateConnection();
@@ -306,9 +367,12 @@ public sealed class LessonRepository : RepositoryBase
         command.CommandText = """
             SELECT
                 l.lesson_id,
-                l.lesson_date || ' — ' || l.topic AS lesson_name
+                l.lesson_date || ' — ' || g.group_name || ' — ' || sub.subject_name || ' — ' || l.topic AS lesson_name
             FROM lessons l
-            ORDER BY l.lesson_date DESC, l.topic;
+            JOIN teacher_assignments ta ON ta.assignment_id = l.assignment_id
+            JOIN groups g ON g.group_id = ta.group_id
+            JOIN subjects sub ON sub.subject_id = ta.subject_id
+            ORDER BY l.lesson_date DESC, g.group_name, sub.subject_name, l.topic;
             """;
 
         using var reader = command.ExecuteReader();
@@ -331,11 +395,13 @@ public sealed class LessonRepository : RepositoryBase
         command.CommandText = """
             SELECT
                 l.lesson_id,
-                l.lesson_date || ' — ' || l.topic AS lesson_name
+                l.lesson_date || ' — ' || g.group_name || ' — ' || sub.subject_name || ' — ' || l.topic AS lesson_name
             FROM lessons l
             JOIN teacher_assignments ta ON ta.assignment_id = l.assignment_id
+            JOIN groups g ON g.group_id = ta.group_id
+            JOIN subjects sub ON sub.subject_id = ta.subject_id
             WHERE ta.teacher_user_id = $teacher_user_id
-            ORDER BY l.lesson_date DESC, l.topic;
+            ORDER BY l.lesson_date DESC, g.group_name, sub.subject_name, l.topic;
             """;
         command.Parameters.AddWithValue("$teacher_user_id", teacherUserId);
 

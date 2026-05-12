@@ -3,27 +3,29 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.FinalGradesPageView"
+             x:Name="Root"
              x:DataType="vm:FinalGradesPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
-        <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-            <Grid ColumnDefinitions="*,150" ColumnSpacing="10">
-                <StackPanel Spacing="3">
-                    <TextBlock Text="Итоговые оценки" FontSize="17" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
-
-                <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
-            </Grid>
-        </Border>
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="3">
+                <TextBlock Text="Итоговые оценки" FontSize="19" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="Обновить"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Command="{Binding LoadCommand}"/>
+        </Grid>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
-            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Итогов сохранено" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding FinalGradeCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Средний итог" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding FinalAverageText}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
@@ -34,24 +36,28 @@
         <Grid Grid.Row="2"
               ColumnDefinitions="*,300"
               ColumnSpacing="10">
-            <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                <Grid RowDefinitions="Auto,*">
-                    <StackPanel Margin="16,14,16,10" Spacing="2">
+            <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                <Grid x:Name="FinalGradesListHost" RowDefinitions="Auto,*">
+                    <Grid Margin="0,0,0,8" ColumnDefinitions="*,Auto">
                         <TextBlock Text="Итоговая ведомость" FontSize="19" FontWeight="SemiBold"/>
-                        <TextBlock Text="Выберите строку, чтобы посмотреть итог по студенту справа." TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    </StackPanel>
+                        <TextBlock Grid.Column="1"
+                                   Text="Нет данных"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   IsVisible="{Binding FinalGradeCount, Converter={StaticResource NoDataConverter}}"/>
+                    </Grid>
             <DataGrid Grid.Row="1"
+                      MinWidth="720"
                       ItemsSource="{Binding FinalGrades}"
                       SelectedItem="{Binding SelectedFinalGrade}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
-                      GridLinesVisibility="Horizontal">
+                      GridLinesVisibility="Horizontal"
+                      IsVisible="{Binding #FinalGradesListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
-                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
-                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
-                    <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
-                    <DataGridTextColumn Header="Период" Binding="{Binding PeriodName}" Width="*"/>
+                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
+                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="110"/>
+                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="180"/>
+                    <DataGridTextColumn Header="Период" Binding="{Binding PeriodName}" Width="120"/>
                     <DataGridTextColumn Header="Средний" Binding="{Binding CalculatedAverage, StringFormat={}{0:F2}}" Width="90"/>
                     <DataGridTemplateColumn Header="Итог" Width="80">
                         <DataGridTemplateColumn.CellTemplate>
@@ -62,31 +68,52 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>
-                    <DataGridTextColumn Header="Утверждено" Binding="{Binding ApprovedAt}" Width="150"/>
                 </DataGrid.Columns>
             </DataGrid>
+            <Border Grid.Row="1"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    IsVisible="{Binding FinalGradeCount, Converter={StaticResource NoDataConverter}}">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="8">
+                    <TextBlock Text="Нет данных"
+                               HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="Рассчитайте и сохраните итоговую оценку справа."
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+            <ListBox Grid.Row="1" ItemsSource="{Binding FinalGrades}" SelectedItem="{Binding SelectedFinalGrade}" IsVisible="{Binding #FinalGradesListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                            <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Grid.Column="1" Text="{Binding FinalValue}" FontWeight="SemiBold" Foreground="{Binding FinalValue, Converter={StaticResource GradeBrushConverter}}"/>
+                            <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PeriodName}" Foreground="{DynamicResource MutedTextBrush}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
                 </Grid>
             </Border>
 
             <Border Grid.Column="1"
                     Padding="12"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Выбранный итог" FontSize="19" FontWeight="SemiBold"/>
-                    <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
-                        <StackPanel Spacing="7">
-                            <TextBlock Text="{Binding SelectedFinalTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding SelectedFinalDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Text="Рассчитать итог"
-                               FontSize="19"
-                               FontWeight="SemiBold"/>
+                    <TextBlock Text="Итог" FontSize="19" FontWeight="SemiBold"/>
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding SelectedFinalTitle}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding SelectedFinalDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
 
                     <TextBlock Text="{Binding ErrorMessage}"
                                Foreground="{DynamicResource DangerThemeBrush}"
@@ -126,18 +153,27 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <TextBlock Text="{Binding CalculatedAverage, StringFormat=Средний балл: {0:F2}}"
-                               TextWrapping="Wrap"/>
-                    <Button Content="Рассчитать средний"
-                            Command="{Binding CalculateCommand}"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Text="{Binding CalculatedAverage, StringFormat=Средний: {0:F2}}"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"/>
+                        <Button Grid.Column="1"
+                                Content="Рассчитать"
+                                Command="{Binding CalculateCommand}"/>
+                    </Grid>
 
                     <TextBox Watermark="Итоговая оценка"
                              Text="{Binding FinalValue}"/>
-                    <TextBox Watermark="Комментарий преподавателя"
+                    <TextBox Watermark="Комментарий"
                              Text="{Binding Comment}"/>
 
-                    <Button Content="Сохранить итог"
-                            Command="{Binding SaveCommand}"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Content="Сохранить"
+                                Command="{Binding SaveCommand}"/>
+                        <Button Grid.Column="1"
+                                Content="Удалить"
+                                Command="{Binding DeleteSelectedFinalGradeCommand}"/>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>

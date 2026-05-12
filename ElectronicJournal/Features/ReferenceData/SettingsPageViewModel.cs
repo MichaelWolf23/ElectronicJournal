@@ -5,12 +5,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 
 namespace ElectronicJournal.ViewModels;
 
 public partial class SettingsPageViewModel : PageViewModelBase
 {
     private readonly SettingsRepository settingsRepository;
+    private readonly BackupService backupService;
 
     [ObservableProperty]
     private ObservableCollection<SystemSetting> settings = new();
@@ -33,10 +35,14 @@ public partial class SettingsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private string gradeScaleText = "Не задана";
 
-    public SettingsPageViewModel(SettingsRepository settingsRepository)
+    [ObservableProperty]
+    private string backupResultMessage = "Резервная копия еще не создавалась.";
+
+    public SettingsPageViewModel(SettingsRepository settingsRepository, BackupService backupService)
         : base("Настройки")
     {
         this.settingsRepository = settingsRepository;
+        this.backupService = backupService;
         Load();
     }
 
@@ -85,6 +91,12 @@ public partial class SettingsPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!IsSettingValueValid(SelectedSetting.SettingKey, SettingValue.Trim(), out var validationError))
+        {
+            ResultMessage = validationError;
+            return;
+        }
+
         try
         {
             settingsRepository.UpdateSetting(SelectedSetting.SettingKey, SettingValue.Trim());
@@ -105,5 +117,70 @@ public partial class SettingsPageViewModel : PageViewModelBase
         {
             ResultMessage = $"Не удалось сохранить настройку: {ex.Message}";
         }
+    }
+
+    [RelayCommand]
+    private void CreateBackup()
+    {
+        try
+        {
+            IsBusy = true;
+            var backupPath = backupService.CreateBackup();
+            BackupResultMessage = $"Резервная копия создана: {backupPath}";
+            ResultMessage = "База данных сохранена в отдельный файл.";
+        }
+        catch (Exception ex)
+        {
+            BackupResultMessage = $"Не удалось создать резервную копию: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void ArchiveSemester()
+    {
+        try
+        {
+            IsBusy = true;
+            var result = backupService.ArchiveCurrentPeriod();
+            BackupResultMessage = result.ArchivedRows > 0
+                ? $"Период \"{result.PeriodName}\" архивирован. Копия базы: {result.BackupPath}"
+                : $"Резервная копия создана, но период \"{result.PeriodName}\" уже был архивирован или не найден.";
+            ResultMessage = "Архивирование выполнено после создания резервной копии.";
+        }
+        catch (Exception ex)
+        {
+            BackupResultMessage = $"Не удалось архивировать период: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private static bool IsSettingValueValid(string key, string value, out string error)
+    {
+        error = string.Empty;
+
+        if (key is "Минимальная положительная оценка" or "Минимальная оценка шкалы" or "Максимальная оценка шкалы")
+        {
+            if (!double.TryParse(value, out var grade) || grade < 0 || grade > 100)
+            {
+                error = "Оценочный параметр должен быть числом.";
+                return false;
+            }
+        }
+
+        if (key == "Автоматические уведомления кураторам" &&
+            value is not ("Включены" or "Отключены" or "Да" or "Нет" or "true" or "false" or "1" or "0"))
+        {
+            error = "Для уведомлений используйте значение: Включены или Отключены.";
+            return false;
+        }
+
+        return true;
     }
 }

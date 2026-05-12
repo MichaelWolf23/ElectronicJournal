@@ -3,14 +3,14 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.NotificationsPageView"
+             x:Name="Root"
              x:DataType="vm:NotificationsPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
         <Border Padding="10"
                 BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Background="{DynamicResource CardBackgroundBrush}">
-            <Grid ColumnDefinitions="*,190,150" ColumnSpacing="10">
+                BorderThickness="0"
+                Background="Transparent">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                 <StackPanel Spacing="3">
                     <TextBlock Text="Центр уведомлений"
                                FontSize="17"
@@ -20,14 +20,19 @@
                                TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding StatusFilters}"
-                          SelectedItem="{Binding SelectedStatusFilter}"
-                          PlaceholderText="Статус"/>
+                <TextBox Grid.Column="1"
+                         Width="250"
+                         Watermark="Поиск"
+                         Text="{Binding SearchText}"/>
 
-                <Button Grid.Column="2"
-                        Content="Обновить"
-                        Command="{Binding LoadCommand}"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <ComboBox Width="190"
+                              ItemsSource="{Binding StatusFilters}"
+                              SelectedItem="{Binding SelectedStatusFilter}"
+                              PlaceholderText="Статус"/>
+                    <Button Content="Обновить"
+                            Command="{Binding LoadCommand}"/>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -36,9 +41,8 @@
               ColumnSpacing="12">
             <Border Padding="14"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel>
                     <TextBlock Text="Новые"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -52,9 +56,8 @@
             <Border Grid.Column="1"
                     Padding="14"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel>
                     <TextBlock Text="Прочитано"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -68,9 +71,8 @@
             <Border Grid.Column="2"
                     Padding="14"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel>
                     <TextBlock Text="Закрыто"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -84,9 +86,8 @@
             <Border Grid.Column="3"
                     Padding="14"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel>
                     <TextBlock Text="Показано"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -103,25 +104,25 @@
               ColumnSpacing="10">
             <Border Grid.Column="1"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
-                <Grid RowDefinitions="Auto,*">
+                    BorderThickness="0"
+                    Background="Transparent">
+                <Grid x:Name="NotificationsListHost" RowDefinitions="Auto,*">
                     <StackPanel Margin="10,8,10,6" Spacing="2">
                         <TextBlock Text="Лента уведомлений" FontSize="16" FontWeight="SemiBold"/>
                     </StackPanel>
                     <DataGrid Grid.Row="1"
+                              MinWidth="720"
                               ItemsSource="{Binding Notifications}"
                               SelectedItem="{Binding SelectedNotification}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              GridLinesVisibility="Horizontal">
+                              GridLinesVisibility="Horizontal"
+                              IsVisible="{Binding #NotificationsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Дата" Binding="{Binding CreatedAt}" Width="150"/>
-                            <DataGridTextColumn Header="Куратор" Binding="{Binding CuratorName}" Width="2*"/>
-                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
-                            <DataGridTextColumn Header="Заголовок" Binding="{Binding Title}" Width="2*"/>
+                            <DataGridTextColumn Header="Куратор" Binding="{Binding CuratorName}" Width="180"/>
+                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="180"/>
+                            <DataGridTextColumn Header="Заголовок" Binding="{Binding Title}" Width="210"/>
                             <DataGridTemplateColumn Header="Статус" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -131,17 +132,30 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Прочитано" Binding="{Binding ReadAt}" Width="150"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Notifications}"
+                             SelectedItem="{Binding SelectedNotification}"
+                             IsVisible="{Binding #NotificationsListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
+                                    <TextBlock Grid.Row="1" Text="{Binding StudentName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CreatedAt}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
 
             <Border Padding="12"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Уведомление" FontSize="16" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding ErrorMessage}"
@@ -151,9 +165,8 @@
 
                     <Border Padding="12"
                             BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Background="{DynamicResource SubtleBackgroundBrush}">
+                            BorderThickness="0"
+                            Background="Transparent">
                         <StackPanel Spacing="7">
                             <TextBlock Text="{Binding SelectedNotificationTitle}"
                                        FontSize="18"
@@ -179,6 +192,9 @@
                                 Content="Закрыто"
                                 Command="{Binding MarkAsClosedCommand}"/>
                     </Grid>
+                    <Button Content="Удалить уведомление"
+                            HorizontalAlignment="Left"
+                            Command="{Binding DeleteSelectedNotificationCommand}"/>
                 </StackPanel>
             </Border>
         </Grid>

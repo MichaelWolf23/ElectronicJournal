@@ -3,112 +3,104 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:entities="using:ElectronicJournal.Models.Entities"
              x:Class="ElectronicJournal.Views.UsersPageView"
+             x:Name="Root"
              x:DataType="vm:UsersPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
-        <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-            <Grid ColumnDefinitions="*,150" ColumnSpacing="10">
-                <StackPanel Spacing="3">
-                    <TextBlock Text="Управление пользователями" FontSize="17" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="18">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Управление пользователями" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <TextBox Grid.Column="1" Width="260" Watermark="Поиск" Text="{Binding SearchText}"/>
+            <Button Grid.Column="2" Content="Обновить" VerticalAlignment="Center" Command="{Binding LoadCommand}"/>
+        </Grid>
 
-                <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
+        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding UserCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="всего пользователей" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="{Binding ActiveUserCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="активные учетные записи" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                    <TextBlock Text="{Binding InactiveUserCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="отключены" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12">
-            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Всего" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding UserCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
-                </StackPanel>
-            </Border>
-            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Активные" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding ActiveUserCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
-                </StackPanel>
-            </Border>
-            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Отключены" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding InactiveUserCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <Grid Grid.Row="2"
-              ColumnDefinitions="300,*"
-              ColumnSpacing="10">
-            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                <Grid RowDefinitions="Auto,*">
-                    <StackPanel Margin="10,8,10,6" Spacing="2">
-                        <TextBlock Text="Учетные записи" FontSize="16" FontWeight="SemiBold"/>
-                    </StackPanel>
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="2*"/>
-                            <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="*"/>
-                            <DataGridTextColumn Header="Роль" Binding="{Binding RoleName}" Width="*"/>
-                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*"/>
-                            <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="*"/>
-                            <DataGridCheckBoxColumn Header="Активен" Binding="{Binding IsActive}" Width="90"/>
-                            <DataGridTextColumn Header="Создан" Binding="{Binding CreatedAt}" Width="150"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+        <Grid Grid.Row="2" ColumnDefinitions="*,320" ColumnSpacing="18">
+            <Grid x:Name="UsersListHost" RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Учетные записи" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" Text="Нет данных" Foreground="{DynamicResource MutedTextBrush}" IsVisible="{Binding UserCount, Converter={StaticResource NoDataConverter}}"/>
                 </Grid>
-            </Border>
+                <DataGrid Grid.Row="1" Margin="0,10,0,0" MinWidth="640" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" IsVisible="{Binding #UsersListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="220"/>
+                        <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="130"/>
+                        <DataGridTextColumn Header="Роль" Binding="{Binding RoleName}" Width="150"/>
+                        <DataGridCheckBoxColumn Header="Активен" Binding="{Binding IsActive}" Width="90"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Border Grid.Row="1"
+                        Margin="0,10,0,0"
+                        BorderBrush="{DynamicResource BorderThemeBrush}"
+                        BorderThickness="1"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        IsVisible="{Binding UserCount, Converter={StaticResource NoDataConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                        <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Создайте пользователя справа."
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <ListBox Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" IsVisible="{Binding #UsersListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Column="1" Text="{Binding RoleName}" Foreground="{DynamicResource AccentThemeBrush}"/>
+                                <TextBlock Grid.Row="1" Text="{Binding Username}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding IsActive}" Foreground="{DynamicResource MutedTextBrush}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
 
-            <Border Padding="12"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1,0,0,0" Padding="18,0,0,0">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{Binding FormTitle}"
-                               FontSize="16"
-                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerThemeBrush}" TextWrapping="Wrap" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-                    <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="{DynamicResource DangerThemeBrush}"
-                               TextWrapping="Wrap"
-                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                    <ComboBox ItemsSource="{Binding Roles}"
-                              SelectedValue="{Binding SelectedRoleId}"
-                              SelectedValueBinding="{Binding RoleId}"
-                              PlaceholderText="Роль">
+                    <ComboBox ItemsSource="{Binding Roles}" SelectedValue="{Binding SelectedRoleId}" SelectedValueBinding="{Binding RoleId}" PlaceholderText="Роль">
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="entities:Role">
                                 <TextBlock Text="{Binding RoleName}"/>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-
-                    <TextBox Watermark="ФИО"
-                             Text="{Binding FullName}"/>
-                    <TextBox Watermark="Логин"
-                             Text="{Binding Username}"/>
-                    <TextBox Watermark="Новый пароль"
-                             PasswordChar="*"
-                             Text="{Binding Password}"/>
-                    <TextBox Watermark="Email"
-                             Text="{Binding Email}"/>
-                    <TextBox Watermark="Телефон"
-                             Text="{Binding Phone}"/>
-                    <CheckBox Content="Пользователь активен"
-                              IsChecked="{Binding IsActive}"/>
+                    <TextBox Watermark="ФИО" Text="{Binding FullName}"/>
+                    <TextBox Watermark="Логин" Text="{Binding Username}"/>
+                    <TextBox Watermark="Новый пароль" PasswordChar="*" Text="{Binding Password}"/>
+                    <TextBox Watermark="Email" Text="{Binding Email}"/>
+                    <TextBox Watermark="Телефон" Text="{Binding Phone}"/>
+                    <CheckBox Content="Пользователь активен" IsChecked="{Binding IsActive}"/>
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
-                        <Button Content="Сохранить"
-                                Command="{Binding SaveCommand}"/>
-                        <Button Grid.Column="1"
-                                Content="Очистить"
-                                Command="{Binding ClearFormCommand}"/>
+                        <Button Content="Сохранить" Command="{Binding SaveCommand}"/>
+                        <Button Grid.Column="1" Content="Очистить" Command="{Binding ClearFormCommand}"/>
                     </Grid>
-
-                    <Button Content="Включить / отключить"
-                            Command="{Binding ToggleActiveCommand}"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Content="Включить / отключить" Command="{Binding ToggleActiveCommand}"/>
+                        <Button Grid.Column="1" Content="Удалить" Command="{Binding DeleteSelectedUserCommand}"/>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>

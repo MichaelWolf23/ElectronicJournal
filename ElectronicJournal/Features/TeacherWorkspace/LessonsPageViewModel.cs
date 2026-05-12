@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -16,6 +18,8 @@ public partial class LessonsPageViewModel : PageViewModelBase
     private readonly LessonRepository lessonRepository;
     private readonly AssignmentRepository assignmentRepository;
     private readonly AuthenticatedUser currentUser;
+    private List<LessonListItem> allLessons = new();
+    private List<ScheduleItem> allSchedule = new();
 
     [ObservableProperty]
     private ObservableCollection<LessonListItem> lessons = new();
@@ -51,6 +55,12 @@ public partial class LessonsPageViewModel : PageViewModelBase
     private string resultMessage = "Заполните данные занятия.";
 
     [ObservableProperty]
+    private string searchText = string.Empty;
+
+    [ObservableProperty]
+    private string selectedScheduleDayFilter = ScheduleDayFilters[0];
+
+    [ObservableProperty]
     private int lessonCount;
 
     [ObservableProperty]
@@ -70,6 +80,18 @@ public partial class LessonsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string selectedLessonNote = "Примечание не выбрано.";
+
+    public static IReadOnlyList<string> ScheduleDayFilters { get; } =
+    [
+        "Вся неделя",
+        "Понедельник",
+        "Вторник",
+        "Среда",
+        "Четверг",
+        "Пятница",
+        "Суббота",
+        "Воскресенье"
+    ];
 
     public LessonsPageViewModel(
         LessonRepository lessonRepository,
@@ -103,6 +125,10 @@ public partial class LessonsPageViewModel : PageViewModelBase
             : value.Note;
     }
 
+    partial void OnSearchTextChanged(string value) => ApplyFilters();
+
+    partial void OnSelectedScheduleDayFilterChanged(string value) => ApplyFilters();
+
     [RelayCommand]
     private void Load()
     {
@@ -111,14 +137,14 @@ public partial class LessonsPageViewModel : PageViewModelBase
             IsBusy = true;
             ErrorMessage = null;
 
-            Lessons = new ObservableCollection<LessonListItem>(LoadLessonsForCurrentUser());
-            Schedule = new ObservableCollection<ScheduleItem>(LoadScheduleForCurrentUser());
+            allLessons = LoadLessonsForCurrentUser();
+            allSchedule = LoadScheduleForCurrentUser();
             Assignments = new ObservableCollection<LookupItem>(LoadAssignmentsForCurrentUser());
             Classrooms = new ObservableCollection<LookupItem>(lessonRepository.GetClassroomLookups());
 
             SelectedAssignmentId = Assignments.FirstOrDefault()?.Id ?? 0;
             SelectedClassroomId = Classrooms.FirstOrDefault()?.Id;
-            UpdateSummary();
+            ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -151,13 +177,26 @@ public partial class LessonsPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!Assignments.Any(assignment => assignment.Id == SelectedAssignmentId))
+        {
+            ResultMessage = "Выбранное назначение недоступно текущему пользователю.";
+            return;
+        }
+
         try
         {
+            var normalizedDate = string.IsNullOrWhiteSpace(LessonDate) ? DateTime.Today.ToString("yyyy-MM-dd") : LessonDate.Trim();
+            if (lessonRepository.LessonExists(SelectedAssignmentId, normalizedDate, Topic.Trim()))
+            {
+                ResultMessage = "Такое занятие уже есть.";
+                return;
+            }
+
             var lesson = new Lesson(
                 0,
                 SelectedAssignmentId,
                 null,
-                string.IsNullOrWhiteSpace(LessonDate) ? DateTime.Today.ToString("yyyy-MM-dd") : LessonDate.Trim(),
+                normalizedDate,
                 Topic.Trim(),
                 SelectedClassroomId,
                 string.IsNullOrWhiteSpace(Note) ? null : Note.Trim());
@@ -171,6 +210,36 @@ public partial class LessonsPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось добавить занятие: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedLesson()
+    {
+        if (SelectedLesson is null)
+        {
+            ResultMessage = "Сначала выберите занятие.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить занятие",
+            $"Удалить занятие \"{SelectedLesson.Topic}\" от {SelectedLesson.LessonDate}? Оценки останутся, но будут отвязаны от занятия.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            lessonRepository.DeleteLesson(SelectedLesson.LessonId);
+            SelectedLesson = null;
+            ResultMessage = "Занятие удалено.";
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить занятие: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 
@@ -204,4 +273,39 @@ public partial class LessonsPageViewModel : PageViewModelBase
             ? "Занятия пока не созданы."
             : $"Загружено занятий: {LessonCount}. Записей расписания: {ScheduleCount}. Доступных назначений: {AssignmentCount}.";
     }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<LessonListItem> filteredLessons = allLessons;
+        IEnumerable<ScheduleItem> filteredSchedule = allSchedule;
+        var query = SearchText.Trim();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            filteredLessons = filteredLessons.Where(lesson =>
+                Contains(lesson.Topic, query) ||
+                Contains(lesson.GroupName, query) ||
+                Contains(lesson.SubjectName, query) ||
+                Contains(lesson.TeacherName, query) ||
+                Contains(lesson.ClassroomName, query));
+            filteredSchedule = filteredSchedule.Where(item =>
+                Contains(item.GroupName, query) ||
+                Contains(item.SubjectName, query) ||
+                Contains(item.TeacherName, query) ||
+                Contains(item.ClassroomName, query) ||
+                Contains(item.DayName, query));
+        }
+
+        if (SelectedScheduleDayFilter != "Вся неделя")
+        {
+            filteredSchedule = filteredSchedule.Where(item => item.DayName == SelectedScheduleDayFilter);
+        }
+
+        Lessons = new ObservableCollection<LessonListItem>(filteredLessons.ToList());
+        Schedule = new ObservableCollection<ScheduleItem>(filteredSchedule.ToList());
+        UpdateSummary();
+    }
+
+    private static bool Contains(string? value, string query) =>
+        value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
 }

@@ -134,21 +134,47 @@ public sealed class NotificationRepository : RepositoryBase
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
-    public int? GetCuratorUserIdForGroup(int groupId)
+    public CuratorLookup? GetCuratorForGroup(int groupId)
     {
         using var connection = DatabaseService.CreateConnection();
         using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT curator_user_id
-            FROM group_curators
-            WHERE group_id = $group_id
-            ORDER BY assigned_at DESC
+            SELECT u.user_id, u.full_name
+            FROM group_curators gc
+            JOIN users u ON u.user_id = gc.curator_user_id
+            WHERE gc.group_id = $group_id
+              AND u.is_active = 1
+            ORDER BY gc.assigned_at DESC
             LIMIT 1;
             """;
         command.Parameters.AddWithValue("$group_id", groupId);
 
-        var result = command.ExecuteScalar();
-        return result is null or DBNull ? null : Convert.ToInt32(result);
+        using var reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            return new CuratorLookup(reader.GetInt32("user_id"), reader.GetString("full_name"), true);
+        }
+
+        return GetFallbackCurator(connection);
+    }
+
+    private static CuratorLookup? GetFallbackCurator(Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT u.user_id, u.full_name
+            FROM users u
+            JOIN roles r ON r.role_id = u.role_id
+            WHERE r.role_name = 'Куратор группы'
+              AND u.is_active = 1
+            ORDER BY u.full_name
+            LIMIT 1;
+            """;
+
+        using var reader = command.ExecuteReader();
+        return reader.Read()
+            ? new CuratorLookup(reader.GetInt32("user_id"), reader.GetString("full_name"), false)
+            : null;
     }
 
     public void UpdateStatus(int notificationId, string status)
@@ -168,5 +194,19 @@ public sealed class NotificationRepository : RepositoryBase
         command.Parameters.AddWithValue("$status", status);
         command.ExecuteNonQuery();
     }
+
+    public void DeleteNotification(int notificationId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM curator_notifications
+            WHERE notification_id = $notification_id;
+            """;
+        command.Parameters.AddWithValue("$notification_id", notificationId);
+        command.ExecuteNonQuery();
+    }
 }
+
+public sealed record CuratorLookup(int UserId, string FullName, bool IsAssignedToGroup);
 

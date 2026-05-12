@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -185,6 +187,18 @@ public partial class StudentsPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!InputValidator.IsEmailValid(Email))
+        {
+            ErrorMessage = "Email указан некорректно.";
+            return;
+        }
+
+        if (!InputValidator.IsPhoneValid(Phone))
+        {
+            ErrorMessage = "Телефон должен содержать от 10 до 15 цифр.";
+            return;
+        }
+
         try
         {
             IsBusy = true;
@@ -235,6 +249,47 @@ public partial class StudentsPageViewModel : PageViewModelBase
         Status = StudentStatuses[0];
         SelectedGroupId = Groups.FirstOrDefault()?.GroupId ?? 0;
         ErrorMessage = null;
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedStudent()
+    {
+        if (!CanEditStudents)
+        {
+            ErrorMessage = "Удалять студентов может только администратор.";
+            return;
+        }
+
+        if (SelectedStudent is null)
+        {
+            ErrorMessage = "Сначала выберите студента.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить студента",
+            $"Удалить студента {SelectedStudent.FullName}? Будут удалены его оценки, посещаемость, итоговые оценки и уведомления.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            studentRepository.DeleteStudent(SelectedStudent.StudentId);
+            ClearForm();
+            Load();
+            ErrorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Не удалось удалить студента: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void ApplyFilters()

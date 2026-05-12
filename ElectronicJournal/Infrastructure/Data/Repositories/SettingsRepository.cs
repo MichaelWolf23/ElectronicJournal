@@ -76,6 +76,16 @@ public sealed class SettingsRepository : RepositoryBase
             : 5;
     }
 
+    public bool AreCuratorNotificationsEnabled()
+    {
+        var value = GetValue("Автоматические уведомления кураторам");
+        return value is null ||
+            value.Equals("Включены", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("Да", StringComparison.OrdinalIgnoreCase);
+    }
+
     public void UpdateSetting(string settingKey, string settingValue)
     {
         using var connection = DatabaseService.CreateConnection();

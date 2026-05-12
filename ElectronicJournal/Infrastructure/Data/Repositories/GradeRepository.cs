@@ -127,6 +127,109 @@ public sealed class GradeRepository : RepositoryBase
         command.ExecuteNonQuery();
     }
 
+    public void DeleteGrade(int gradeId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM grades
+            WHERE grade_id = $grade_id;
+            """;
+        command.Parameters.AddWithValue("$grade_id", gradeId);
+        command.ExecuteNonQuery();
+    }
+
+    public bool GradeExists(int studentId, int assignmentId, int gradeTypeId, string gradeDate, int? lessonId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM grades
+            WHERE student_id = $student_id
+              AND assignment_id = $assignment_id
+              AND grade_type_id = $grade_type_id
+              AND grade_date = $grade_date
+              AND (
+                    ($lesson_id IS NULL AND lesson_id IS NULL)
+                    OR lesson_id = $lesson_id
+                  );
+            """;
+        command.Parameters.AddWithValue("$student_id", studentId);
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+        command.Parameters.AddWithValue("$grade_type_id", gradeTypeId);
+        command.Parameters.AddWithValue("$grade_date", gradeDate);
+        command.Parameters.AddWithValue("$lesson_id", (object?)lessonId ?? DBNull.Value);
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
+    public bool CanTeacherAccessGrade(int gradeId, int teacherUserId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM grades gr
+            JOIN teacher_assignments ta ON ta.assignment_id = gr.assignment_id
+            WHERE gr.grade_id = $grade_id
+              AND ta.teacher_user_id = $teacher_user_id;
+            """;
+        command.Parameters.AddWithValue("$grade_id", gradeId);
+        command.Parameters.AddWithValue("$teacher_user_id", teacherUserId);
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
+    public bool CanTeacherUseAssignment(int assignmentId, int teacherUserId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM teacher_assignments
+            WHERE assignment_id = $assignment_id
+              AND teacher_user_id = $teacher_user_id;
+            """;
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+        command.Parameters.AddWithValue("$teacher_user_id", teacherUserId);
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
+    public bool CanStudentUseAssignment(int studentId, int assignmentId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM students s
+            JOIN teacher_assignments ta ON ta.group_id = s.group_id
+            WHERE s.student_id = $student_id
+              AND ta.assignment_id = $assignment_id;
+            """;
+        command.Parameters.AddWithValue("$student_id", studentId);
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
+    public bool LessonBelongsToAssignment(int lessonId, int assignmentId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COUNT(*)
+            FROM lessons
+            WHERE lesson_id = $lesson_id
+              AND assignment_id = $assignment_id;
+            """;
+        command.Parameters.AddWithValue("$lesson_id", lessonId);
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
     public double? GetGradeValue(int gradeId)
     {
         using var connection = DatabaseService.CreateConnection();

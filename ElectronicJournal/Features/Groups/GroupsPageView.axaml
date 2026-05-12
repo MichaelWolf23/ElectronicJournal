@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:entities="using:ElectronicJournal.Models.Entities"
+             x:Class="ElectronicJournal.Views.GroupsPageView"
+             x:Name="Root"
+             x:DataType="vm:GroupsPageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="18">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="3">
+                <TextBlock Text="Учебные группы" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding GroupCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="всего групп" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="{Binding FirstCourseCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="первый курс" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                    <TextBlock Text="{Binding SeniorCourseCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="старшие курсы" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,340" ColumnSpacing="18">
+            <Grid x:Name="GroupsListHost" RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Список групп" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" Text="Нет данных" Foreground="{DynamicResource MutedTextBrush}" IsVisible="{Binding GroupCount, Converter={StaticResource NoDataConverter}}"/>
+                </Grid>
+                <DataGrid Grid.Row="1"
+                          Margin="0,10,0,0"
+                          MinWidth="640"
+                          ItemsSource="{Binding Groups}"
+                          SelectedItem="{Binding SelectedGroup}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          IsVisible="{Binding #GroupsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="170"/>
+                        <DataGridTextColumn Header="Курс" Binding="{Binding CourseNumber}" Width="90"/>
+                        <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="360"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Border Grid.Row="1"
+                        Margin="0,10,0,0"
+                        BorderBrush="{DynamicResource BorderThemeBrush}"
+                        BorderThickness="1"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        IsVisible="{Binding GroupCount, Converter={StaticResource NoDataConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                        <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Добавьте учебную группу справа."
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <ListBox Grid.Row="1"
+                         Margin="0,10,0,0"
+                         ItemsSource="{Binding Groups}"
+                         SelectedItem="{Binding SelectedGroup}"
+                         IsVisible="{Binding #GroupsListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="entities:Group">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                <TextBlock Text="{Binding GroupName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CourseNumber, StringFormat='{}{0} курс'}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Description}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1,0,0,0" Padding="18,0,0,0">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerThemeBrush}" TextWrapping="Wrap" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <TextBox Watermark="Название группы" Text="{Binding GroupName}"/>
+                    <TextBox Watermark="Курс от 1 до 6" Text="{Binding CourseNumber}"/>
+                    <TextBox Watermark="Описание" Text="{Binding Description}"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
+                        <Button Content="Сохранить" Command="{Binding SaveCommand}"/>
+                        <Button Grid.Column="1" Content="Новая" Command="{Binding ClearFormCommand}"/>
+                    </Grid>
+                    <Button Content="Удалить группу"
+                            HorizontalAlignment="Left"
+                            Command="{Binding DeleteSelectedGroupCommand}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

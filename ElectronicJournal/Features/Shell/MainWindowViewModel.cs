@@ -78,6 +78,8 @@ public partial class MainWindowViewModel : ViewModelBase
         var notificationRepository = new NotificationRepository(databaseService);
         var finalGradeRepository = new FinalGradeRepository(databaseService);
         var userRepository = new UserRepository(databaseService);
+        var backupService = new BackupService(databaseService);
+        var reportRepository = new ReportRepository(databaseService);
 
         IsDatabaseAvailable = health.IsAvailable;
         DatabasePath = health.DatabasePath;
@@ -106,6 +108,8 @@ public partial class MainWindowViewModel : ViewModelBase
             settingsRepository,
             finalGradeRepository,
             userRepository,
+            backupService,
+            reportRepository,
             currentUser);
     }
 
@@ -152,6 +156,8 @@ public partial class MainWindowViewModel : ViewModelBase
         SettingsRepository settingsRepository,
         FinalGradeRepository finalGradeRepository,
         UserRepository userRepository,
+        BackupService backupService,
+        ReportRepository reportRepository,
         AuthenticatedUser currentUser)
     {
         var dashboardPage = new DashboardPageViewModel(
@@ -173,10 +179,24 @@ public partial class MainWindowViewModel : ViewModelBase
             "П",
             "Аккаунты и роли"));
         AddNavigationItem(currentUser, new NavigationItem(
-            "Студенты и группы",
+            "Студенты",
             new StudentsPageViewModel(studentRepository, groupRepository, currentUser),
             "С",
-            "Карточки и группы"));
+            "Карточки студентов"));
+        AddNavigationItem(currentUser, new NavigationItem(
+            "Группы",
+            new GroupsPageViewModel(groupRepository),
+            "Г",
+            "Курсы и группы"));
+        AddNavigationItem(currentUser, new NavigationItem(
+            "Назначения",
+            new AssignmentsPageViewModel(
+                assignmentRepository,
+                userRepository,
+                groupRepository,
+                subjectRepository),
+            "Н",
+            "Преподаватели и кураторы"));
         var studentProfilePage = new StudentProfilePageViewModel(
             studentRepository,
             gradeRepository,
@@ -220,12 +240,22 @@ public partial class MainWindowViewModel : ViewModelBase
                 gradeRepository,
                 gradeTypeRepository,
                 settingsRepository,
+                reportRepository,
                 currentUser),
             "Ж",
             "Пара целиком"));
         AddNavigationItem(currentUser, new NavigationItem(
+            "Отчеты",
+            new TeacherReportsPageViewModel(
+                gradeRepository,
+                studentRepository,
+                settingsRepository,
+                currentUser),
+            "О",
+            "Успеваемость"));
+        AddNavigationItem(currentUser, new NavigationItem(
             "Пересдачи",
-            new RetakesPageViewModel(gradeRepository, gradeRetakeRepository, settingsRepository),
+            new RetakesPageViewModel(gradeRepository, gradeRetakeRepository, settingsRepository, currentUser),
             "П",
             "История исправлений"));
         AddNavigationItem(currentUser, new NavigationItem(
@@ -282,17 +312,23 @@ public partial class MainWindowViewModel : ViewModelBase
                 finalGradeRepository,
                 studentRepository,
                 assignmentRepository,
-                settingsRepository),
+                settingsRepository,
+                currentUser),
             "И",
             "Ведомость периода"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Справочники",
-            new SettingsPageViewModel(settingsRepository),
+            new ReferenceDataPageViewModel(
+                groupRepository,
+                subjectRepository,
+                gradeTypeRepository,
+                lessonRepository,
+                assignmentRepository),
             "С",
-            "Параметры и шкалы"));
+            "Учебные данные"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Настройки",
-            new SettingsPageViewModel(settingsRepository),
+            new SettingsPageViewModel(settingsRepository, backupService),
             "Н",
             "Параметры системы"));
 
@@ -331,8 +367,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         return roleName switch
         {
-            "Администратор" => title is "Пользователи" or "Студенты и группы" or "Справочники" or "Настройки",
-            "Преподаватель" => title is "Мои занятия" or "Журнал занятия" or "Оценивание" or "Пересдачи" or "Посещаемость" or "Темы и расписание" or "Студенты риска" or "Итоговые",
+            "Администратор" => title is "Пользователи" or "Студенты" or "Группы" or "Назначения" or "Справочники" or "Настройки" or "Отчеты",
+            "Преподаватель" => title is "Мои занятия" or "Журнал занятия" or "Оценивание" or "Отчеты" or "Пересдачи" or "Посещаемость" or "Темы и расписание" or "Студенты риска" or "Итоговые",
             "Куратор группы" => title is "Мои группы" or "Студенты риска" or "Уведомления" or "Карточки студентов",
             _ => title is "Карточки студентов"
         };
@@ -345,7 +381,7 @@ public partial class MainWindowViewModel : ViewModelBase
             "Оценки" => "Оценивание",
             "Занятия" => "Темы и расписание",
             "Должники" => "Студенты риска",
-            "Студенты" => "Карточки студентов",
+            "Студенты и группы" => "Студенты",
             "Статистика" => "Мои группы",
             _ => sectionTitle
         };

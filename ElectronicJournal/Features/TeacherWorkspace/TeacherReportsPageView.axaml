@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.TeacherReportsPageView"
+             x:Name="Root"
+             x:DataType="vm:TeacherReportsPageViewModel">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <StackPanel Spacing="2">
+                <TextBlock Text="Отчет по успеваемости" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                    <Button Content="Печать" Command="{Binding PrintReportCommand}"/>
+                    <Button Content="Excel" Command="{Binding ExportExcelCommand}"/>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox Width="190" ItemsSource="{Binding GroupFilters}" SelectedItem="{Binding SelectedGroupFilter}"/>
+                    <ComboBox Width="230" ItemsSource="{Binding SubjectFilters}" SelectedItem="{Binding SelectedSubjectFilter}"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Сбросить" Command="{Binding ResetFiltersCommand}"/>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="20">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding GradeCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="оценок" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="{Binding StudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                    <TextBlock Text="{Binding AverageText}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="средний балл" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="3" Spacing="2">
+                    <TextBlock Text="{Binding DebtorCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                    <TextBlock Text="должников" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" x:Name="ReportListHost">
+            <DataGrid MinWidth="860"
+                      ItemsSource="{Binding Grades}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal"
+                      IsVisible="{Binding #ReportListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
+                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="100"/>
+                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="170"/>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding GradeType}" Width="120"/>
+                    <DataGridTextColumn Header="Вес" Binding="{Binding GradeWeight}" Width="70"/>
+                    <DataGridTextColumn Header="Оценка" Binding="{Binding GradeValue}" Width="80"/>
+                    <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="110"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="1"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    IsVisible="{Binding GradeCount, Converter={StaticResource NoDataConverter}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Оценки появятся после заполнения журнала."
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <ListBox ItemsSource="{Binding Grades}"
+                     IsVisible="{Binding #ReportListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="dto:GradeJournalItem">
+                        <Grid MinHeight="62" RowDefinitions="Auto,Auto" Margin="0,4">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Column="1" Text="{Binding GradeValue}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="Bold"/>
+                            </Grid>
+                            <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
+</UserControl>

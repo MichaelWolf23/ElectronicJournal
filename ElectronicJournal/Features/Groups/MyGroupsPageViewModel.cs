@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -30,6 +31,9 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<CuratorNotificationItem> notifications = new();
+
+    [ObservableProperty]
+    private ObservableCollection<GroupChartItem> chartItems = new();
 
     [ObservableProperty]
     private GroupStatisticsItem? selectedGroup;
@@ -90,6 +94,7 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
                     ? notificationRepository.GetNotificationsByCurator(currentUser.UserId)
                     : notificationRepository.GetNotifications());
             Groups = new ObservableCollection<GroupStatisticsItem>(loadedGroups);
+            ChartItems = new ObservableCollection<GroupChartItem>(BuildChartItems(loadedGroups));
             TotalStudents = loadedGroups.Sum(group => group.StudentCount);
             TotalDebtors = loadedGroups.Sum(group => group.DebtorCount);
             AverageText = loadedGroups.Where(group => group.AverageGrade is not null).Select(group => group.AverageGrade!.Value).DefaultIfEmpty().Average().ToString("F2");
@@ -100,6 +105,21 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
         {
             ErrorMessage = $"Не удалось загрузить группы: {ex.Message}";
         }
+    }
+
+    private static List<GroupChartItem> BuildChartItems(List<GroupStatisticsItem> groups)
+    {
+        var maxDebtors = Math.Max(1, groups.Select(group => group.DebtorCount).DefaultIfEmpty().Max());
+        return groups.Select(group =>
+        {
+            var average = group.AverageGrade ?? 0;
+            return new GroupChartItem(
+                group.GroupName,
+                group.AverageGrade?.ToString("F2") ?? "-",
+                Math.Clamp(average / 5 * 160, 4, 160),
+                group.DebtorCount,
+                Math.Clamp((double)group.DebtorCount / maxDebtors * 160, group.DebtorCount == 0 ? 0 : 4, 160));
+        }).ToList();
     }
 
     private void UpdateGroupDetails()
@@ -117,5 +137,61 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
         GroupDetails = $"Студентов: {SelectedGroup.StudentCount}. Средний балл: {SelectedGroup.AverageGrade?.ToString("F2") ?? "нет данных"}. Должников: {SelectedGroup.DebtorCount}.";
         Students = new ObservableCollection<StudentListItem>(studentRepository.GetStudentsByGroup(SelectedGroup.GroupId));
         GroupDebts = new ObservableCollection<DebtorItem>(allDebts.Where(debt => debt.GroupId == SelectedGroup.GroupId));
+    }
+
+    [RelayCommand]
+    private void ExportGroupReport()
+    {
+        if (SelectedGroup is null)
+        {
+            ResultMessage = "Выберите группу для отчета.";
+            return;
+        }
+
+        try
+        {
+            var rows = new List<IReadOnlyList<string?>>();
+            rows.Add(new[]
+            {
+                "Сводка",
+                SelectedGroup.GroupName,
+                $"Студентов: {SelectedGroup.StudentCount}",
+                $"Средний балл: {SelectedGroup.AverageGrade?.ToString("F2") ?? "нет данных"}",
+                $"Должников: {SelectedGroup.DebtorCount}",
+                string.Empty
+            });
+
+            rows.AddRange(Students.Select(student => new[]
+            {
+                "Студент",
+                SelectedGroup.GroupName,
+                student.FullName,
+                student.Status,
+                student.StudentCardNumber,
+                string.Empty
+            }));
+
+            rows.AddRange(GroupDebts.Select(debt => new[]
+            {
+                "Риск",
+                debt.GroupName,
+                debt.StudentName,
+                debt.SubjectName,
+                debt.GradeValue.ToString("F1"),
+                debt.Comment ?? string.Empty
+            }));
+
+            var reportPath = CsvExportService.CreateReport(
+                $"group_{SelectedGroup.GroupName}",
+                new[] { "Раздел", "Группа", "Объект", "Описание", "Значение", "Комментарий" },
+                rows);
+
+            ReportExportService.ShowInExplorer(reportPath);
+            ResultMessage = $"Сводный отчет сохранен: {reportPath}";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось сохранить отчет: {ex.Message}";
+        }
     }
 }

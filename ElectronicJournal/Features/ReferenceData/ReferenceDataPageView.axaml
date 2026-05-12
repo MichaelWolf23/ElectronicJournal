@@ -1,0 +1,232 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:entities="using:ElectronicJournal.Models.Entities"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
+             x:Class="ElectronicJournal.Views.ReferenceDataPageView"
+             x:DataType="vm:ReferenceDataPageViewModel">
+    <Grid RowDefinitions="Auto,*" RowSpacing="8">
+        <Border Padding="12,8"
+                BorderBrush="{DynamicResource StrongBorderBrush}"
+                BorderThickness="0"
+                Background="Transparent">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="1">
+                    <TextBlock Text="Справочники учебного процесса"
+                               FontSize="17"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding ResultMessage}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="Обновить"
+                        Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="250,*,330"
+              ColumnSpacing="8">
+            <Border CornerRadius="0" BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="0"
+                    Background="Transparent">
+                <Grid RowDefinitions="34,*">
+                    <Border Padding="10,0"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="0,0,0,1">
+                        <TextBlock Text="Базовые справочники"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold"/>
+                    </Border>
+                    <StackPanel Grid.Row="1">
+                        <Grid Height="36" ColumnDefinitions="*,Auto" Margin="10,0">
+                            <TextBlock Text="Группы" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding GroupsCount}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                        </Grid>
+                        <Grid Height="36" ColumnDefinitions="*,Auto" Margin="10,0">
+                            <TextBlock Text="Предметы" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding SubjectsCount}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                        </Grid>
+                        <Grid Height="36" ColumnDefinitions="*,Auto" Margin="10,0">
+                            <TextBlock Text="Типы оценок" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding GradeTypesCount}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                        </Grid>
+                        <Grid Height="36" ColumnDefinitions="*,Auto" Margin="10,0">
+                            <TextBlock Text="Аудитории" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ClassroomsCount}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                        </Grid>
+                        <Grid Height="36" ColumnDefinitions="*,Auto" Margin="10,0">
+                            <TextBlock Text="Назначения" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding AssignmentsCount}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                        </Grid>
+                        <Grid Height="36" ColumnDefinitions="*,Auto" Margin="10,0">
+                            <TextBlock Text="Строк расписания" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ScheduleCount}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1"
+                    BorderBrush="{DynamicResource StrongBorderBrush}"
+                    BorderThickness="0"
+                    Background="Transparent">
+                <ScrollViewer>
+                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="0">
+                        <Grid RowDefinitions="34,*">
+                            <Border Padding="10,0"
+                                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="0,0,0,1">
+                                <TextBlock Text="Группы" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </Border>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding Groups}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="entities:Group">
+                                        <Border Padding="10,8"
+                                                BorderBrush="{DynamicResource BorderThemeBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid ColumnDefinitions="*,76" ColumnSpacing="8">
+                                                <StackPanel Spacing="1">
+                                                    <TextBlock Text="{Binding GroupName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding CourseNumber, StringFormat='{}курс {0}'}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource AccentThemeBrush}"
+                                                           FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+
+                        <Grid Grid.Row="1" RowDefinitions="34,*">
+                            <Border Padding="10,0"
+                                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="0,1,0,1">
+                                <TextBlock Text="Предметы" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </Border>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding Subjects}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="entities:Subject">
+                                        <Border Padding="10,8"
+                                                BorderBrush="{DynamicResource BorderThemeBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <StackPanel Spacing="1">
+                                                <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding Description}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+
+                        <Grid Grid.Row="2" RowDefinitions="34,*">
+                            <Border Padding="10,0"
+                                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="0,1,0,1">
+                                <TextBlock Text="Типы оценок" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </Border>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding GradeTypes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="entities:GradeType">
+                                        <Border Padding="10,8"
+                                                BorderBrush="{DynamicResource BorderThemeBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid ColumnDefinitions="*,70" ColumnSpacing="8">
+                                                <StackPanel Spacing="1">
+                                                    <TextBlock Text="{Binding TypeName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Weight, StringFormat='{}x{0:0.##}'}"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource WarningThemeBrush}"
+                                                           FontWeight="Bold"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+
+            <Border Grid.Column="2"
+                    BorderBrush="{DynamicResource StrongBorderBrush}"
+                    BorderThickness="0"
+                    Background="Transparent">
+                <Grid RowDefinitions="34,160,34,*">
+                    <Border Padding="10,0"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="0,0,0,1">
+                        <TextBlock Text="Аудитории и назначения" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel Margin="10,8" Spacing="4">
+                            <ItemsControl ItemsSource="{Binding Classrooms}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LookupItem">
+                                        <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding Assignments}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LookupItem">
+                                        <TextBlock Margin="0,6,0,0"
+                                                   Text="{Binding Name}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2"
+                            Padding="10,0"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="0,1,0,1">
+                        <TextBlock Text="Расписание" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <ScrollViewer Grid.Row="3">
+                        <ItemsControl ItemsSource="{Binding Schedule}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="dto:ScheduleItem">
+                                    <Border Padding="10,8"
+                                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                                            BorderThickness="0,0,0,1">
+                                        <StackPanel Spacing="2">
+                                            <Grid ColumnDefinitions="32,*" ColumnSpacing="8">
+                                                <TextBlock Text="{Binding DayOfWeek}" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding SubjectName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding GroupName}" TextWrapping="Wrap"/>
+                                            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap">
+                                                <Run Text="{Binding StartTime}"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding EndTime}"/>
+                                                <Run Text=", "/>
+                                                <Run Text="{Binding ClassroomName}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding TeacherName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

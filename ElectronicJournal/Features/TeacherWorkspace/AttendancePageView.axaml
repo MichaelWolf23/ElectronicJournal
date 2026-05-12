@@ -4,20 +4,30 @@
              xmlns:entities="using:ElectronicJournal.Models.Entities"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.AttendancePageView"
+             x:Name="Root"
              x:DataType="vm:AttendancePageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
         <Border Padding="14"
                 BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Background="{DynamicResource CardBackgroundBrush}">
+                BorderThickness="0"
+                Background="Transparent">
             <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
-                <TextBlock Text="Фильтры посещаемости"
-                           FontWeight="SemiBold"/>
-                <Grid Grid.Row="1"
-                      ColumnDefinitions="*,*,170,120,120"
-                      ColumnSpacing="10">
-                    <ComboBox ItemsSource="{Binding Groups}"
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <TextBlock Text="Фильтры посещаемости"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="Сбросить"
+                                Command="{Binding ClearFiltersCommand}"/>
+                        <Button Content="Обновить"
+                                Command="{Binding LoadCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                    <ComboBox Width="220"
+                              ItemsSource="{Binding Groups}"
                               SelectedItem="{Binding SelectedGroupFilter}"
                               PlaceholderText="Группа">
                         <ComboBox.ItemTemplate>
@@ -27,7 +37,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <ComboBox Grid.Column="1"
+                    <ComboBox Width="240"
                               ItemsSource="{Binding Subjects}"
                               SelectedItem="{Binding SelectedSubjectFilter}"
                               PlaceholderText="Предмет">
@@ -38,41 +48,35 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <TextBox Grid.Column="2"
+                    <TextBox Width="170"
                              Watermark="Дата"
                              Text="{Binding DateFilter}"/>
-                    <Button Grid.Column="3"
-                            Content="Сбросить"
-                            Command="{Binding ClearFiltersCommand}"/>
-                    <Button Grid.Column="4"
-                            Content="Обновить"
-                            Command="{Binding LoadCommand}"/>
-                </Grid>
+                </StackPanel>
             </Grid>
         </Border>
 
         <Grid Grid.Row="1"
               ColumnDefinitions="*,*,*,*"
               ColumnSpacing="12">
-            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Записей" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding VisibleAttendanceCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Присутствовали" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding PresentCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Отсутствовали" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding AbsentCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="3" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="3" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Опоздали" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding LateCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
@@ -83,45 +87,71 @@
         <Grid Grid.Row="2"
               ColumnDefinitions="300,*"
               ColumnSpacing="10">
-            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                <Grid RowDefinitions="Auto,*">
-                    <StackPanel Margin="10,8,10,6" Spacing="2">
+            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                <Grid x:Name="AttendanceListHost" RowDefinitions="Auto,*">
+                    <Grid Margin="0,0,0,8" ColumnDefinitions="*,Auto">
                         <TextBlock Text="Журнал посещаемости" FontSize="16" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding AttendanceSummary}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    </StackPanel>
+                        <TextBlock Grid.Column="1" Text="Нет данных" Foreground="{DynamicResource MutedTextBrush}" IsVisible="{Binding VisibleAttendanceCount, Converter={StaticResource NoDataConverter}}"/>
+                    </Grid>
                     <DataGrid Grid.Row="1"
+                              MinWidth="720"
                               ItemsSource="{Binding AttendanceItems}"
                               SelectedItem="{Binding SelectedAttendanceItem}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              GridLinesVisibility="Horizontal">
+                              GridLinesVisibility="Horizontal"
+                              IsVisible="{Binding #AttendanceListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Дата" Binding="{Binding LessonDate}" Width="110"/>
-                            <DataGridTextColumn Header="Тема" Binding="{Binding Topic}" Width="2*"/>
-                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
-                            <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
-                            <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="150"/>
-                            <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>
+                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="120"/>
+                            <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="180"/>
+                            <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="120"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                    <Border Grid.Row="1"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="1"
+                            Background="{DynamicResource CardBackgroundBrush}"
+                            IsVisible="{Binding VisibleAttendanceCount, Converter={StaticResource NoDataConverter}}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Отметьте посещаемость справа или измените фильтры."
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding AttendanceItems}"
+                             SelectedItem="{Binding SelectedAttendanceItem}"
+                             IsVisible="{Binding #AttendanceListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                    <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LessonDate}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
 
             <Border Padding="12"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="10">
                     <TextBlock Text="Посещаемость"
                                FontSize="16"
                                FontWeight="SemiBold"/>
                     <Border Padding="9"
                             BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Background="{DynamicResource SubtleBackgroundBrush}">
+                            BorderThickness="0"
+                            Background="Transparent">
                         <StackPanel Spacing="7">
                             <TextBlock Text="{Binding SelectedAttendanceTitle}"
                                        FontSize="15"
@@ -174,8 +204,13 @@
                     <TextBox Watermark="Комментарий"
                              Text="{Binding Comment}"/>
 
-                    <Button Content="Сохранить"
-                            Command="{Binding SaveAttendanceCommand}"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Content="Сохранить"
+                                Command="{Binding SaveAttendanceCommand}"/>
+                        <Button Grid.Column="1"
+                                Content="Удалить"
+                                Command="{Binding DeleteSelectedAttendanceCommand}"/>
+                    </Grid>
 
                     <TextBlock Text="{Binding ResultMessage}"
                                TextWrapping="Wrap"

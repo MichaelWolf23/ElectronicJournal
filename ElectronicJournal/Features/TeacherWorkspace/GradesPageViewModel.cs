@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -34,7 +36,7 @@ public partial class GradesPageViewModel : PageViewModelBase
     private ObservableCollection<Subject> subjects = new();
 
     [ObservableProperty]
-    private ObservableCollection<LookupItem> students = new();
+    private ObservableCollection<StudentLookupItem> students = new();
 
     [ObservableProperty]
     private ObservableCollection<LookupItem> assignments = new();
@@ -55,7 +57,7 @@ public partial class GradesPageViewModel : PageViewModelBase
     private Subject? selectedSubjectFilter;
 
     [ObservableProperty]
-    private LookupItem? selectedStudentFilter;
+    private StudentLookupItem? selectedStudentFilter;
 
     [ObservableProperty]
     private int selectedStudentId;
@@ -125,7 +127,7 @@ public partial class GradesPageViewModel : PageViewModelBase
 
     partial void OnSelectedSubjectFilterChanged(Subject? value) => ApplyFilters();
 
-    partial void OnSelectedStudentFilterChanged(LookupItem? value) => ApplyFilters();
+    partial void OnSelectedStudentFilterChanged(StudentLookupItem? value) => ApplyFilters();
 
     partial void OnSelectedGradeChanged(GradeJournalItem? value)
     {
@@ -150,8 +152,8 @@ public partial class GradesPageViewModel : PageViewModelBase
             ErrorMessage = null;
 
             Groups = new ObservableCollection<Group>(LoadGroupsForCurrentUser());
-            Subjects = new ObservableCollection<Subject>(subjectRepository.GetAll());
-            Students = new ObservableCollection<LookupItem>(LoadStudentLookupsForCurrentUser());
+            Subjects = new ObservableCollection<Subject>(LoadSubjectsForCurrentUser());
+            Students = new ObservableCollection<StudentLookupItem>(LoadStudentLookupsForCurrentUser());
             Assignments = new ObservableCollection<LookupItem>(LoadAssignmentLookupsForCurrentUser());
             GradeTypes = new ObservableCollection<LookupItem>(gradeTypeRepository.GetGradeTypeLookups());
             Lessons = new ObservableCollection<LookupItem>(LoadLessonLookupsForCurrentUser());
@@ -183,6 +185,12 @@ public partial class GradesPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!CanUseSelectedGradeScope(out var scopeError))
+        {
+            ErrorMessage = scopeError;
+            return;
+        }
+
         if (!IsGradeInScale(GradeValue, out var gradeError))
         {
             ErrorMessage = gradeError;
@@ -199,15 +207,27 @@ public partial class GradesPageViewModel : PageViewModelBase
         {
             IsBusy = true;
             ErrorMessage = null;
+            var normalizedDate = NormalizeDate(GradeDate);
+
+            if (gradeRepository.GradeExists(
+                SelectedStudentId,
+                SelectedAssignmentId,
+                SelectedGradeTypeId,
+                normalizedDate,
+                SelectedLessonId is 0 ? null : SelectedLessonId))
+            {
+                ErrorMessage = "Такая оценка уже есть: тот же студент, предмет, тип, дата и занятие.";
+                return;
+            }
 
             var grade = new Grade(
                 0,
                 SelectedStudentId,
                 SelectedAssignmentId,
-                SelectedLessonId,
+                SelectedLessonId is 0 ? null : SelectedLessonId,
                 SelectedGradeTypeId,
                 GradeValue,
-                NormalizeDate(GradeDate),
+                normalizedDate,
                 string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim(),
                 currentUser.UserId,
                 string.Empty,
@@ -246,6 +266,12 @@ public partial class GradesPageViewModel : PageViewModelBase
 
         try
         {
+            if (!CanEditSelectedGrade(SelectedGrade.GradeId))
+            {
+                EditResult = "Нельзя изменить оценку, которая не относится к вашим предметам.";
+                return;
+            }
+
             gradeRepository.UpdateGrade(
                 SelectedGrade.GradeId,
                 GradeValue,
@@ -258,6 +284,43 @@ public partial class GradesPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             EditResult = $"Не удалось обновить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedGrade()
+    {
+        if (SelectedGrade is null)
+        {
+            EditResult = "Сначала выберите оценку в таблице.";
+            return;
+        }
+
+        if (!CanEditSelectedGrade(SelectedGrade.GradeId))
+        {
+            EditResult = "Нельзя удалить оценку, которая не относится к вашим предметам.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить оценку",
+            $"Удалить оценку {SelectedGrade.GradeValue} у студента {SelectedGrade.StudentName}?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            gradeRepository.DeleteGrade(SelectedGrade.GradeId);
+            SelectedGrade = null;
+            allGrades = LoadJournalForCurrentUser();
+            ApplyFilters();
+            EditResult = "Оценка удалена.";
+        }
+        catch (Exception ex)
+        {
+            EditResult = $"Не удалось удалить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 
@@ -308,7 +371,9 @@ public partial class GradesPageViewModel : PageViewModelBase
 
         if (SelectedStudentFilter is not null)
         {
-            filtered = filtered.Where(grade => grade.StudentName == SelectedStudentFilter.Name);
+            filtered = filtered.Where(grade =>
+                grade.StudentName == SelectedStudentFilter.Name &&
+                grade.GroupName == SelectedStudentFilter.GroupName);
         }
 
         var visibleGrades = filtered.ToList();
@@ -355,13 +420,23 @@ public partial class GradesPageViewModel : PageViewModelBase
         };
     }
 
-    private List<LookupItem> LoadStudentLookupsForCurrentUser()
+    private List<Subject> LoadSubjectsForCurrentUser()
     {
         return currentUser.RoleName switch
         {
-            "Преподаватель" => studentRepository.GetStudentLookupsForTeacher(currentUser.UserId),
-            "Куратор группы" => studentRepository.GetStudentLookupsForCurator(currentUser.UserId),
-            _ => studentRepository.GetStudentLookups()
+            "Преподаватель" => subjectRepository.GetSubjectsForTeacher(currentUser.UserId),
+            "Куратор группы" => subjectRepository.GetSubjectsForCurator(currentUser.UserId),
+            _ => subjectRepository.GetAll()
+        };
+    }
+
+    private List<StudentLookupItem> LoadStudentLookupsForCurrentUser()
+    {
+        return currentUser.RoleName switch
+        {
+            "Преподаватель" => studentRepository.GetStudentLookupItemsForTeacher(currentUser.UserId),
+            "Куратор группы" => studentRepository.GetStudentLookupItemsForCurator(currentUser.UserId),
+            _ => studentRepository.GetStudentLookupItems()
         };
     }
 
@@ -387,6 +462,51 @@ public partial class GradesPageViewModel : PageViewModelBase
             "Куратор группы" => gradeRepository.GetJournalForCurator(currentUser.UserId),
             _ => gradeRepository.GetJournal()
         };
+    }
+
+    private bool CanUseSelectedGradeScope(out string error)
+    {
+        if (!Students.Any(student => student.Id == SelectedStudentId))
+        {
+            error = "Выбранный студент недоступен текущему пользователю.";
+            return false;
+        }
+
+        if (!Assignments.Any(assignment => assignment.Id == SelectedAssignmentId))
+        {
+            error = "Выбранное назначение недоступно текущему пользователю.";
+            return false;
+        }
+
+        if (currentUser.RoleName == "Преподаватель" &&
+            !gradeRepository.CanTeacherUseAssignment(SelectedAssignmentId, currentUser.UserId))
+        {
+            error = "Преподаватель может ставить оценки только по своим предметам.";
+            return false;
+        }
+
+        if (!gradeRepository.CanStudentUseAssignment(SelectedStudentId, SelectedAssignmentId))
+        {
+            error = "Студент не относится к группе выбранного предмета.";
+            return false;
+        }
+
+        if (SelectedLessonId is int lessonId &&
+            lessonId != 0 &&
+            !gradeRepository.LessonBelongsToAssignment(lessonId, SelectedAssignmentId))
+        {
+            error = "Выбранное занятие не относится к выбранному предмету.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private bool CanEditSelectedGrade(int gradeId)
+    {
+        return currentUser.RoleName != "Преподаватель" ||
+            gradeRepository.CanTeacherAccessGrade(gradeId, currentUser.UserId);
     }
 
     private void UpdateSummary(IReadOnlyCollection<GradeJournalItem> visibleGrades)

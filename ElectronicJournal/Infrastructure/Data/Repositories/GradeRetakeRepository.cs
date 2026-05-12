@@ -62,6 +62,18 @@ public sealed class GradeRetakeRepository : RepositoryBase
         return retakes;
     }
 
+    public List<GradeRetakeItem> GetRetakesForTeacher(int teacherUserId)
+    {
+        return GetRetakesByScope("ta.teacher_user_id = $user_id", teacherUserId);
+    }
+
+    public List<GradeRetakeItem> GetRetakesForCurator(int curatorUserId)
+    {
+        return GetRetakesByScope(
+            "EXISTS (SELECT 1 FROM group_curators gc WHERE gc.group_id = g.group_id AND gc.curator_user_id = $user_id)",
+            curatorUserId);
+    }
+
     public int AddRetake(GradeRetake retake)
     {
         using var connection = DatabaseService.CreateConnection();
@@ -108,5 +120,67 @@ public sealed class GradeRetakeRepository : RepositoryBase
 
         transaction.Commit();
         return retakeId;
+    }
+
+    public void DeleteRetake(int retakeId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM grade_retakes
+            WHERE retake_id = $retake_id;
+            """;
+        command.Parameters.AddWithValue("$retake_id", retakeId);
+        command.ExecuteNonQuery();
+    }
+
+    private List<GradeRetakeItem> GetRetakesByScope(string scopeWhere, int userId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT
+                r.retake_id,
+                s.full_name AS student_name,
+                g.group_name,
+                sub.subject_name,
+                teacher.full_name AS teacher_name,
+                r.old_value,
+                r.new_value,
+                r.retake_date,
+                r.reason,
+                changed.full_name AS changed_by_name
+            FROM grade_retakes r
+            JOIN grades gr ON gr.grade_id = r.original_grade_id
+            JOIN students s ON s.student_id = gr.student_id
+            JOIN groups g ON g.group_id = s.group_id
+            JOIN teacher_assignments ta ON ta.assignment_id = gr.assignment_id
+            JOIN subjects sub ON sub.subject_id = ta.subject_id
+            JOIN users teacher ON teacher.user_id = ta.teacher_user_id
+            JOIN users changed ON changed.user_id = r.changed_by_user_id
+            WHERE {scopeWhere}
+            ORDER BY r.retake_date DESC, s.full_name;
+            """;
+        command.Parameters.AddWithValue("$user_id", userId);
+
+        using var reader = command.ExecuteReader();
+        var retakes = new List<GradeRetakeItem>();
+
+        while (reader.Read())
+        {
+            retakes.Add(new GradeRetakeItem(
+                reader.GetInt32("retake_id"),
+                reader.GetString("student_name"),
+                reader.GetString("group_name"),
+                reader.GetString("subject_name"),
+                reader.GetString("teacher_name"),
+                reader.GetDouble("old_value"),
+                reader.GetDouble("new_value"),
+                reader.GetString("retake_date"),
+                reader.GetNullableString("reason"),
+                reader.GetString("changed_by_name")));
+        }
+
+        return retakes;
     }
 }

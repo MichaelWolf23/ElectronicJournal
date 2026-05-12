@@ -3,22 +3,36 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.LessonsPageView"
+             x:Name="Root"
              x:DataType="vm:LessonsPageViewModel">
-    <Grid RowDefinitions="Auto,*" RowSpacing="10">
-        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <TextBox Width="280"
+                     Watermark="Поиск по теме, группе, предмету"
+                     Text="{Binding SearchText}"/>
+            <ComboBox Grid.Column="1"
+                      Width="170"
+                      ItemsSource="{Binding ScheduleDayFilters}"
+                      SelectedItem="{Binding SelectedScheduleDayFilter}"/>
+            <Button Grid.Column="2"
+                    Content="Обновить"
+                    Command="{Binding LoadCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12">
+            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Занятий" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding LessonCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="В расписании" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding ScheduleCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Назначений" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding AssignmentCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
@@ -26,65 +40,102 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="300,*" ColumnSpacing="10">
+        <Grid Grid.Row="2" ColumnDefinitions="300,*" ColumnSpacing="10">
         <TabControl Grid.Column="1">
             <TabItem Header="Занятия">
-                <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                    <Grid RowDefinitions="Auto,*">
+                <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                    <Grid x:Name="LessonsListHost" RowDefinitions="Auto,*">
                         <StackPanel Margin="10,8,10,6" Spacing="2">
                             <TextBlock Text="Темы занятий" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding LessonsSummary}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                         </StackPanel>
                         <DataGrid Grid.Row="1"
+                                  MinWidth="720"
                                   ItemsSource="{Binding Lessons}"
                                   SelectedItem="{Binding SelectedLesson}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
-                                  GridLinesVisibility="Horizontal">
+                                  GridLinesVisibility="Horizontal"
+                                  IsVisible="{Binding #LessonsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Дата" Binding="{Binding LessonDate}" Width="110"/>
-                                <DataGridTextColumn Header="Тема" Binding="{Binding Topic}" Width="2*"/>
-                                <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
-                                <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
-                                <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
-                                <DataGridTextColumn Header="Аудитория" Binding="{Binding ClassroomName}" Width="*"/>
-                                <DataGridTextColumn Header="Примечание" Binding="{Binding Note}" Width="2*"/>
+                                <DataGridTextColumn Header="Тема" Binding="{Binding Topic}" Width="250"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="120"/>
+                                <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="180"/>
+                                <DataGridTextColumn Header="Аудитория" Binding="{Binding ClassroomName}" Width="100"/>
                             </DataGrid.Columns>
                         </DataGrid>
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding Lessons}"
+                                 SelectedItem="{Binding SelectedLesson}"
+                                 IsVisible="{Binding #LessonsListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                        <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding LessonDate}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Grid>
                 </Border>
             </TabItem>
 
             <TabItem Header="Расписание">
-                <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-                    <Grid RowDefinitions="Auto,*">
+                <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                    <Grid x:Name="ScheduleListHost" RowDefinitions="Auto,*">
                         <StackPanel Margin="10,8,10,6" Spacing="2">
                             <TextBlock Text="Расписание" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="Фильтр дня применяется к расписанию, поиск - к расписанию и занятиям."
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
                         </StackPanel>
                         <DataGrid Grid.Row="1"
+                                  MinWidth="720"
                                   ItemsSource="{Binding Schedule}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
-                                  GridLinesVisibility="Horizontal">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
-                                <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
-                                <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
-                                <DataGridTextColumn Header="День недели" Binding="{Binding DayOfWeek}" Width="110"/>
-                                <DataGridTextColumn Header="Начало" Binding="{Binding StartTime}" Width="100"/>
-                                <DataGridTextColumn Header="Конец" Binding="{Binding EndTime}" Width="100"/>
-                                <DataGridTextColumn Header="Аудитория" Binding="{Binding ClassroomName}" Width="*"/>
+                                  GridLinesVisibility="Horizontal"
+                                  IsVisible="{Binding #ScheduleListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
+                        <DataGrid.Columns>
+                                <DataGridTextColumn Header="День" Binding="{Binding DayName}" Width="130"/>
+                                <DataGridTextColumn Header="Время" Binding="{Binding TimeRange}" Width="110"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="120"/>
+                                <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="180"/>
+                                <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="160"/>
+                                <DataGridTextColumn Header="Аудитория" Binding="{Binding ClassroomName}" Width="100"/>
                             </DataGrid.Columns>
                         </DataGrid>
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding Schedule}"
+                                 IsVisible="{Binding #ScheduleListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                        <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}"/>
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="{Binding DayName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            <TextBlock Text="·"/>
+                                            <TextBlock Text="{Binding TimeRange}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ClassroomName}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Grid>
                 </Border>
             </TabItem>
         </TabControl>
 
-        <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
+        <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
             <StackPanel Spacing="10">
                 <TextBlock Text="Занятие" FontSize="16" FontWeight="SemiBold"/>
-                <Border Padding="9" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
+                <Border Padding="9" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
                     <StackPanel Spacing="7">
                         <TextBlock Text="{Binding SelectedLessonTitle}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding SelectedLessonDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -122,8 +173,14 @@
                          Text="{Binding Topic}"/>
                 <TextBox Watermark="Примечание"
                          Text="{Binding Note}"/>
-                <Button Content="Добавить занятие"
-                        Command="{Binding AddLessonCommand}"/>
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <Button Grid.Column="1"
+                            Content="Добавить"
+                            Command="{Binding AddLessonCommand}"/>
+                    <Button Grid.Column="2"
+                            Content="Удалить выбранное"
+                            Command="{Binding DeleteSelectedLessonCommand}"/>
+                </Grid>
                 <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
             </StackPanel>
         </Border>

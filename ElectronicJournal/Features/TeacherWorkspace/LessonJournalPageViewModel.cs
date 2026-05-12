@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -18,6 +19,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
     private readonly GradeRepository gradeRepository;
     private readonly GradeTypeRepository gradeTypeRepository;
     private readonly SettingsRepository settingsRepository;
+    private readonly ReportRepository reportRepository;
     private readonly AuthenticatedUser currentUser;
 
     [ObservableProperty]
@@ -39,7 +41,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
     private LookupItem? selectedGradeType;
 
     [ObservableProperty]
-    private string selectedStatus = "присутствовал";
+    private string selectedStatus = "Присутствовал";
 
     [ObservableProperty]
     private double gradeValue = 5;
@@ -66,6 +68,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         GradeRepository gradeRepository,
         GradeTypeRepository gradeTypeRepository,
         SettingsRepository settingsRepository,
+        ReportRepository reportRepository,
         AuthenticatedUser currentUser)
         : base("Журнал занятия")
     {
@@ -75,6 +78,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         this.gradeRepository = gradeRepository;
         this.gradeTypeRepository = gradeTypeRepository;
         this.settingsRepository = settingsRepository;
+        this.reportRepository = reportRepository;
         this.currentUser = currentUser;
 
         Load();
@@ -82,10 +86,10 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
 
     public ObservableCollection<string> AttendanceStatuses { get; } = new()
     {
-        "присутствовал",
-        "отсутствовал",
-        "опоздал",
-        "уважительная причина"
+        "Присутствовал",
+        "Отсутствовал",
+        "Опоздал",
+        "Уважительная причина"
     };
 
     partial void OnSelectedLessonChanged(LessonJournalLessonItem? value)
@@ -145,6 +149,12 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
 
         try
         {
+            if (!CanUseSelectedLessonScope(out var scopeError))
+            {
+                ResultMessage = scopeError;
+                return;
+            }
+
             attendanceRepository.UpsertAttendance(
                 SelectedLesson.LessonId,
                 SelectedStudent.StudentId,
@@ -175,6 +185,12 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
 
         try
         {
+            if (!CanUseSelectedLessonScope(out var scopeError))
+            {
+                ResultMessage = scopeError;
+                return;
+            }
+
             gradeRepository.AddGrade(new Grade(
                 0,
                 SelectedStudent.StudentId,
@@ -202,6 +218,80 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         SaveGrade();
     }
 
+    [RelayCommand]
+    private void PrintJournal()
+    {
+        if (SelectedLesson is null)
+        {
+            ResultMessage = "Выберите занятие для печати.";
+            return;
+        }
+
+        try
+        {
+            if (!CanUseSelectedLessonOnly(out var scopeError))
+            {
+                ResultMessage = scopeError;
+                return;
+            }
+
+            var rows = reportRepository.GetLessonPrintRows(SelectedLesson.LessonId);
+            var path = ReportExportService.CreatePrintableHtml(
+                $"lesson_journal_{SelectedLesson.GroupName}_{SelectedLesson.LessonDate}",
+                "Журнал занятия",
+                new[]
+                {
+                    $"Дата: {SelectedLesson.LessonDate}",
+                    $"Группа: {SelectedLesson.GroupName}",
+                    $"Предмет: {SelectedLesson.SubjectName}",
+                    $"Преподаватель: {SelectedLesson.TeacherName}",
+                    $"Тема: {SelectedLesson.Topic}"
+                },
+                new[] { "Студент", "Посещаемость", "Оценки", "Комментарий" },
+                rows.Select(row => new[] { row.StudentName, row.Status, row.Grades, row.Comment ?? string.Empty }));
+
+            ReportExportService.OpenPrintDialog(path);
+            ResultMessage = $"Печатная форма открыта: {path}";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось создать печатную форму: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private void ExportJournalExcel()
+    {
+        if (SelectedLesson is null)
+        {
+            ResultMessage = "Выберите занятие для экспорта.";
+            return;
+        }
+
+        try
+        {
+            if (!CanUseSelectedLessonOnly(out var scopeError))
+            {
+                ResultMessage = scopeError;
+                return;
+            }
+
+            var rows = reportRepository.GetLessonPrintRows(SelectedLesson.LessonId);
+            var path = ReportExportService.CreateExcelXml(
+                $"lesson_journal_{SelectedLesson.GroupName}_{SelectedLesson.LessonDate}",
+                "Журнал занятия",
+                new[] { "Студент", "Посещаемость", "Оценки", "Комментарий" },
+                rows.Select(row => new[] { row.StudentName, row.Status, row.Grades, row.Comment ?? string.Empty }));
+
+            ReportExportService.ShowInExplorer(path);
+            ResultMessage = $"Excel-файл создан: {path}";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось экспортировать журнал: {ex.Message}";
+        }
+    }
+
     private bool IsGradeInScale(double value, out string error)
     {
         var minGrade = settingsRepository.GetMinGradeScale();
@@ -209,6 +299,68 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         if (value < minGrade || value > maxGrade)
         {
             error = $"Оценка должна быть от {minGrade} до {maxGrade}.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private bool CanUseSelectedLessonScope(out string error)
+    {
+        if (SelectedLesson is null || SelectedStudent is null)
+        {
+            error = "Выберите занятие и студента.";
+            return false;
+        }
+
+        if (!Lessons.Any(lesson => lesson.LessonId == SelectedLesson.LessonId))
+        {
+            error = "Выбранное занятие недоступно текущему пользователю.";
+            return false;
+        }
+
+        if (!Students.Any(student => student.StudentId == SelectedStudent.StudentId))
+        {
+            error = "Выбранный студент не входит в список выбранной группы.";
+            return false;
+        }
+
+        if (currentUser.RoleName == "Преподаватель" &&
+            !attendanceRepository.CanTeacherAccessLesson(SelectedLesson.LessonId, currentUser.UserId))
+        {
+            error = "Преподаватель может работать только со своими занятиями.";
+            return false;
+        }
+
+        if (!attendanceRepository.CanStudentAttendLesson(SelectedLesson.LessonId, SelectedStudent.StudentId))
+        {
+            error = "Студент не относится к группе выбранного занятия.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private bool CanUseSelectedLessonOnly(out string error)
+    {
+        if (SelectedLesson is null)
+        {
+            error = "Выберите занятие.";
+            return false;
+        }
+
+        if (!Lessons.Any(lesson => lesson.LessonId == SelectedLesson.LessonId))
+        {
+            error = "Выбранное занятие недоступно текущему пользователю.";
+            return false;
+        }
+
+        if (currentUser.RoleName == "Преподаватель" &&
+            !attendanceRepository.CanTeacherAccessLesson(SelectedLesson.LessonId, currentUser.UserId))
+        {
+            error = "Преподаватель может печатать только свои занятия.";
             return false;
         }
 

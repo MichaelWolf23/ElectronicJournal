@@ -1,207 +1,128 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:ElectronicJournal.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="750"
-        x:Class="ElectronicJournal.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Электронный журнал"
-        Width="1200"
-        Height="750"
-        MinWidth="680"
-        MinHeight="480">
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:vm="using:ElectronicJournal.ViewModels"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="750"
+		x:Class="ElectronicJournal.Views.MainWindow"
+		x:DataType="vm:MainWindowViewModel"
+		Icon="/Assets/avalonia-logo.ico"
+		Title="Электронный журнал"
+		Width="1200"
+		Height="750"
+		MinWidth="820"
+		MinHeight="560">
 
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+	<Design.DataContext>
+		<vm:MainWindowViewModel/>
+	</Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource AppBackgroundBrush}">
-        <Border Grid.Row="0"
-                Padding="12,8"
-                Background="{DynamicResource HeaderBackgroundBrush}"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0,0,0,1">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Disabled">
-                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                        <Border Width="38"
-                                Height="38"
-                                CornerRadius="8"
-                                Background="{DynamicResource AccentThemeBrush}">
-                            <TextBlock Text="Ж"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       FontSize="20"
-                                       FontWeight="Bold"
-                                       Foreground="White"/>
-                        </Border>
-                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="Электронный журнал"
-                                       FontSize="20"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Border Padding="7,3"
-                                        CornerRadius="6"
-                                        Background="{DynamicResource AccentSoftBrush}">
-                                    <TextBlock Text="{Binding CurrentPeriodName, StringFormat=Период: {0}}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource AccentThemeBrush}"/>
-                                </Border>
-                            </StackPanel>
-                        </StackPanel>
-                    </Grid>
+	<Grid Background="{DynamicResource AppBackgroundBrush}"
+		  ColumnDefinitions="248,*">
+		<Border Background="{DynamicResource SidebarBackgroundBrush}"
+				BorderBrush="{DynamicResource BorderThemeBrush}"
+				BorderThickness="0,0,1,0">
+			<Grid RowDefinitions="Auto,*,Auto">
+				<StackPanel Grid.Column="0" Margin="18,18,18,16"
+							VerticalAlignment="Center"
+							Spacing="1">
+					<TextBlock Text="Электронный журнал"
+							   FontSize="16"
+							   FontWeight="SemiBold"/>
+					<TextBlock Text="{Binding CurrentPeriodName, StringFormat=Период: {0}}"
+							   FontSize="12"
+							   Foreground="{DynamicResource MutedTextBrush}"
+							   TextTrimming="CharacterEllipsis"/>
+				</StackPanel>
 
-                    <Border Grid.Column="1"
-                            Padding="10,6"
-                            CornerRadius="7"
-                            BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            Background="{DynamicResource SubtleBackgroundBrush}">
-                        <Grid ColumnDefinitions="*" ColumnSpacing="0">
-                            <StackPanel HorizontalAlignment="Right" Spacing="1">
-                                <TextBlock Text="{Binding CurrentUserName}"
-                                           FontWeight="SemiBold"
-                                           HorizontalAlignment="Right"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Text="{Binding CurrentUserRole}"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
-                                           HorizontalAlignment="Right"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
 
-                    <Button Grid.Column="2"
-                            Content="{Binding ThemeButtonText}"
-                            VerticalAlignment="Center"
-                            Command="{Binding ToggleThemeCommand}"/>
+				<ScrollViewer Grid.Row="1"
+							  Margin="10,0"
+							  VerticalScrollBarVisibility="Auto"
+							  HorizontalScrollBarVisibility="Disabled">
+					<ListBox ItemsSource="{Binding NavigationItems}"
+							 SelectedItem="{Binding SelectedNavigationItem}">
+						<ListBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:NavigationItem">
+								<Grid Height="38"
+									  Margin="3,1">
+									<StackPanel VerticalAlignment="Center"
+												Margin="14,0,8,0"
+												Spacing="1">
+										<TextBlock Text="{Binding Title}"
+												   FontSize="13"
+												   FontWeight="SemiBold"
+												   TextTrimming="CharacterEllipsis"/>
+									</StackPanel>
+								</Grid>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+				</ScrollViewer>
 
-                    <Button Grid.Column="3"
-                            Content="Выйти"
-                            VerticalAlignment="Center"
-                            Command="{Binding LogoutCommand}"/>
-                </Grid>
-            </ScrollViewer>
-        </Border>
+				<Border Grid.Row="2"
+						Margin="18,12,18,18"
+						Padding="0,14,0,0"
+						BorderBrush="{DynamicResource BorderThemeBrush}"
+						BorderThickness="0,1,0,0">
+					<Grid RowDefinitions="Auto,Auto"
+						  RowSpacing="10">
+						<StackPanel Spacing="1">
+							<TextBlock Text="{Binding CurrentUserName}"
+									   FontWeight="SemiBold"
+									   TextTrimming="CharacterEllipsis"/>
+							<TextBlock Text="{Binding CurrentUserRole}"
+									   FontSize="12"
+									   Foreground="{DynamicResource SecondaryTextBrush}"
+									   TextTrimming="CharacterEllipsis"/>
+						</StackPanel>
+						<Grid Grid.Row="1"
+							  ColumnDefinitions="*,Auto"
+							  ColumnSpacing="8">
+							<Button Content="{Binding ThemeButtonText}"
+									Command="{Binding ToggleThemeCommand}"/>
+							<Button Grid.Column="1"
+									Content="Выйти"
+									Command="{Binding LogoutCommand}"/>
+						</Grid>
+					</Grid>
+				</Border>
+			</Grid>
+		</Border>
 
-        <Grid Grid.Row="1"
-              Margin="10"
-              ColumnDefinitions="210,*"
-              ColumnSpacing="10">
-            <Border Padding="10"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource SidebarBackgroundBrush}">
-                <Grid RowDefinitions="Auto,Auto,*">
-                    <StackPanel Spacing="2" Margin="4,2,4,8">
-                        <TextBlock Text="Разделы"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    </StackPanel>
-                    <Border Grid.Row="1"
-                            Margin="4,0,4,8"
-                            Padding="8,5"
-                            CornerRadius="6"
-                            BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            Background="{DynamicResource AccentSoftBrush}">
-                        <TextBlock Text="{Binding CurrentUserRole}"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource AccentThemeBrush}"
-                                       TextTrimming="CharacterEllipsis"/>
-                    </Border>
-                    <ScrollViewer Grid.Row="2"
-                                  VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled">
-                        <ListBox ItemsSource="{Binding NavigationItems}"
-                                 SelectedItem="{Binding SelectedNavigationItem}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="vm:NavigationItem">
-                                    <Grid ColumnDefinitions="30,*" ColumnSpacing="8" Margin="1">
-                                        <Border Width="26"
-                                                Height="26"
-                                                CornerRadius="6"
-                                                Background="{DynamicResource PillBackgroundBrush}">
-                                            <TextBlock Text="{Binding Icon}"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       FontWeight="Bold"
-                                                       Foreground="{DynamicResource AccentThemeBrush}"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Title}"
-                                                       FontSize="14"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
+		<Grid Grid.Column="1"
+			  RowDefinitions="56,*">
+			<Border Background="{DynamicResource HeaderBackgroundBrush}"
+					BorderBrush="{DynamicResource BorderThemeBrush}"
+					BorderThickness="0,0,0,1"
+					Padding="24,0">
+				<Grid ColumnDefinitions="*,Auto"
+					  ColumnSpacing="16">
+					<StackPanel VerticalAlignment="Center"
+								Spacing="1">
+						<TextBlock Text="{Binding SelectedNavigationItem.Title}"
+								   FontSize="22"
+								   FontWeight="SemiBold"/>
+					</StackPanel>
+					<StackPanel Grid.Column="1"
+								Orientation="Horizontal"
+								Spacing="8"
+								VerticalAlignment="Center">
+						<Border Width="8"
+								Height="8"
+								CornerRadius="4"
+								Background="{DynamicResource SuccessThemeBrush}"/>
+						<TextBlock Text="База данных"
+								   Foreground="{DynamicResource SecondaryTextBrush}"
+								   VerticalAlignment="Center"/>
+					</StackPanel>
+				</Grid>
+			</Border>
 
-            <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="10">
-                <Border Padding="12"
-                        BorderBrush="{DynamicResource BorderThemeBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundBrush}">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="{Binding SelectedNavigationItem.Title}"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="{Binding OperationStatus}"
-                                       TextTrimming="CharacterEllipsis"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        </StackPanel>
-                        <Border Grid.Column="1"
-                                Padding="8,5"
-                                CornerRadius="6"
-                                BorderBrush="{DynamicResource BorderThemeBrush}"
-                                BorderThickness="1"
-                                Background="{DynamicResource SuccessSoftBrush}"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="Рабочий режим"
-                                       Foreground="{DynamicResource SuccessThemeBrush}"
-                                       FontWeight="SemiBold"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <ScrollViewer Grid.Row="1"
-                              HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto">
-                    <ContentControl Content="{Binding CurrentPage}"/>
-                </ScrollViewer>
-            </Grid>
-        </Grid>
-
-        <Border Grid.Row="2"
-                Padding="14,6"
-                Background="{DynamicResource HeaderBackgroundBrush}"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0,1,0,0">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Text="{Binding OperationStatus}"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           TextTrimming="CharacterEllipsis"/>
-                <TextBlock Grid.Column="1"
-                           Text="{Binding DatabaseStatus}"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           TextTrimming="CharacterEllipsis"/>
-            </Grid>
-        </Border>
-    </Grid>
+			<Border Grid.Row="1"
+					Padding="24,20">
+				<ContentControl Content="{Binding CurrentPage}"/>
+			</Border>
+		</Grid>
+	</Grid>
 </Window>

@@ -101,9 +101,12 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
                 "Куратор группы" => gradeRepository.GetJournalForCurator(currentUser.UserId),
                 _ => gradeRepository.GetJournal()
             };
-            allAttendance = currentUser.RoleName == "Преподаватель"
-                ? attendanceRepository.GetAttendanceJournalForTeacher(currentUser.UserId)
-                : attendanceRepository.GetAttendanceJournal();
+            allAttendance = currentUser.RoleName switch
+            {
+                "Преподаватель" => attendanceRepository.GetAttendanceJournalForTeacher(currentUser.UserId),
+                "Куратор группы" => attendanceRepository.GetAttendanceJournalForCurator(currentUser.UserId),
+                _ => attendanceRepository.GetAttendanceJournal()
+            };
             allDebts = currentUser.RoleName switch
             {
                 "Преподаватель" => gradeRepository.GetDebtorsForTeacher(settingsRepository.GetMinPositiveGrade(), currentUser.UserId),

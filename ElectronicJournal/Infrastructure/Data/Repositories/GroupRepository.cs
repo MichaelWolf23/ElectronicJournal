@@ -116,6 +116,76 @@ public sealed class GroupRepository : RepositoryBase
             : null;
     }
 
+    public int AddGroup(Group group)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO groups (group_name, course_number, description)
+            VALUES ($group_name, $course_number, $description);
+            SELECT last_insert_rowid();
+            """;
+        command.Parameters.AddWithValue("$group_name", group.GroupName);
+        command.Parameters.AddWithValue("$course_number", (object?)group.CourseNumber ?? DBNull.Value);
+        command.Parameters.AddWithValue("$description", (object?)group.Description ?? DBNull.Value);
+
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public void UpdateGroup(Group group)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE groups
+            SET group_name = $group_name,
+                course_number = $course_number,
+                description = $description
+            WHERE group_id = $group_id;
+            """;
+        command.Parameters.AddWithValue("$group_id", group.GroupId);
+        command.Parameters.AddWithValue("$group_name", group.GroupName);
+        command.Parameters.AddWithValue("$course_number", (object?)group.CourseNumber ?? DBNull.Value);
+        command.Parameters.AddWithValue("$description", (object?)group.Description ?? DBNull.Value);
+        command.ExecuteNonQuery();
+    }
+
+    public int CountBlockingGroupReferences(int groupId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                (SELECT COUNT(*) FROM students WHERE group_id = $group_id) +
+                (SELECT COUNT(*) FROM teacher_assignments WHERE group_id = $group_id);
+            """;
+        command.Parameters.AddWithValue("$group_id", groupId);
+
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public void DeleteGroup(int groupId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+
+        foreach (var sql in new[]
+        {
+            "DELETE FROM curator_notifications WHERE group_id = $group_id;",
+            "DELETE FROM group_curators WHERE group_id = $group_id;",
+            "DELETE FROM groups WHERE group_id = $group_id;"
+        })
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = sql;
+            command.Parameters.AddWithValue("$group_id", groupId);
+            command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+    }
+
     public List<GroupStatisticsItem> GetGroupStatistics(double minPositiveGrade)
     {
         using var connection = DatabaseService.CreateConnection();

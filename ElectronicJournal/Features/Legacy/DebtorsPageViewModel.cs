@@ -159,10 +159,16 @@ public partial class DebtorsPageViewModel : PageViewModelBase
             return;
         }
 
-        var curatorUserId = notificationRepository.GetCuratorUserIdForGroup(SelectedDebtor.GroupId);
-        if (curatorUserId is null)
+        if (!settingsRepository.AreCuratorNotificationsEnabled())
         {
-            ResultMessage = $"Для группы {SelectedDebtor.GroupName} не найден куратор.";
+            ResultMessage = "Уведомления кураторам отключены в настройках журнала.";
+            return;
+        }
+
+        var curator = notificationRepository.GetCuratorForGroup(SelectedDebtor.GroupId);
+        if (curator is null)
+        {
+            ResultMessage = "В системе нет активного куратора.";
             return;
         }
 
@@ -173,7 +179,7 @@ public partial class DebtorsPageViewModel : PageViewModelBase
 
             notificationRepository.CreateNotification(new CuratorNotification(
                 0,
-                curatorUserId.Value,
+                curator.UserId,
                 SelectedDebtor.StudentId,
                 SelectedDebtor.GroupId,
                 SelectedDebtor.AssignmentId,
@@ -183,7 +189,9 @@ public partial class DebtorsPageViewModel : PageViewModelBase
                 string.Empty,
                 null));
 
-            ResultMessage = $"Уведомление куратору группы {SelectedDebtor.GroupName} создано.";
+            ResultMessage = curator.IsAssignedToGroup
+                ? $"Уведомление создано для куратора: {curator.FullName}."
+                : $"У группы нет назначенного куратора. Уведомление отправлено активному куратору: {curator.FullName}.";
         }
         catch (Exception ex)
         {

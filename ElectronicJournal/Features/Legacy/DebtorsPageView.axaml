@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ElectronicJournal.ViewModels"
              x:Class="ElectronicJournal.Views.DebtorsPageView"
+             x:Name="Root"
              x:DataType="vm:DebtorsPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
         <Border Padding="10"
                 BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Background="{DynamicResource CardBackgroundBrush}">
+                BorderThickness="0"
+                Background="Transparent">
             <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Spacing="3">
@@ -23,9 +23,8 @@
                     <Border Grid.Column="1"
                             Padding="8"
                             BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Background="{DynamicResource SubtleBackgroundBrush}">
+                            BorderThickness="0"
+                            Background="Transparent">
                         <StackPanel>
                             <TextBlock Text="Проходной балл"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -38,24 +37,29 @@
                 </Grid>
 
                 <Grid Grid.Row="1"
-                      ColumnDefinitions="*,180,180,130,130"
-                      ColumnSpacing="10">
-                    <TextBox Watermark="Поиск: студент, группа, предмет"
-                             Text="{Binding SearchText}"/>
-                    <ComboBox Grid.Column="1"
-                              ItemsSource="{Binding GroupFilters}"
-                              SelectedItem="{Binding SelectedGroupFilter}"
-                              PlaceholderText="Группа"/>
-                    <ComboBox Grid.Column="2"
-                              ItemsSource="{Binding SubjectFilters}"
-                              SelectedItem="{Binding SelectedSubjectFilter}"
-                              PlaceholderText="Предмет"/>
-                    <Button Grid.Column="3"
-                            Content="Сбросить"
-                            Command="{Binding ClearFiltersCommand}"/>
-                    <Button Grid.Column="4"
-                            Content="Обновить"
-                            Command="{Binding LoadCommand}"/>
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBox Width="280"
+                                 Watermark="Поиск"
+                                 Text="{Binding SearchText}"/>
+                        <ComboBox Width="180"
+                                  ItemsSource="{Binding GroupFilters}"
+                                  SelectedItem="{Binding SelectedGroupFilter}"
+                                  PlaceholderText="Группа"/>
+                        <ComboBox Width="210"
+                                  ItemsSource="{Binding SubjectFilters}"
+                                  SelectedItem="{Binding SelectedSubjectFilter}"
+                                  PlaceholderText="Предмет"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                        <Button Content="Сбросить"
+                                Command="{Binding ClearFiltersCommand}"/>
+                        <Button Content="Обновить"
+                                Command="{Binding LoadCommand}"/>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Border>
@@ -65,9 +69,8 @@
               ColumnSpacing="12">
             <Border Padding="10"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Задолженностей"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -80,9 +83,8 @@
             <Border Grid.Column="1"
                     Padding="10"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Студентов"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -95,9 +97,8 @@
             <Border Grid.Column="2"
                     Padding="10"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Групп затронуто"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -110,9 +111,8 @@
             <Border Grid.Column="3"
                     Padding="10"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Самая низкая"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -129,10 +129,9 @@
               ColumnSpacing="10">
             <Border Grid.Column="1"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
-                <Grid RowDefinitions="Auto,*">
+                    BorderThickness="0"
+                    Background="Transparent">
+                <Grid x:Name="DebtorsListHost" RowDefinitions="Auto,*">
                     <StackPanel Margin="10,8,10,6"
                                 Spacing="2">
                         <TextBlock Text="Список проблем"
@@ -140,15 +139,17 @@
                                    FontWeight="SemiBold"/>
                     </StackPanel>
                     <DataGrid Grid.Row="1"
+                              MinWidth="720"
                               ItemsSource="{Binding Debtors}"
                               SelectedItem="{Binding SelectedDebtor}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              GridLinesVisibility="Horizontal">
+                              GridLinesVisibility="Horizontal"
+                              IsVisible="{Binding #DebtorsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="2*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="*"/>
-                            <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="*"/>
+                            <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="110"/>
+                            <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="180"/>
                             <DataGridTemplateColumn Header="Оценка" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -159,18 +160,30 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="120"/>
-                            <DataGridTextColumn Header="Преподаватель" Binding="{Binding TeacherName}" Width="2*"/>
-                            <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="2*"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Debtors}"
+                             SelectedItem="{Binding SelectedDebtor}"
+                             IsVisible="{Binding #DebtorsListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                    <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding GradeValue}" FontWeight="SemiBold" Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}"/>
+                                    <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GradeDate}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
 
             <Border Padding="12"
                     BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource CardBackgroundBrush}">
+                    BorderThickness="0"
+                    Background="Transparent">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Детали"
                                FontSize="16"
@@ -183,9 +196,8 @@
 
                     <Border Padding="9"
                             BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Background="{DynamicResource SubtleBackgroundBrush}">
+                            BorderThickness="0"
+                            Background="Transparent">
                         <StackPanel Spacing="7">
                             <TextBlock Text="{Binding SelectedProblemTitle}"
                                        FontSize="15"
@@ -204,22 +216,17 @@
                                FontWeight="SemiBold"/>
                     <Border Padding="9"
                             BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Background="{DynamicResource SubtleBackgroundBrush}">
+                            BorderThickness="0"
+                            Background="Transparent">
                         <TextBlock Text="{Binding NotificationPreview}"
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </Border>
 
-                    <Button Content="Создать уведомление куратору"
+                    <Button Content="Уведомить куратора"
                             Command="{Binding CreateNotificationCommand}"
                             IsVisible="{Binding CanCreateNotification}"/>
 
-                    <TextBlock Text="В роли куратора этот раздел используется для контроля своих групп. Создание уведомлений доступно преподавателю и администратору."
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               IsVisible="{Binding IsNotificationHelpVisible}"/>
                 </StackPanel>
             </Border>
         </Grid>

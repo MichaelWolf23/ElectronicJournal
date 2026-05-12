@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -16,6 +19,7 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
     private readonly StudentRepository studentRepository;
     private readonly AssignmentRepository assignmentRepository;
     private readonly SettingsRepository settingsRepository;
+    private readonly AuthenticatedUser currentUser;
 
     [ObservableProperty]
     private ObservableCollection<FinalGradeItem> finalGrades = new();
@@ -69,15 +73,51 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         FinalGradeRepository finalGradeRepository,
         StudentRepository studentRepository,
         AssignmentRepository assignmentRepository,
-        SettingsRepository settingsRepository)
+        SettingsRepository settingsRepository,
+        AuthenticatedUser currentUser)
         : base("Итоговые оценки")
     {
         this.finalGradeRepository = finalGradeRepository;
         this.studentRepository = studentRepository;
         this.assignmentRepository = assignmentRepository;
         this.settingsRepository = settingsRepository;
+        this.currentUser = currentUser;
 
         Load();
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedFinalGrade()
+    {
+        if (SelectedFinalGrade is null)
+        {
+            ResultMessage = "Сначала выберите итоговую оценку.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить итоговую",
+            $"Удалить итоговую оценку {SelectedFinalGrade.FinalValue} у студента {SelectedFinalGrade.StudentName}?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            finalGradeRepository.DeleteFinalGrade(SelectedFinalGrade.FinalGradeId);
+            SelectedFinalGrade = null;
+            FinalGrades = new ObservableCollection<FinalGradeItem>(LoadFinalGradesForCurrentUser());
+            FinalGradeCount = FinalGrades.Count;
+            FinalAverageText = FinalGrades.Count == 0
+                ? "Нет данных"
+                : FinalGrades.Average(grade => grade.FinalValue).ToString("F2");
+            ResultMessage = "Итоговая оценка удалена.";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить итоговую оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
     }
 
     partial void OnSelectedFinalGradeChanged(FinalGradeItem? value)
@@ -103,13 +143,13 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         {
             IsBusy = true;
             ErrorMessage = null;
-            FinalGrades = new ObservableCollection<FinalGradeItem>(finalGradeRepository.GetFinalGrades());
+            FinalGrades = new ObservableCollection<FinalGradeItem>(LoadFinalGradesForCurrentUser());
             FinalGradeCount = FinalGrades.Count;
             FinalAverageText = FinalGrades.Count == 0
                 ? "Нет данных"
                 : FinalGrades.Average(grade => grade.FinalValue).ToString("F2");
-            Students = new ObservableCollection<LookupItem>(studentRepository.GetStudentLookups());
-            Assignments = new ObservableCollection<LookupItem>(assignmentRepository.GetAssignmentLookups());
+            Students = new ObservableCollection<LookupItem>(LoadStudentLookupsForCurrentUser());
+            Assignments = new ObservableCollection<LookupItem>(LoadAssignmentLookupsForCurrentUser());
             Periods = new ObservableCollection<LookupItem>(finalGradeRepository.GetPeriodLookups());
 
             SelectedStudentId = Students.FirstOrDefault()?.Id ?? 0;
@@ -136,6 +176,12 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
             return;
         }
 
+        if (!CanUseSelectedScope(out var scopeError))
+        {
+            ResultMessage = scopeError;
+            return;
+        }
+
         CalculatedAverage = finalGradeRepository.CalculateAverage(SelectedStudentId, SelectedAssignmentId);
         if (CalculatedAverage is null)
         {
@@ -154,6 +200,12 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         if (SelectedStudentId == 0 || SelectedAssignmentId == 0 || SelectedPeriodId == 0)
         {
             ResultMessage = "Выберите студента, предмет и период.";
+            return;
+        }
+
+        if (!CanUseSelectedScope(out var scopeError))
+        {
+            ResultMessage = scopeError;
             return;
         }
 
@@ -179,12 +231,12 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
                 value,
                 CalculatedAverage,
                 string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim(),
-                null,
+                currentUser.UserId,
                 null));
 
             ResultMessage = "Итоговая оценка сохранена.";
             Comment = string.Empty;
-            FinalGrades = new ObservableCollection<FinalGradeItem>(finalGradeRepository.GetFinalGrades());
+            FinalGrades = new ObservableCollection<FinalGradeItem>(LoadFinalGradesForCurrentUser());
             FinalGradeCount = FinalGrades.Count;
             FinalAverageText = FinalGrades.Count == 0
                 ? "Нет данных"
@@ -203,6 +255,57 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         if (value < minGrade || value > maxGrade)
         {
             error = $"Итоговая оценка должна быть в пределах от {minGrade} до {maxGrade}.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private List<FinalGradeItem> LoadFinalGradesForCurrentUser()
+    {
+        return currentUser.RoleName switch
+        {
+            "Преподаватель" => finalGradeRepository.GetFinalGradesForTeacher(currentUser.UserId),
+            "Куратор группы" => finalGradeRepository.GetFinalGradesForCurator(currentUser.UserId),
+            _ => finalGradeRepository.GetFinalGrades()
+        };
+    }
+
+    private List<LookupItem> LoadStudentLookupsForCurrentUser()
+    {
+        return currentUser.RoleName switch
+        {
+            "Преподаватель" => studentRepository.GetStudentLookupsForTeacher(currentUser.UserId),
+            "Куратор группы" => studentRepository.GetStudentLookupsForCurator(currentUser.UserId),
+            _ => studentRepository.GetStudentLookups()
+        };
+    }
+
+    private List<LookupItem> LoadAssignmentLookupsForCurrentUser()
+    {
+        return currentUser.RoleName == "Преподаватель"
+            ? assignmentRepository.GetAssignmentLookupsForTeacher(currentUser.UserId)
+            : assignmentRepository.GetAssignmentLookups();
+    }
+
+    private bool CanUseSelectedScope(out string error)
+    {
+        if (!Students.Any(student => student.Id == SelectedStudentId))
+        {
+            error = "Выбранный студент недоступен текущему пользователю.";
+            return false;
+        }
+
+        if (!Assignments.Any(assignment => assignment.Id == SelectedAssignmentId))
+        {
+            error = "Выбранный предмет недоступен текущему пользователю.";
+            return false;
+        }
+
+        if (!finalGradeRepository.CanStudentUseAssignment(SelectedStudentId, SelectedAssignmentId))
+        {
+            error = "Студент не относится к группе выбранного предмета.";
             return false;
         }
 

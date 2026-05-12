@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
+using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -23,6 +26,9 @@ public partial class NotificationsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string selectedStatusFilter = StatusFilters[0];
+
+    [ObservableProperty]
+    private string searchText = string.Empty;
 
     [ObservableProperty]
     private int newCount;
@@ -67,6 +73,8 @@ public partial class NotificationsPageViewModel : PageViewModelBase
     }
 
     partial void OnSelectedStatusFilterChanged(string value) => ApplyFilter();
+
+    partial void OnSearchTextChanged(string value) => ApplyFilter();
 
     partial void OnSelectedNotificationChanged(CuratorNotificationItem? value)
     {
@@ -118,6 +126,36 @@ public partial class NotificationsPageViewModel : PageViewModelBase
     [RelayCommand]
     private void MarkAsClosed() => UpdateSelectedStatus("Закрыто");
 
+    [RelayCommand]
+    private async Task DeleteSelectedNotification()
+    {
+        if (SelectedNotification is null)
+        {
+            ResultMessage = "Сначала выберите уведомление.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить уведомление",
+            $"Удалить уведомление \"{SelectedNotification.Title}\"?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            notificationRepository.DeleteNotification(SelectedNotification.NotificationId);
+            SelectedNotification = null;
+            ResultMessage = "Уведомление удалено.";
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить уведомление: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
     private void UpdateSelectedStatus(string status)
     {
         if (SelectedNotification is null)
@@ -147,10 +185,24 @@ public partial class NotificationsPageViewModel : PageViewModelBase
             filtered = filtered.Where(item => item.Status == SelectedStatusFilter);
         }
 
+        var query = SearchText.Trim();
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            filtered = filtered.Where(item =>
+                Contains(item.Title, query) ||
+                Contains(item.Message, query) ||
+                Contains(item.CuratorName, query) ||
+                Contains(item.StudentName, query) ||
+                Contains(item.GroupName, query));
+        }
+
         var visibleNotifications = filtered.ToList();
         Notifications = new ObservableCollection<CuratorNotificationItem>(visibleNotifications);
         VisibleNotificationCount = visibleNotifications.Count;
     }
+
+    private static bool Contains(string? value, string query) =>
+        value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
 
     private void UpdateCounters()
     {

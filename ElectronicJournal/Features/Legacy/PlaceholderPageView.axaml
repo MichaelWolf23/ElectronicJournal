@@ -5,9 +5,8 @@
              x:DataType="vm:PlaceholderPageViewModel">
     <Border Padding="14"
             BorderBrush="{DynamicResource BorderThemeBrush}"
-            BorderThickness="1"
-            CornerRadius="8"
-            Background="{DynamicResource SubtleBackgroundBrush}">
+            BorderThickness="0"
+            Background="Transparent">
         <StackPanel Spacing="10">
             <TextBlock Text="{Binding Title}"
                        FontSize="20"

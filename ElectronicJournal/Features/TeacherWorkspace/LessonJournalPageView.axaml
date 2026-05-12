@@ -4,66 +4,114 @@
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.LessonJournalPageView"
              x:DataType="vm:LessonJournalPageViewModel">
-    <Grid ColumnDefinitions="280,*,300" ColumnSpacing="10">
-        <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-            <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                <TextBlock Text="Занятие" FontSize="17" FontWeight="SemiBold"/>
-                <ListBox Grid.Row="1" ItemsSource="{Binding Lessons}" SelectedItem="{Binding SelectedLesson}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="dto:LessonJournalLessonItem">
-                            <Border Padding="9" Margin="0,0,0,6" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
-                                <StackPanel Spacing="3">
-                                    <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding LessonDate}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource MutedTextBrush}"/>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-        </Border>
+    <Grid ColumnDefinitions="280,*,300"
+          ColumnSpacing="18">
+        <Grid RowDefinitions="Auto,*">
+            <TextBlock Text="Занятия"
+                       FontSize="18"
+                       FontWeight="SemiBold"/>
+            <ListBox Grid.Row="1"
+                     Margin="0,10,0,0"
+                     ItemsSource="{Binding Lessons}"
+                     SelectedItem="{Binding SelectedLesson}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="dto:LessonJournalLessonItem">
+                        <Grid MinHeight="62"
+                              Margin="4,0"
+                              ColumnDefinitions="*,Auto"
+                              ColumnSpacing="8">
+                            <StackPanel VerticalAlignment="Center" Spacing="2">
+                                <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding GroupName}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding LessonDate}"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentThemeBrush}"
+                                       FontWeight="SemiBold"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
 
-        <Border Grid.Column="1" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-            <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="{Binding LessonTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding LessonDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+        <Border Grid.Column="1"
+                BorderBrush="{DynamicResource BorderThemeBrush}"
+                BorderThickness="1,0,1,0"
+                Padding="18,0">
+            <Grid RowDefinitions="Auto,34,*">
+                <StackPanel Spacing="3">
+                    <TextBlock Text="{Binding LessonTitle}"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding LessonDetails}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <ListBox Grid.Row="1" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}">
+                <Grid Grid.Row="1"
+                      Margin="0,16,0,0"
+                      ColumnDefinitions="*,120">
+                    <TextBlock Text="Студент"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Grid.Column="1"
+                               Text="Статус"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </Grid>
+
+                <ListBox Grid.Row="2"
+                         ItemsSource="{Binding Students}"
+                         SelectedItem="{Binding SelectedStudent}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:StudentListItem">
-                            <Border Padding="10" Margin="0,0,0,6" CornerRadius="8" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" Background="{DynamicResource SubtleBackgroundBrush}">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{Binding FullName}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding StudentCardNumber, StringFormat=Билет: {0}}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    </StackPanel>
-                                    <Border Grid.Column="1" Padding="7,4" CornerRadius="6" Background="{DynamicResource PillBackgroundBrush}" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Status}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
-                                    </Border>
-                                </Grid>
-                            </Border>
+                            <Grid MinHeight="46"
+                                  ColumnDefinitions="*,120"
+                                  ColumnSpacing="8">
+                                <StackPanel VerticalAlignment="Center" Spacing="1">
+                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding StudentCardNumber, StringFormat=Билет: {0}}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Status}"
+                                           HorizontalAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentThemeBrush}"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
         </Border>
 
-        <Border Grid.Column="2" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}">
-            <StackPanel Spacing="9">
-                <TextBlock Text="Отметка студента" FontSize="17" FontWeight="SemiBold"/>
-                <Border Padding="9" CornerRadius="8" Background="{DynamicResource SubtleBackgroundBrush}">
-                    <TextBlock Text="{Binding StudentDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                </Border>
+        <Grid Grid.Column="2"
+              RowDefinitions="Auto,Auto,*">
+            <TextBlock Text="Отметка"
+                       FontSize="18"
+                       FontWeight="SemiBold"/>
+            <TextBlock Grid.Row="1"
+                       Margin="0,10,0,14"
+                       Text="{Binding StudentDetails}"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                <TextBlock Text="Посещаемость" FontWeight="SemiBold"/>
+            <StackPanel Grid.Row="2" Spacing="8">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBlock Text="Посещаемость" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Сохранить" Command="{Binding SaveAttendanceCommand}"/>
+                </Grid>
                 <ComboBox ItemsSource="{Binding AttendanceStatuses}" SelectedItem="{Binding SelectedStatus}"/>
-                <Button Content="Сохранить посещаемость" Command="{Binding SaveAttendanceCommand}"/>
 
-                <TextBlock Text="Оценка" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                <TextBlock Text="Оценка" FontWeight="SemiBold" Margin="0,10,0,0"/>
                 <ComboBox ItemsSource="{Binding GradeTypes}" SelectedItem="{Binding SelectedGradeType}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:LookupItem">
@@ -73,12 +121,18 @@
                 </ComboBox>
                 <TextBox Watermark="Оценка" Text="{Binding GradeValue}"/>
                 <TextBox Watermark="Комментарий" Text="{Binding Comment}"/>
-                <Button Content="Сохранить оценку" Command="{Binding SaveGradeCommand}"/>
-                <Button Content="Сохранить все" Command="{Binding SaveBothCommand}"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Content="Оценка" Command="{Binding SaveGradeCommand}"/>
+                    <Button Grid.Column="1" Content="Все" Command="{Binding SaveBothCommand}"/>
+                </Grid>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Content="Печать" Command="{Binding PrintJournalCommand}"/>
+                    <Button Grid.Column="1" Content="Excel" Command="{Binding ExportJournalExcelCommand}"/>
+                </Grid>
 
                 <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             </StackPanel>
-        </Border>
+        </Grid>
     </Grid>
 </UserControl>

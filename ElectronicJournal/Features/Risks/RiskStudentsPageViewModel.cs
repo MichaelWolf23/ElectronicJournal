@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
+using ElectronicJournal.Services;
 using ElectronicJournal.Utilities;
 
 namespace ElectronicJournal.ViewModels;
@@ -135,10 +136,16 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
             return;
         }
 
-        var curatorUserId = notificationRepository.GetCuratorUserIdForGroup(SelectedRisk.GroupId);
-        if (curatorUserId is null)
+        if (!settingsRepository.AreCuratorNotificationsEnabled())
         {
-            ResultMessage = "Для группы не найден куратор.";
+            ResultMessage = "Уведомления кураторам отключены в настройках журнала.";
+            return;
+        }
+
+        var curator = notificationRepository.GetCuratorForGroup(SelectedRisk.GroupId);
+        if (curator is null)
+        {
+            ResultMessage = "В системе нет активного куратора.";
             return;
         }
 
@@ -146,7 +153,7 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         {
             notificationRepository.CreateNotification(new CuratorNotification(
                 0,
-                curatorUserId.Value,
+                curator.UserId,
                 SelectedRisk.StudentId,
                 SelectedRisk.GroupId,
                 SelectedRisk.AssignmentId,
@@ -155,7 +162,9 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
                 "Новое",
                 string.Empty,
                 null));
-            ResultMessage = "Уведомление куратору создано.";
+            ResultMessage = curator.IsAssignedToGroup
+                ? $"Уведомление создано для куратора: {curator.FullName}."
+                : $"У группы нет назначенного куратора. Уведомление отправлено активному куратору: {curator.FullName}.";
         }
         catch (Exception ex)
         {
@@ -173,6 +182,41 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         }
 
         StudentProfileRequested?.Invoke(SelectedRisk.StudentId);
+    }
+
+    [RelayCommand]
+    private void ExportReport()
+    {
+        if (Risks.Count == 0)
+        {
+            ResultMessage = "Нет данных для отчета.";
+            return;
+        }
+
+        try
+        {
+            var reportPath = CsvExportService.CreateReport(
+                "students_risk",
+                new[] { "Студент", "Группа", "Тип риска", "Предмет", "Преподаватель", "Значение", "Дата", "Комментарий" },
+                Risks.Select(risk => new[]
+                {
+                    risk.StudentName,
+                    risk.GroupName,
+                    risk.RiskType,
+                    risk.SubjectName,
+                    risk.TeacherName,
+                    risk.ValueText,
+                    risk.DateText,
+                    risk.Comment ?? string.Empty
+                }));
+
+            ReportExportService.ShowInExplorer(reportPath);
+            ResultMessage = $"Отчет сохранен: {reportPath}";
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось сохранить отчет: {ex.Message}";
+        }
     }
 
     private void ApplyFilters()
