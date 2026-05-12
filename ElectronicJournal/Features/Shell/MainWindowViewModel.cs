@@ -65,6 +65,26 @@ public partial class MainWindowViewModel : ViewModelBase
         ThemeButtonText = IsDarkTheme ? "Светлая тема" : "Темная тема";
 
         var health = databaseService.CheckConnection();
+        IsDatabaseAvailable = health.IsAvailable;
+        DatabasePath = health.DatabasePath;
+        TableCount = health.TableCount;
+        DatabaseStatus = health.IsAvailable
+            ? $"База данных подключена. Найдено таблиц: {health.TableCount}."
+            : $"Ошибка подключения к базе данных: {health.ErrorMessage}";
+
+        if (!health.IsAvailable)
+        {
+            CurrentPeriodName = "Недоступен";
+            OperationStatus = "База данных недоступна. Проверьте файл electronic_journal.db рядом с приложением.";
+            var unavailablePage = new PlaceholderPageViewModel(
+                "База данных недоступна",
+                $"Приложение запущено, но не может открыть электронный журнал. {health.ErrorMessage} Путь: {health.DatabasePath}");
+            NavigationItems.Add(new NavigationItem("Состояние", unavailablePage, "!", "База недоступна"));
+            SelectedNavigationItem = NavigationItems[0];
+            CurrentPage = unavailablePage;
+            return;
+        }
+
         var settingsRepository = new SettingsRepository(databaseService);
         var studentRepository = new StudentRepository(databaseService);
         var groupRepository = new GroupRepository(databaseService);
@@ -81,18 +101,8 @@ public partial class MainWindowViewModel : ViewModelBase
         var backupService = new BackupService(databaseService);
         var reportRepository = new ReportRepository(databaseService);
 
-        IsDatabaseAvailable = health.IsAvailable;
-        DatabasePath = health.DatabasePath;
-        TableCount = health.TableCount;
-        DatabaseStatus = health.IsAvailable
-            ? $"База данных подключена. Найдено таблиц: {health.TableCount}."
-            : $"Ошибка подключения к базе данных: {health.ErrorMessage}";
-        CurrentPeriodName = health.IsAvailable
-            ? settingsRepository.GetValue("Текущий учебный период") ?? "Не задан"
-            : "Недоступен";
-        OperationStatus = health.IsAvailable
-            ? "Данные загружены. Выберите раздел в левом меню."
-            : "Ошибка: база данных недоступна.";
+        CurrentPeriodName = settingsRepository.GetValue("Текущий учебный период") ?? "Не задан";
+        OperationStatus = "Данные загружены. Выберите раздел в левом меню.";
 
         InitializeNavigation(
             studentRepository,

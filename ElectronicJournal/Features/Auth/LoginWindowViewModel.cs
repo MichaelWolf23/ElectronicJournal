@@ -15,6 +15,7 @@ public partial class LoginWindowViewModel : ViewModelBase
 {
     private readonly AuthService authService;
     private readonly UserRepository userRepository;
+    private bool isDatabaseAvailable = true;
 
     [ObservableProperty]
     private ObservableCollection<Role> roles = new();
@@ -55,6 +56,9 @@ public partial class LoginWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string themeButtonText = "Темная тема";
 
+    [ObservableProperty]
+    private bool canUseDatabase = true;
+
     public event Action<AuthenticatedUser>? LoginSucceeded;
 
     public LoginWindowViewModel(AuthService authService, UserRepository userRepository)
@@ -70,25 +74,44 @@ public partial class LoginWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Login()
     {
+        if (!isDatabaseAvailable)
+        {
+            Message = "База данных не найдена или не содержит нужных таблиц. Вход временно недоступен.";
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(LoginUsername) || string.IsNullOrWhiteSpace(LoginPassword))
         {
             Message = "Введите логин и пароль.";
             return;
         }
 
-        var user = authService.Login(LoginUsername, LoginPassword);
-        if (user is null)
+        try
         {
-            Message = "Неверный логин или пароль, либо пользователь отключен.";
-            return;
-        }
+            var user = authService.Login(LoginUsername, LoginPassword);
+            if (user is null)
+            {
+                Message = "Неверный логин или пароль, либо пользователь отключен.";
+                return;
+            }
 
-        LoginSucceeded?.Invoke(user);
+            LoginSucceeded?.Invoke(user);
+        }
+        catch (Exception ex)
+        {
+            Message = $"Не удалось выполнить вход: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
     }
 
     [RelayCommand]
     private void Register()
     {
+        if (!isDatabaseAvailable)
+        {
+            Message = "База данных не найдена или не содержит нужных таблиц. Регистрация временно недоступна.";
+            return;
+        }
+
         if (SelectedRoleId == 0)
         {
             Message = "Выберите роль пользователя.";
@@ -142,7 +165,23 @@ public partial class LoginWindowViewModel : ViewModelBase
 
     private void LoadRoles()
     {
-        Roles = new ObservableCollection<Role>(userRepository.GetRoles());
-        SelectedRoleId = Roles.FirstOrDefault()?.RoleId ?? 0;
+        try
+        {
+            Roles = new ObservableCollection<Role>(userRepository.GetRoles());
+            SelectedRoleId = Roles.FirstOrDefault()?.RoleId ?? 0;
+            isDatabaseAvailable = Roles.Count > 0;
+            CanUseDatabase = isDatabaseAvailable;
+            Message = isDatabaseAvailable
+                ? "Войдите в систему или зарегистрируйте нового пользователя."
+                : "В базе данных нет ролей. Проверьте структуру electronic_journal.db.";
+        }
+        catch (Exception ex)
+        {
+            isDatabaseAvailable = false;
+            CanUseDatabase = false;
+            Roles = new ObservableCollection<Role>();
+            SelectedRoleId = 0;
+            Message = $"База данных недоступна: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
     }
 }

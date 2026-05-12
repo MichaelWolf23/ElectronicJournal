@@ -36,7 +36,8 @@
                 <TabControl Grid.Row="1">
                     <TabItem Header="Вход">
                         <StackPanel Spacing="12"
-                                    Margin="0,18,0,0">
+                                    Margin="0,18,0,0"
+                                    IsEnabled="{Binding CanUseDatabase}">
                             <TextBox Watermark="Логин"
                                      Text="{Binding LoginUsername}"/>
                             <TextBox Watermark="Пароль"
@@ -52,7 +53,8 @@
                         <ScrollViewer MaxHeight="300"
                                       Margin="0,18,0,0"
                                       VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      IsEnabled="{Binding CanUseDatabase}">
                             <StackPanel Spacing="12">
                                 <ComboBox ItemsSource="{Binding Roles}"
                                           SelectedValue="{Binding SelectedRoleId}"
