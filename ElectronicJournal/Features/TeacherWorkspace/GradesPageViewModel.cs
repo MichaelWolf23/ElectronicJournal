@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -46,6 +47,15 @@ public partial class GradesPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<LookupItem> lessons = new();
+
+    [ObservableProperty]
+    private ObservableCollection<LessonJournalLessonItem> lessonChoices = new();
+
+    [ObservableProperty]
+    private ObservableCollection<GradeEntryRow> gradeEntryRows = new();
+
+    [ObservableProperty]
+    private LessonJournalLessonItem? selectedLessonForGrading;
 
     [ObservableProperty]
     private GradeJournalItem? selectedGrade;
@@ -98,6 +108,18 @@ public partial class GradesPageViewModel : PageViewModelBase
     [ObservableProperty]
     private string journalSummary = "Журнал оценок загружается.";
 
+    [ObservableProperty]
+    private string lessonGradeSummary = "Выберите занятие и тип оценки.";
+
+    [ObservableProperty]
+    private string lessonGradeResult = string.Empty;
+
+    [ObservableProperty]
+    private int lessonStudentCount;
+
+    [ObservableProperty]
+    private int filledLessonGradeCount;
+
     public GradesPageViewModel(
         GradeRepository gradeRepository,
         StudentRepository studentRepository,
@@ -129,6 +151,31 @@ public partial class GradesPageViewModel : PageViewModelBase
 
     partial void OnSelectedStudentFilterChanged(StudentLookupItem? value) => ApplyFilters();
 
+    partial void OnSelectedLessonForGradingChanged(LessonJournalLessonItem? value)
+    {
+        if (value is null)
+        {
+            SelectedLessonId = null;
+            SelectedAssignmentId = 0;
+            GradeEntryRows = new ObservableCollection<GradeEntryRow>();
+            UpdateLessonGradeSummary();
+            return;
+        }
+
+        SelectedLessonId = value.LessonId;
+        SelectedAssignmentId = value.AssignmentId;
+        GradeDate = value.LessonDate;
+        SelectedGroupFilter = Groups.FirstOrDefault(group => group.GroupId == value.GroupId);
+        SelectedSubjectFilter = Subjects.FirstOrDefault(subject => subject.SubjectName == value.SubjectName);
+        LoadLessonGradeRows();
+        ApplyFilters();
+    }
+
+    partial void OnSelectedGradeTypeIdChanged(int value)
+    {
+        LoadLessonGradeRows();
+    }
+
     partial void OnSelectedGradeChanged(GradeJournalItem? value)
     {
         if (value is null)
@@ -156,6 +203,7 @@ public partial class GradesPageViewModel : PageViewModelBase
             Students = new ObservableCollection<StudentLookupItem>(LoadStudentLookupsForCurrentUser());
             Assignments = new ObservableCollection<LookupItem>(LoadAssignmentLookupsForCurrentUser());
             GradeTypes = new ObservableCollection<LookupItem>(gradeTypeRepository.GetGradeTypeLookups());
+            LessonChoices = new ObservableCollection<LessonJournalLessonItem>(LoadJournalLessonsForCurrentUser());
             Lessons = new ObservableCollection<LookupItem>(LoadLessonLookupsForCurrentUser());
             allGrades = LoadJournalForCurrentUser();
 
@@ -163,12 +211,92 @@ public partial class GradesPageViewModel : PageViewModelBase
             SelectedAssignmentId = Assignments.FirstOrDefault()?.Id ?? 0;
             SelectedGradeTypeId = GradeTypes.FirstOrDefault()?.Id ?? 0;
             SelectedLessonId = Lessons.FirstOrDefault()?.Id;
+            SelectedLessonForGrading = LessonChoices.FirstOrDefault();
 
             ApplyFilters();
+            LoadLessonGradeRows();
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Не удалось загрузить журнал оценок: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void SaveLessonGrades()
+    {
+        if (SelectedLessonForGrading is null)
+        {
+            LessonGradeResult = "Выберите занятие.";
+            return;
+        }
+
+        if (SelectedGradeTypeId == 0)
+        {
+            LessonGradeResult = "Выберите тип оценки.";
+            return;
+        }
+
+        var rowsToSave = GradeEntryRows
+            .Where(row => !string.IsNullOrWhiteSpace(row.GradeValueText))
+            .ToList();
+        if (rowsToSave.Count == 0)
+        {
+            LessonGradeResult = "Заполните хотя бы одну оценку.";
+            return;
+        }
+
+        if (!CanUseSelectedGradeScope(out var scopeError))
+        {
+            LessonGradeResult = scopeError;
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            ErrorMessage = null;
+
+            var saved = 0;
+            foreach (var row in rowsToSave)
+            {
+                if (!double.TryParse(row.GradeValueText.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
+                {
+                    LessonGradeResult = $"Проверьте оценку у студента {row.StudentName}.";
+                    return;
+                }
+
+                if (!IsGradeInScale(value, out var gradeError))
+                {
+                    LessonGradeResult = $"{row.StudentName}: {gradeError}";
+                    return;
+                }
+
+                gradeRepository.UpsertLessonGrade(
+                    row.GradeId,
+                    row.StudentId,
+                    SelectedLessonForGrading.AssignmentId,
+                    SelectedLessonForGrading.LessonId,
+                    SelectedGradeTypeId,
+                    value,
+                    SelectedLessonForGrading.LessonDate,
+                    string.IsNullOrWhiteSpace(row.Comment) ? null : row.Comment.Trim(),
+                    currentUser.UserId);
+                saved++;
+            }
+
+            allGrades = LoadJournalForCurrentUser();
+            LoadLessonGradeRows();
+            ApplyFilters();
+            LessonGradeResult = $"Сохранено оценок: {saved}.";
+        }
+        catch (Exception ex)
+        {
+            LessonGradeResult = $"Не удалось сохранить оценки: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
         finally
         {
@@ -454,6 +582,13 @@ public partial class GradesPageViewModel : PageViewModelBase
             : lessonRepository.GetLessonLookups();
     }
 
+    private List<LessonJournalLessonItem> LoadJournalLessonsForCurrentUser()
+    {
+        return currentUser.RoleName == "Преподаватель"
+            ? lessonRepository.GetJournalLessonsForTeacher(currentUser.UserId)
+            : lessonRepository.GetJournalLessons();
+    }
+
     private List<GradeJournalItem> LoadJournalForCurrentUser()
     {
         return currentUser.RoleName switch
@@ -466,6 +601,25 @@ public partial class GradesPageViewModel : PageViewModelBase
 
     private bool CanUseSelectedGradeScope(out string error)
     {
+        if (SelectedLessonForGrading is not null)
+        {
+            if (!LessonChoices.Any(lesson => lesson.LessonId == SelectedLessonForGrading.LessonId))
+            {
+                error = "Выбранное занятие недоступно текущему пользователю.";
+                return false;
+            }
+
+            if (currentUser.RoleName == "Преподаватель" &&
+                !gradeRepository.CanTeacherUseAssignment(SelectedLessonForGrading.AssignmentId, currentUser.UserId))
+            {
+                error = "Преподаватель может ставить оценки только по своим предметам.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
         if (!Students.Any(student => student.Id == SelectedStudentId))
         {
             error = "Выбранный студент недоступен текущему пользователю.";
@@ -519,5 +673,36 @@ public partial class GradesPageViewModel : PageViewModelBase
         JournalSummary = visibleGrades.Count == 0
             ? "По выбранным фильтрам оценок нет."
             : $"Показано оценок: {VisibleGradeCount}. Средний балл по списку: {AverageGradeText}.";
+    }
+
+    private void LoadLessonGradeRows()
+    {
+        if (SelectedLessonForGrading is null || SelectedGradeTypeId == 0)
+        {
+            GradeEntryRows = new ObservableCollection<GradeEntryRow>();
+            UpdateLessonGradeSummary();
+            return;
+        }
+
+        try
+        {
+            GradeEntryRows = new ObservableCollection<GradeEntryRow>(
+                gradeRepository.GetGradeEntryRowsForLesson(SelectedLessonForGrading.LessonId, SelectedGradeTypeId));
+            LessonGradeResult = string.Empty;
+            UpdateLessonGradeSummary();
+        }
+        catch (Exception ex)
+        {
+            LessonGradeResult = $"Не удалось загрузить студентов занятия: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    private void UpdateLessonGradeSummary()
+    {
+        LessonStudentCount = GradeEntryRows.Count;
+        FilledLessonGradeCount = GradeEntryRows.Count(row => !string.IsNullOrWhiteSpace(row.GradeValueText));
+        LessonGradeSummary = SelectedLessonForGrading is null
+            ? "Выберите занятие и тип оценки."
+            : $"{SelectedLessonForGrading.LessonDate} · {SelectedLessonForGrading.GroupName} · {SelectedLessonForGrading.SubjectName} · {SelectedLessonForGrading.Topic}";
     }
 }

@@ -22,10 +22,16 @@ public partial class UsersPageViewModel : PageViewModelBase
     private ObservableCollection<UserListItem> users = new();
 
     [ObservableProperty]
+    private ObservableCollection<UserListItem> registrationRequests = new();
+
+    [ObservableProperty]
     private ObservableCollection<Role> roles = new();
 
     [ObservableProperty]
     private UserListItem? selectedUser;
+
+    [ObservableProperty]
+    private UserListItem? selectedRegistrationRequest;
 
     [ObservableProperty]
     private int selectedRoleId;
@@ -66,6 +72,24 @@ public partial class UsersPageViewModel : PageViewModelBase
     [ObservableProperty]
     private int inactiveUserCount;
 
+    [ObservableProperty]
+    private int registrationRequestCount;
+
+    [ObservableProperty]
+    private bool hasSelectedRegistrationRequest;
+
+    [ObservableProperty]
+    private bool hasSelectedUser;
+
+    [ObservableProperty]
+    private string selectedRequestTitle = "Заявка не выбрана";
+
+    [ObservableProperty]
+    private string selectedRequestDetails = "Выберите заявку слева, назначьте роль и активируйте пользователя.";
+
+    [ObservableProperty]
+    private string selectedUserDetails = "Выберите пользователя для редактирования или очистите форму для создания нового.";
+
     public UsersPageViewModel(UserRepository userRepository)
         : base("Пользователи")
     {
@@ -79,9 +103,11 @@ public partial class UsersPageViewModel : PageViewModelBase
     {
         if (value is null)
         {
+            HasSelectedUser = false;
             return;
         }
 
+        HasSelectedUser = true;
         FormTitle = "Редактирование пользователя";
         SelectedRoleId = value.RoleId;
         Username = value.Username;
@@ -90,6 +116,26 @@ public partial class UsersPageViewModel : PageViewModelBase
         Phone = value.Phone ?? string.Empty;
         Password = string.Empty;
         IsActive = value.IsActive;
+        SelectedUserDetails = $"{value.RoleName}. Логин: {value.Username}. " +
+            $"Статус: {(value.IsActive ? "активен" : "отключен")}.";
+    }
+
+    partial void OnSelectedRegistrationRequestChanged(UserListItem? value)
+    {
+        if (value is null)
+        {
+            HasSelectedRegistrationRequest = false;
+            SelectedRequestTitle = "Заявка не выбрана";
+            SelectedRequestDetails = "Выберите заявку слева, назначьте роль и активируйте пользователя.";
+            return;
+        }
+
+        HasSelectedRegistrationRequest = true;
+        SelectedUser = value;
+        SelectedRequestTitle = value.FullName;
+        SelectedRequestDetails = $"Логин: {value.Username}. Email: {value.Email ?? "не указан"}. " +
+            $"Телефон: {value.Phone ?? "не указан"}.";
+        ResultMessage = $"Выбрана заявка: {value.FullName}. Назначьте роль и активируйте пользователя.";
     }
 
     [RelayCommand]
@@ -100,15 +146,89 @@ public partial class UsersPageViewModel : PageViewModelBase
             ErrorMessage = null;
             Roles = new ObservableCollection<Role>(userRepository.GetRoles());
             allUsers = userRepository.GetUsers();
+            RegistrationRequests = new ObservableCollection<UserListItem>(
+                allUsers.Where(IsRegistrationRequest));
             ApplyFilter();
             UserCount = allUsers.Count;
             ActiveUserCount = allUsers.Count(user => user.IsActive);
             InactiveUserCount = allUsers.Count - ActiveUserCount;
+            RegistrationRequestCount = RegistrationRequests.Count;
             SelectedRoleId = Roles.FirstOrDefault()?.RoleId ?? 0;
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Не удалось загрузить пользователей: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    [RelayCommand]
+    private void ActivateRegistrationRequest()
+    {
+        if (SelectedRegistrationRequest is null)
+        {
+            ResultMessage = "Сначала выберите заявку.";
+            return;
+        }
+
+        if (SelectedRoleId == 0)
+        {
+            ResultMessage = "Выберите роль для пользователя.";
+            return;
+        }
+
+        try
+        {
+            userRepository.UpdateUser(new User(
+                SelectedRegistrationRequest.UserId,
+                SelectedRoleId,
+                SelectedRegistrationRequest.Username,
+                string.Empty,
+                SelectedRegistrationRequest.FullName,
+                SelectedRegistrationRequest.Email,
+                SelectedRegistrationRequest.Phone,
+                true,
+                SelectedRegistrationRequest.CreatedAt,
+                null));
+
+            ResultMessage = $"Пользователь {SelectedRegistrationRequest.FullName} активирован.";
+            SelectedRegistrationRequest = null;
+            ClearForm();
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось активировать заявку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task RejectRegistrationRequest()
+    {
+        if (SelectedRegistrationRequest is null)
+        {
+            ResultMessage = "Сначала выберите заявку.";
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Отклонить заявку",
+            $"Отклонить заявку пользователя {SelectedRegistrationRequest.FullName}?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            userRepository.DeleteUser(SelectedRegistrationRequest.UserId);
+            ResultMessage = "Заявка отклонена.";
+            SelectedRegistrationRequest = null;
+            ClearForm();
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось отклонить заявку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 
@@ -197,6 +317,9 @@ public partial class UsersPageViewModel : PageViewModelBase
     private void ClearForm()
     {
         SelectedUser = null;
+        SelectedRegistrationRequest = null;
+        HasSelectedUser = false;
+        HasSelectedRegistrationRequest = false;
         FormTitle = "Новый пользователь";
         SelectedRoleId = Roles.FirstOrDefault()?.RoleId ?? 0;
         Username = string.Empty;
@@ -205,6 +328,9 @@ public partial class UsersPageViewModel : PageViewModelBase
         Phone = string.Empty;
         Password = string.Empty;
         IsActive = true;
+        SelectedRequestTitle = "Заявка не выбрана";
+        SelectedRequestDetails = "Выберите заявку слева, назначьте роль и активируйте пользователя.";
+        SelectedUserDetails = "Заполните форму, чтобы создать пользователя вручную.";
     }
 
     [RelayCommand]
@@ -263,9 +389,10 @@ public partial class UsersPageViewModel : PageViewModelBase
     private void ApplyFilter()
     {
         var query = SearchText.Trim();
+        var visibleUsers = allUsers.Where(user => !IsRegistrationRequest(user)).ToList();
         var filtered = string.IsNullOrWhiteSpace(query)
-            ? allUsers
-            : allUsers.Where(user =>
+            ? visibleUsers
+            : visibleUsers.Where(user =>
                 user.FullName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 user.Username.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 user.RoleName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
@@ -274,4 +401,7 @@ public partial class UsersPageViewModel : PageViewModelBase
 
         Users = new ObservableCollection<UserListItem>(filtered);
     }
+
+    private static bool IsRegistrationRequest(UserListItem user) =>
+        !user.IsActive && user.RoleName == "Преподаватель";
 }

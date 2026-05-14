@@ -126,6 +126,24 @@ public sealed class UserRepository : RepositoryBase
         return roles;
     }
 
+    public int? GetRoleIdByName(string roleName)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT role_id
+            FROM roles
+            WHERE role_name = $role_name
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$role_name", roleName);
+
+        var result = command.ExecuteScalar();
+        return result is null || result == DBNull.Value
+            ? null
+            : Convert.ToInt32(result);
+    }
+
     public List<LookupItem> GetActiveUserLookupsByRole(string roleName)
     {
         using var connection = DatabaseService.CreateConnection();
@@ -173,7 +191,7 @@ public sealed class UserRepository : RepositoryBase
                 $full_name,
                 $email,
                 $phone,
-                1);
+                $is_active);
             SELECT last_insert_rowid();
             """;
         command.Parameters.AddWithValue("$role_id", user.RoleId);
@@ -182,6 +200,7 @@ public sealed class UserRepository : RepositoryBase
         command.Parameters.AddWithValue("$full_name", user.FullName);
         command.Parameters.AddWithValue("$email", (object?)user.Email ?? DBNull.Value);
         command.Parameters.AddWithValue("$phone", (object?)user.Phone ?? DBNull.Value);
+        command.Parameters.AddWithValue("$is_active", user.IsActive ? 1 : 0);
 
         return Convert.ToInt32(command.ExecuteScalar());
     }

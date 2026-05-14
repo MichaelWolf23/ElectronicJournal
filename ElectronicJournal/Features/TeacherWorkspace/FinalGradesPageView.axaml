@@ -5,76 +5,117 @@
              x:Class="ElectronicJournal.Views.FinalGradesPageView"
              x:Name="Root"
              x:DataType="vm:FinalGradesPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-            <StackPanel Spacing="3">
-                <TextBlock Text="Итоговые оценки" FontSize="19" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Итоговые оценки" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResultMessage}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           TextWrapping="Wrap"/>
             </StackPanel>
             <Button Grid.Column="1"
+                    Content="Сохранить ведомость"
+                    VerticalAlignment="Top"
+                    Command="{Binding SaveSheetCommand}"/>
+            <Button Grid.Column="2"
                     Content="Обновить"
-                    HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Command="{Binding LoadCommand}"/>
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="12">
-            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Итогов сохранено" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding FinalGradeCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
-                </StackPanel>
-            </Border>
-            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Средний итог" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding FinalAverageText}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
-                </StackPanel>
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto" RowSpacing="12">
+            <Grid ColumnDefinitions="*,220" ColumnSpacing="10">
+                <ComboBox ItemsSource="{Binding Assignments}"
+                          SelectedValue="{Binding SelectedAssignmentId}"
+                          SelectedValueBinding="{Binding Id}"
+                          PlaceholderText="Группа — предмет — преподаватель">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:LookupItem">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding Periods}"
+                          SelectedValue="{Binding SelectedPeriodId}"
+                          SelectedValueBinding="{Binding Id}"
+                          PlaceholderText="Период">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:LookupItem">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    Padding="0,10"
+                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                    BorderThickness="0,1,0,1">
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding SheetStudentCount}"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentThemeBrush}"/>
+                        <TextBlock Text="студентов в ведомости"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Text="{Binding SavedSheetCount}"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource SuccessThemeBrush}"/>
+                        <TextBlock Text="итогов уже сохранено"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="2">
+                        <TextBlock Text="{Binding SheetAverageText}"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource WarningThemeBrush}"/>
+                        <TextBlock Text="средний по ведомости"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                </Grid>
             </Border>
         </Grid>
 
-        <Grid Grid.Row="2"
-              ColumnDefinitions="*,300"
-              ColumnSpacing="10">
-            <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
-                <Grid x:Name="FinalGradesListHost" RowDefinitions="Auto,*">
-                    <Grid Margin="0,0,0,8" ColumnDefinitions="*,Auto">
-                        <TextBlock Text="Итоговая ведомость" FontSize="19" FontWeight="SemiBold"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="Нет данных"
-                                   Foreground="{DynamicResource MutedTextBrush}"
-                                   IsVisible="{Binding FinalGradeCount, Converter={StaticResource NoDataConverter}}"/>
-                    </Grid>
-            <DataGrid Grid.Row="1"
-                      MinWidth="720"
-                      ItemsSource="{Binding FinalGrades}"
-                      SelectedItem="{Binding SelectedFinalGrade}"
+        <Grid Grid.Row="2" x:Name="FinalSheetHost">
+            <DataGrid MinWidth="780"
+                      ItemsSource="{Binding SheetRows}"
+                      SelectedItem="{Binding SelectedSheetRow}"
                       AutoGenerateColumns="False"
-                      IsReadOnly="True"
                       GridLinesVisibility="Horizontal"
-                      IsVisible="{Binding #FinalGradesListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
+                      IsVisible="{Binding #FinalSheetHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
+                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="260"/>
                     <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="110"/>
-                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="180"/>
-                    <DataGridTextColumn Header="Период" Binding="{Binding PeriodName}" Width="120"/>
-                    <DataGridTextColumn Header="Средний" Binding="{Binding CalculatedAverage, StringFormat={}{0:F2}}" Width="90"/>
-                    <DataGridTemplateColumn Header="Итог" Width="80">
+                    <DataGridTextColumn Header="Средний" Binding="{Binding AverageText}" Width="100"/>
+                    <DataGridTemplateColumn Header="Итог" Width="110">
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding FinalValue}"
-                                           FontWeight="SemiBold"
-                                           Foreground="{Binding FinalValue, Converter={StaticResource GradeBrushConverter}}"/>
+                            <DataTemplate x:DataType="dto:FinalGradeSheetRow">
+                                <TextBox Text="{Binding FinalValueText, Mode=TwoWay}"
+                                         Watermark="2-5"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Комментарий" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="dto:FinalGradeSheetRow">
+                                <TextBox Text="{Binding Comment, Mode=TwoWay}"
+                                         Watermark="Комментарий"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Статус" Binding="{Binding StatusText}" Width="120"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <Border Grid.Row="1"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
+
+            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                     BorderThickness="1"
                     Background="{DynamicResource CardBackgroundBrush}"
-                    IsVisible="{Binding FinalGradeCount, Converter={StaticResource NoDataConverter}}">
+                    IsVisible="{Binding SheetStudentCount, Converter={StaticResource NoDataConverter}}">
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="8">
@@ -82,100 +123,38 @@
                                HorizontalAlignment="Center"
                                FontSize="18"
                                FontWeight="SemiBold"/>
-                    <TextBlock Text="Рассчитайте и сохраните итоговую оценку справа."
+                    <TextBlock Text="Выберите предмет и период, чтобы открыть ведомость."
                                HorizontalAlignment="Center"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
-            <ListBox Grid.Row="1" ItemsSource="{Binding FinalGrades}" SelectedItem="{Binding SelectedFinalGrade}" IsVisible="{Binding #FinalGradesListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+
+            <ListBox ItemsSource="{Binding SheetRows}"
+                     SelectedItem="{Binding SelectedSheetRow}"
+                     IsVisible="{Binding #FinalSheetHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
                 <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                    <DataTemplate x:DataType="dto:FinalGradeSheetRow">
+                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,90" Margin="0,7" ColumnSpacing="10">
                             <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                            <TextBlock Grid.Column="1" Text="{Binding FinalValue}" FontWeight="SemiBold" Foreground="{Binding FinalValue, Converter={StaticResource GradeBrushConverter}}"/>
-                            <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PeriodName}" Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding FinalValueText, Mode=TwoWay}"
+                                     Watermark="Итог"/>
+                            <TextBlock Grid.Row="1"
+                                       Text="{Binding AverageText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="1"
+                                       Text="{Binding StatusText}"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBox Grid.Row="2"
+                                     Grid.ColumnSpan="2"
+                                     Text="{Binding Comment, Mode=TwoWay}"
+                                     Watermark="Комментарий"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-                </Grid>
-            </Border>
-
-            <Border Grid.Column="1"
-                    Padding="12"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Итог" FontSize="19" FontWeight="SemiBold"/>
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="{Binding SelectedFinalTitle}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding SelectedFinalDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="{DynamicResource DangerThemeBrush}"
-                               TextWrapping="Wrap"
-                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                    <ComboBox ItemsSource="{Binding Students}"
-                              SelectedValue="{Binding SelectedStudentId}"
-                              SelectedValueBinding="{Binding Id}"
-                              PlaceholderText="Студент">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="dto:LookupItem">
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <ComboBox ItemsSource="{Binding Assignments}"
-                              SelectedValue="{Binding SelectedAssignmentId}"
-                              SelectedValueBinding="{Binding Id}"
-                              PlaceholderText="Группа — предмет — преподаватель">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="dto:LookupItem">
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <ComboBox ItemsSource="{Binding Periods}"
-                              SelectedValue="{Binding SelectedPeriodId}"
-                              SelectedValueBinding="{Binding Id}"
-                              PlaceholderText="Период">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="dto:LookupItem">
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <TextBlock Text="{Binding CalculatedAverage, StringFormat=Средний: {0:F2}}"
-                                   VerticalAlignment="Center"
-                                   TextWrapping="Wrap"/>
-                        <Button Grid.Column="1"
-                                Content="Рассчитать"
-                                Command="{Binding CalculateCommand}"/>
-                    </Grid>
-
-                    <TextBox Watermark="Итоговая оценка"
-                             Text="{Binding FinalValue}"/>
-                    <TextBox Watermark="Комментарий"
-                             Text="{Binding Comment}"/>
-
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                        <Button Content="Сохранить"
-                                Command="{Binding SaveCommand}"/>
-                        <Button Grid.Column="1"
-                                Content="Удалить"
-                                Command="{Binding DeleteSelectedFinalGradeCommand}"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
         </Grid>
     </Grid>
 </UserControl>

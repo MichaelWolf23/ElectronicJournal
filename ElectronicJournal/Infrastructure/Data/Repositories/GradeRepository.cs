@@ -73,6 +73,58 @@ public sealed class GradeRepository : RepositoryBase
             curatorUserId);
     }
 
+    public List<GradeEntryRow> GetGradeEntryRowsForLesson(int lessonId, int gradeTypeId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                s.student_id,
+                s.full_name AS student_name,
+                g.group_name,
+                s.student_card_number,
+                gr.grade_id,
+                gr.grade_value,
+                gr.comment
+            FROM lessons l
+            JOIN teacher_assignments ta ON ta.assignment_id = l.assignment_id
+            JOIN students s ON s.group_id = ta.group_id
+            JOIN groups g ON g.group_id = s.group_id
+            LEFT JOIN grades gr ON gr.grade_id = (
+                SELECT gr2.grade_id
+                FROM grades gr2
+                WHERE gr2.student_id = s.student_id
+                  AND gr2.lesson_id = l.lesson_id
+                  AND gr2.assignment_id = l.assignment_id
+                  AND gr2.grade_type_id = $grade_type_id
+                ORDER BY COALESCE(gr2.updated_at, gr2.created_at) DESC, gr2.grade_id DESC
+                LIMIT 1
+            )
+            WHERE l.lesson_id = $lesson_id
+              AND s.status = 'Обучается'
+            ORDER BY s.full_name;
+            """;
+        command.Parameters.AddWithValue("$lesson_id", lessonId);
+        command.Parameters.AddWithValue("$grade_type_id", gradeTypeId);
+
+        using var reader = command.ExecuteReader();
+        var rows = new List<GradeEntryRow>();
+
+        while (reader.Read())
+        {
+            rows.Add(new GradeEntryRow(
+                reader.GetInt32("student_id"),
+                reader.GetString("student_name"),
+                reader.GetString("group_name"),
+                reader.GetNullableString("student_card_number"),
+                reader.GetNullableInt32("grade_id"),
+                reader.GetNullableDouble("grade_value"),
+                reader.GetNullableString("comment")));
+        }
+
+        return rows;
+    }
+
     public int AddGrade(Grade grade)
     {
         using var connection = DatabaseService.CreateConnection();
@@ -108,6 +160,37 @@ public sealed class GradeRepository : RepositoryBase
         command.Parameters.AddWithValue("$created_by_user_id", grade.CreatedByUserId);
 
         return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public void UpsertLessonGrade(
+        int? gradeId,
+        int studentId,
+        int assignmentId,
+        int lessonId,
+        int gradeTypeId,
+        double gradeValue,
+        string gradeDate,
+        string? comment,
+        int currentUserId)
+    {
+        if (gradeId is int existingGradeId)
+        {
+            UpdateGrade(existingGradeId, gradeValue, comment);
+            return;
+        }
+
+        AddGrade(new Grade(
+            0,
+            studentId,
+            assignmentId,
+            lessonId,
+            gradeTypeId,
+            gradeValue,
+            gradeDate,
+            comment,
+            currentUserId,
+            string.Empty,
+            null));
     }
 
     public void UpdateGrade(int gradeId, double gradeValue, string? comment)

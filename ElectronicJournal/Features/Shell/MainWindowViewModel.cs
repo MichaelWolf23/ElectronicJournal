@@ -46,6 +46,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private NavigationItem? selectedNavigationItem;
 
+    [ObservableProperty]
+    private bool isSidebarCollapsed;
+
+    [ObservableProperty]
+    private double sidebarWidth = 248;
+
+    [ObservableProperty]
+    private bool isSidebarExpanded = true;
+
+    [ObservableProperty]
+    private string sidebarToggleText = "<";
+
     public ObservableCollection<NavigationItem> NavigationItems { get; } = new();
 
     public event Action? LogoutRequested;
@@ -79,7 +91,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var unavailablePage = new PlaceholderPageViewModel(
                 "База данных недоступна",
                 $"Приложение запущено, но не может открыть электронный журнал. {health.ErrorMessage} Путь: {health.DatabasePath}");
-            NavigationItems.Add(new NavigationItem("Состояние", unavailablePage, "!", "База недоступна"));
+            NavigationItems.Add(new NavigationItem("Состояние", unavailablePage, NavigationIcons.Warning, "База недоступна"));
             SelectedNavigationItem = NavigationItems[0];
             CurrentPage = unavailablePage;
             return;
@@ -152,6 +164,15 @@ public partial class MainWindowViewModel : ViewModelBase
         ThemeButtonText = IsDarkTheme ? "Светлая тема" : "Темная тема";
     }
 
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        IsSidebarCollapsed = !IsSidebarCollapsed;
+        SidebarWidth = IsSidebarCollapsed ? 72 : 248;
+        IsSidebarExpanded = !IsSidebarCollapsed;
+        SidebarToggleText = IsSidebarCollapsed ? ">" : "<";
+    }
+
     private void InitializeNavigation(
         StudentRepository studentRepository,
         GroupRepository groupRepository,
@@ -181,22 +202,22 @@ public partial class MainWindowViewModel : ViewModelBase
             settingsRepository,
             userRepository);
         dashboardPage.NavigateRequested += SelectSection;
-        NavigationItems.Add(new NavigationItem("Главная", dashboardPage, "Г", "Рабочий стол"));
+        NavigationItems.Add(new NavigationItem("Главная", dashboardPage, NavigationIcons.Home, "Рабочий стол"));
 
         AddNavigationItem(currentUser, new NavigationItem(
             "Пользователи",
             new UsersPageViewModel(userRepository),
-            "П",
+            NavigationIcons.Users,
             "Аккаунты и роли"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Студенты",
             new StudentsPageViewModel(studentRepository, groupRepository, currentUser),
-            "С",
+            NavigationIcons.Student,
             "Карточки студентов"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Группы",
             new GroupsPageViewModel(groupRepository),
-            "Г",
+            NavigationIcons.Groups,
             "Курсы и группы"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Назначения",
@@ -205,7 +226,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 userRepository,
                 groupRepository,
                 subjectRepository),
-            "Н",
+            NavigationIcons.Assignment,
             "Преподаватели и кураторы"));
         var studentProfilePage = new StudentProfilePageViewModel(
             studentRepository,
@@ -217,7 +238,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AddNavigationItem(currentUser, new NavigationItem(
             "Карточки студентов",
             studentProfilePage,
-            "К",
+            NavigationIcons.Student,
             "Состав группы"));
 
         var myLessonsPage = new MyLessonsPageViewModel(lessonRepository, currentUser);
@@ -225,7 +246,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AddNavigationItem(currentUser, new NavigationItem(
             "Мои занятия",
             myLessonsPage,
-            "З",
+            NavigationIcons.Calendar,
             "Пары и темы"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Оценивание",
@@ -239,7 +260,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 lessonRepository,
                 settingsRepository,
                 currentUser),
-            "О",
+            NavigationIcons.Grade,
             "Оценки студентов"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Журнал занятия",
@@ -252,7 +273,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 settingsRepository,
                 reportRepository,
                 currentUser),
-            "Ж",
+            NavigationIcons.Journal,
             "Пара целиком"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Отчеты",
@@ -261,12 +282,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 studentRepository,
                 settingsRepository,
                 currentUser),
-            "О",
+            NavigationIcons.Report,
             "Успеваемость"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Пересдачи",
             new RetakesPageViewModel(gradeRepository, gradeRetakeRepository, settingsRepository, currentUser),
-            "П",
+            NavigationIcons.Retake,
             "История исправлений"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Посещаемость",
@@ -277,12 +298,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 groupRepository,
                 subjectRepository,
                 currentUser),
-            "Я",
+            NavigationIcons.Attendance,
             "Отметки занятий"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Темы и расписание",
             new LessonsPageViewModel(lessonRepository, assignmentRepository, currentUser),
-            "З",
+            NavigationIcons.Calendar,
             "Темы и расписание"));
         var riskStudentsPage = new RiskStudentsPageViewModel(
             gradeRepository,
@@ -298,7 +319,7 @@ public partial class MainWindowViewModel : ViewModelBase
         AddNavigationItem(currentUser, new NavigationItem(
             "Студенты риска",
             riskStudentsPage,
-            "Д",
+            NavigationIcons.Warning,
             "Контроль рисков"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Мои группы",
@@ -309,12 +330,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 notificationRepository,
                 settingsRepository,
                 currentUser),
-            "А",
+            NavigationIcons.Analytics,
             "Аналитика групп"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Уведомления",
             new NotificationsPageViewModel(notificationRepository, currentUser),
-            "У",
+            NavigationIcons.Bell,
             "Сообщения куратору"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Итоговые",
@@ -324,7 +345,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 assignmentRepository,
                 settingsRepository,
                 currentUser),
-            "И",
+            NavigationIcons.Final,
             "Ведомость периода"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Справочники",
@@ -334,12 +355,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 gradeTypeRepository,
                 lessonRepository,
                 assignmentRepository),
-            "С",
+            NavigationIcons.Folder,
             "Учебные данные"));
         AddNavigationItem(currentUser, new NavigationItem(
             "Настройки",
             new SettingsPageViewModel(settingsRepository, backupService),
-            "Н",
+            NavigationIcons.Settings,
             "Параметры системы"));
 
         if (NavigationItems.Count > 0)

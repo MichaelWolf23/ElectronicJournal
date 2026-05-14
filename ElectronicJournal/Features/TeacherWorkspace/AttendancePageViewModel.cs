@@ -36,6 +36,9 @@ public partial class AttendancePageViewModel : PageViewModelBase
     private ObservableCollection<LookupItem> students = new();
 
     [ObservableProperty]
+    private ObservableCollection<AttendanceMarkItem> lessonMarks = new();
+
+    [ObservableProperty]
     private ObservableCollection<Group> groups = new();
 
     [ObservableProperty]
@@ -58,6 +61,9 @@ public partial class AttendancePageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string selectedStatus = AttendanceStatuses[0];
+
+    [ObservableProperty]
+    private string bulkStatus = AttendanceStatuses[0];
 
     [ObservableProperty]
     private string comment = string.Empty;
@@ -88,6 +94,12 @@ public partial class AttendancePageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string selectedAttendanceComment = "Комментарий не выбран.";
+
+    [ObservableProperty]
+    private int lessonStudentCount;
+
+    [ObservableProperty]
+    private int lessonMarkedCount;
 
     public static IReadOnlyList<string> AttendanceStatuses { get; } =
     [
@@ -122,7 +134,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
 
     partial void OnDateFilterChanged(string value) => ApplyFilters();
 
-    partial void OnSelectedLessonIdChanged(int value) => RefreshStudentsForSelectedLesson();
+    partial void OnSelectedLessonIdChanged(int value) => RefreshLessonAttendance();
 
     partial void OnSelectedAttendanceItemChanged(AttendanceJournalItem? value)
     {
@@ -156,7 +168,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
             Subjects = new ObservableCollection<Subject>(LoadSubjectsForCurrentUser());
 
             SelectedLessonId = Lessons.FirstOrDefault()?.Id ?? 0;
-            RefreshStudentsForSelectedLesson();
+            RefreshLessonAttendance();
             ApplyFilters();
         }
         catch (Exception ex)
@@ -191,6 +203,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
             attendanceRepository.DeleteAttendance(SelectedAttendanceItem.AttendanceId);
             SelectedAttendanceItem = null;
             allAttendance = LoadAttendanceForCurrentUser();
+            RefreshLessonAttendance();
             ApplyFilters();
             ResultMessage = "Отметка посещаемости удалена.";
         }
@@ -231,6 +244,97 @@ public partial class AttendancePageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить посещаемость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+        }
+    }
+
+    [RelayCommand]
+    private void MarkAllPresent()
+    {
+        if (LessonMarks.Count == 0)
+        {
+            ResultMessage = "В выбранном занятии нет студентов.";
+            return;
+        }
+
+        foreach (var mark in LessonMarks)
+        {
+            mark.Status = "Присутствовал";
+            mark.Comment = string.Empty;
+        }
+
+        SaveLessonAttendance();
+    }
+
+    [RelayCommand]
+    private void ApplyStatusToAll()
+    {
+        if (LessonMarks.Count == 0)
+        {
+            ResultMessage = "В выбранном занятии нет студентов.";
+            return;
+        }
+
+        foreach (var mark in LessonMarks)
+        {
+            mark.Status = BulkStatus;
+        }
+
+        ResultMessage = $"В таблице всем студентам выбран статус \"{BulkStatus}\". Нажмите \"Сохранить журнал\".";
+    }
+
+    [RelayCommand]
+    private void SaveLessonAttendance()
+    {
+        if (SelectedLessonId == 0)
+        {
+            ResultMessage = "Выберите занятие.";
+            return;
+        }
+
+        if (LessonMarks.Count == 0)
+        {
+            ResultMessage = "В выбранном занятии нет студентов.";
+            return;
+        }
+
+        try
+        {
+            if (currentUser.RoleName == "Преподаватель" &&
+                !attendanceRepository.CanTeacherAccessLesson(SelectedLessonId, currentUser.UserId))
+            {
+                ResultMessage = "Преподаватель может отмечать посещаемость только на своих занятиях.";
+                return;
+            }
+
+            foreach (var mark in LessonMarks)
+            {
+                if (!AttendanceStatuses.Contains(mark.Status))
+                {
+                    ResultMessage = $"У студента {mark.StudentName} выбран некорректный статус.";
+                    return;
+                }
+
+                if (!attendanceRepository.CanStudentAttendLesson(SelectedLessonId, mark.StudentId))
+                {
+                    ResultMessage = $"Студент {mark.StudentName} не относится к группе выбранного занятия.";
+                    return;
+                }
+
+                attendanceRepository.UpsertAttendance(
+                    SelectedLessonId,
+                    mark.StudentId,
+                    mark.Status,
+                    string.IsNullOrWhiteSpace(mark.Comment) ? null : mark.Comment.Trim());
+            }
+
+            ResultMessage = $"Журнал занятия сохранен. В таблице обновлено студентов: {LessonMarks.Count}.";
+            allAttendance = LoadAttendanceForCurrentUser();
+            RefreshLessonAttendance();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось сохранить журнал занятия: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
         }
     }
 
@@ -291,7 +395,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         };
     }
 
-    private void RefreshStudentsForSelectedLesson()
+    private void RefreshLessonAttendance()
     {
         var currentStudentId = SelectedStudentId;
         var lessonStudents = SelectedLessonId > 0
@@ -302,6 +406,12 @@ public partial class AttendancePageViewModel : PageViewModelBase
         SelectedStudentId = Students.Any(student => student.Id == currentStudentId)
             ? currentStudentId
             : Students.FirstOrDefault()?.Id ?? 0;
+
+        LessonMarks = SelectedLessonId > 0
+            ? new ObservableCollection<AttendanceMarkItem>(attendanceRepository.GetLessonAttendanceMarks(SelectedLessonId))
+            : new ObservableCollection<AttendanceMarkItem>();
+        LessonStudentCount = LessonMarks.Count;
+        LessonMarkedCount = LessonMarks.Count(mark => mark.AttendanceId is not null);
     }
 
     private List<Group> LoadGroupsForCurrentUser()

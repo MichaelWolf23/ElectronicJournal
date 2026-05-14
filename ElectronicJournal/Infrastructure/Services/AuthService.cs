@@ -1,3 +1,4 @@
+using System;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Models.Entities;
 using ElectronicJournal.Repositories;
@@ -31,26 +32,29 @@ public sealed class AuthService
             : null;
     }
 
-    public AuthenticatedUser Register(
-        int roleId,
+    public void RegisterInactiveTeacher(
         string username,
         string password,
         string fullName,
         string? email,
         string? phone)
     {
+        var teacherRoleId = userRepository.GetRoleIdByName("Преподаватель");
+        if (teacherRoleId is null)
+        {
+            throw new InvalidOperationException("В базе данных не найдена роль \"Преподаватель\".");
+        }
+
         userRepository.CreateUser(new User(
             0,
-            roleId,
+            teacherRoleId.Value,
             username.Trim(),
             PasswordHasher.Hash(password),
             fullName.Trim(),
             string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
             string.IsNullOrWhiteSpace(phone) ? null : phone.Trim(),
-            true,
+            false,
             string.Empty,
             null));
-
-        return Login(username, password)!;
     }
 }

@@ -147,6 +147,47 @@ public sealed class AttendanceRepository : RepositoryBase
         return journal;
     }
 
+    public List<AttendanceMarkItem> GetLessonAttendanceMarks(int lessonId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                a.attendance_id,
+                s.student_id,
+                s.full_name AS student_name,
+                g.group_name,
+                COALESCE(a.status, 'Присутствовал') AS status,
+                a.comment
+            FROM lessons l
+            JOIN teacher_assignments ta ON ta.assignment_id = l.assignment_id
+            JOIN students s ON s.group_id = ta.group_id
+            JOIN groups g ON g.group_id = s.group_id
+            LEFT JOIN attendance a
+                ON a.lesson_id = l.lesson_id
+               AND a.student_id = s.student_id
+            WHERE l.lesson_id = $lesson_id
+            ORDER BY s.full_name;
+            """;
+        command.Parameters.AddWithValue("$lesson_id", lessonId);
+
+        using var reader = command.ExecuteReader();
+        var marks = new List<AttendanceMarkItem>();
+
+        while (reader.Read())
+        {
+            marks.Add(new AttendanceMarkItem(
+                reader.GetNullableInt32("attendance_id"),
+                reader.GetInt32("student_id"),
+                reader.GetString("student_name"),
+                reader.GetString("group_name"),
+                reader.GetString("status"),
+                reader.GetNullableString("comment")));
+        }
+
+        return marks;
+    }
+
     public List<StudentRiskItem> GetAbsenceRisks()
     {
         using var connection = DatabaseService.CreateConnection();

@@ -1,7 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ElectronicJournal.ViewModels"
-        xmlns:entities="using:ElectronicJournal.Models.Entities"
         x:Class="ElectronicJournal.Views.LoginWindow"
         x:DataType="vm:LoginWindowViewModel"
         Title="Вход"
@@ -56,16 +55,9 @@
                                       HorizontalScrollBarVisibility="Disabled"
                                       IsEnabled="{Binding CanUseDatabase}">
                             <StackPanel Spacing="12">
-                                <ComboBox ItemsSource="{Binding Roles}"
-                                          SelectedValue="{Binding SelectedRoleId}"
-                                          SelectedValueBinding="{Binding RoleId}"
-                                          PlaceholderText="Роль">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate x:DataType="entities:Role">
-                                            <TextBlock Text="{Binding RoleName}"/>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                                <TextBlock Text="Регистрация создает заявку преподавателя. Администратор активирует аккаунт и назначит роль."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
                                 <TextBox Watermark="ФИО"
                                          Text="{Binding FullName}"/>
                                 <TextBox Watermark="Логин"

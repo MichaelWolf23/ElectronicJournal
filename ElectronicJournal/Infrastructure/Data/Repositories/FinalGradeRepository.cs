@@ -115,6 +115,57 @@ public sealed class FinalGradeRepository : RepositoryBase
         return result is null or DBNull ? null : Convert.ToDouble(result);
     }
 
+    public List<FinalGradeSheetRow> GetFinalGradeSheet(int assignmentId, int periodId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                s.student_id,
+                s.full_name AS student_name,
+                g.group_name,
+                avg_data.average_grade,
+                fg.final_value,
+                fg.comment
+            FROM teacher_assignments ta
+            JOIN groups g ON g.group_id = ta.group_id
+            JOIN students s ON s.group_id = g.group_id
+            LEFT JOIN (
+                SELECT
+                    gr.student_id,
+                    SUM(gr.grade_value * gt.weight) / NULLIF(SUM(gt.weight), 0) AS average_grade
+                FROM grades gr
+                JOIN grade_types gt ON gt.grade_type_id = gr.grade_type_id
+                WHERE gr.assignment_id = $assignment_id
+                GROUP BY gr.student_id
+            ) avg_data ON avg_data.student_id = s.student_id
+            LEFT JOIN final_grades fg ON fg.student_id = s.student_id
+                AND fg.assignment_id = ta.assignment_id
+                AND fg.period_id = $period_id
+            WHERE ta.assignment_id = $assignment_id
+              AND s.status = 'Обучается'
+            ORDER BY s.full_name;
+            """;
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+        command.Parameters.AddWithValue("$period_id", periodId);
+
+        using var reader = command.ExecuteReader();
+        var rows = new List<FinalGradeSheetRow>();
+
+        while (reader.Read())
+        {
+            rows.Add(new FinalGradeSheetRow(
+                reader.GetInt32("student_id"),
+                reader.GetString("student_name"),
+                reader.GetString("group_name"),
+                reader.GetNullableDouble("average_grade"),
+                reader.GetNullableDouble("final_value"),
+                reader.GetNullableString("comment")));
+        }
+
+        return rows;
+    }
+
     public bool CanStudentUseAssignment(int studentId, int assignmentId)
     {
         using var connection = DatabaseService.CreateConnection();

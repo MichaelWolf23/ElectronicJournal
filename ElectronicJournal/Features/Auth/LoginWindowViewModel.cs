@@ -112,12 +112,6 @@ public partial class LoginWindowViewModel : ViewModelBase
             return;
         }
 
-        if (SelectedRoleId == 0)
-        {
-            Message = "Выберите роль пользователя.";
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(RegisterUsername) ||
             string.IsNullOrWhiteSpace(RegisterPassword) ||
             string.IsNullOrWhiteSpace(FullName))
@@ -138,17 +132,34 @@ public partial class LoginWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!InputValidator.IsEmailValid(Email))
+        {
+            Message = "Email указан некорректно.";
+            return;
+        }
+
+        if (!InputValidator.IsPhoneValid(Phone))
+        {
+            Message = "Телефон должен содержать от 10 до 15 цифр.";
+            return;
+        }
+
         try
         {
-            var user = authService.Register(
-                SelectedRoleId,
+            authService.RegisterInactiveTeacher(
                 RegisterUsername,
                 RegisterPassword,
                 FullName,
                 Email,
                 Phone);
 
-            LoginSucceeded?.Invoke(user);
+            RegisterUsername = string.Empty;
+            RegisterPassword = string.Empty;
+            RegisterPasswordRepeat = string.Empty;
+            FullName = string.Empty;
+            Email = string.Empty;
+            Phone = string.Empty;
+            Message = "Заявка создана. Администратор активирует учетную запись и назначит нужную роль.";
         }
         catch (Exception ex)
         {
@@ -168,12 +179,12 @@ public partial class LoginWindowViewModel : ViewModelBase
         try
         {
             Roles = new ObservableCollection<Role>(userRepository.GetRoles());
-            SelectedRoleId = Roles.FirstOrDefault()?.RoleId ?? 0;
-            isDatabaseAvailable = Roles.Count > 0;
+            SelectedRoleId = Roles.FirstOrDefault(role => role.RoleName == "Преподаватель")?.RoleId ?? 0;
+            isDatabaseAvailable = SelectedRoleId != 0;
             CanUseDatabase = isDatabaseAvailable;
             Message = isDatabaseAvailable
                 ? "Войдите в систему или зарегистрируйте нового пользователя."
-                : "В базе данных нет ролей. Проверьте структуру electronic_journal.db.";
+                : "В базе данных нет роли преподавателя. Проверьте структуру electronic_journal.db.";
         }
         catch (Exception ex)
         {
