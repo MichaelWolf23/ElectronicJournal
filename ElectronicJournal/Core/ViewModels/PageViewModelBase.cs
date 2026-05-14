@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows.Input;
 
 namespace ElectronicJournal.ViewModels;
 
@@ -16,4 +17,14 @@ public abstract partial class PageViewModelBase : ViewModelBase
 
     [ObservableProperty]
     private string? errorMessage;
+
+    public virtual void OnNavigatedTo()
+    {
+        var loadCommandProperty = GetType().GetProperty("LoadCommand");
+        if (loadCommandProperty?.GetValue(this) is ICommand loadCommand &&
+            loadCommand.CanExecute(null))
+        {
+            loadCommand.Execute(null);
+        }
+    }
 }

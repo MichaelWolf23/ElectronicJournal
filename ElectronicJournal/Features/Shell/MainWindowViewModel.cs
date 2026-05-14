@@ -140,6 +140,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (value is not null)
         {
             CurrentPage = value.Page;
+            value.Page.OnNavigatedTo();
             OperationStatus = $"Открыт раздел: {value.Title}";
         }
     }

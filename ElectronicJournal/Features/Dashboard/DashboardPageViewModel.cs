@@ -9,6 +9,14 @@ namespace ElectronicJournal.ViewModels;
 public sealed partial class DashboardPageViewModel : PageViewModelBase
 {
     private readonly AuthenticatedUser _currentUser;
+    private readonly StudentRepository studentRepository;
+    private readonly GroupRepository groupRepository;
+    private readonly AssignmentRepository assignmentRepository;
+    private readonly LessonRepository lessonRepository;
+    private readonly GradeRepository gradeRepository;
+    private readonly NotificationRepository notificationRepository;
+    private readonly SettingsRepository settingsRepository;
+    private readonly UserRepository userRepository;
 
     public DashboardPageViewModel(
         AuthenticatedUser currentUser,
@@ -23,29 +31,19 @@ public sealed partial class DashboardPageViewModel : PageViewModelBase
         : base("Главная")
     {
         _currentUser = currentUser;
+        this.studentRepository = studentRepository;
+        this.groupRepository = groupRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.lessonRepository = lessonRepository;
+        this.gradeRepository = gradeRepository;
+        this.notificationRepository = notificationRepository;
+        this.settingsRepository = settingsRepository;
+        this.userRepository = userRepository;
         Greeting = $"Здравствуйте, {currentUser.FullName}";
         RoleText = $"Роль: {currentUser.RoleName}";
         Description = GetRoleDescription(currentUser.RoleName);
 
-        LoadMetrics(
-            studentRepository,
-            groupRepository,
-            assignmentRepository,
-            lessonRepository,
-            gradeRepository,
-            notificationRepository,
-            settingsRepository,
-            userRepository);
-        LoadActions();
-        LoadRoleWorkspace(
-            studentRepository,
-            groupRepository,
-            assignmentRepository,
-            lessonRepository,
-            gradeRepository,
-            notificationRepository,
-            settingsRepository,
-            userRepository);
+        ReloadDashboard();
     }
 
     public string Greeting { get; }
@@ -71,6 +69,39 @@ public sealed partial class DashboardPageViewModel : PageViewModelBase
     public ObservableCollection<DashboardWorkItem> AttentionItems { get; } = new();
 
     public event Action<string>? NavigateRequested;
+
+    public override void OnNavigatedTo()
+    {
+        ReloadDashboard();
+    }
+
+    private void ReloadDashboard()
+    {
+        Metrics.Clear();
+        Actions.Clear();
+        PriorityItems.Clear();
+        AttentionItems.Clear();
+
+        LoadMetrics(
+            studentRepository,
+            groupRepository,
+            assignmentRepository,
+            lessonRepository,
+            gradeRepository,
+            notificationRepository,
+            settingsRepository,
+            userRepository);
+        LoadActions();
+        LoadRoleWorkspace(
+            studentRepository,
+            groupRepository,
+            assignmentRepository,
+            lessonRepository,
+            gradeRepository,
+            notificationRepository,
+            settingsRepository,
+            userRepository);
+    }
 
     private void LoadMetrics(
         StudentRepository studentRepository,

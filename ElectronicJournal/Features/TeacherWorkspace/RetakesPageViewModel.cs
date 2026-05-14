@@ -214,7 +214,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
         }
 
         if (!double.TryParse(
-                SelectedNewValueText.Replace(',', '.'),
+                SelectedRetakeRow.NewValueText.Replace(',', '.'),
                 NumberStyles.Number,
                 CultureInfo.InvariantCulture,
                 out var newValue))
@@ -229,7 +229,8 @@ public partial class RetakesPageViewModel : PageViewModelBase
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(SelectedRetakeDate) && !DateTime.TryParse(SelectedRetakeDate, out _))
+        if (!string.IsNullOrWhiteSpace(SelectedRetakeRow.RetakeDate) &&
+            !DateTime.TryParse(SelectedRetakeRow.RetakeDate, out _))
         {
             ResultMessage = "Дата пересдачи должна быть в понятном формате, например 2026-02-10.";
             return;
@@ -267,8 +268,8 @@ public partial class RetakesPageViewModel : PageViewModelBase
                 SelectedRetakeRow.GradeId,
                 currentValue,
                 newValue,
-                string.IsNullOrWhiteSpace(SelectedRetakeDate) ? DateTime.Today.ToString("yyyy-MM-dd") : SelectedRetakeDate.Trim(),
-                string.IsNullOrWhiteSpace(SelectedReason) ? null : SelectedReason.Trim(),
+                string.IsNullOrWhiteSpace(SelectedRetakeRow.RetakeDate) ? DateTime.Today.ToString("yyyy-MM-dd") : SelectedRetakeRow.RetakeDate.Trim(),
+                string.IsNullOrWhiteSpace(SelectedRetakeRow.Reason) ? null : SelectedRetakeRow.Reason.Trim(),
                 currentUser.UserId,
                 string.Empty);
 
