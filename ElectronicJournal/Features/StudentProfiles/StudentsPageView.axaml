@@ -6,6 +6,7 @@
              x:Name="Root"
              x:DataType="vm:StudentsPageViewModel">
     <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="18">
+        <Border Classes="toolbar-panel">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <TextBox Width="280" Watermark="Поиск" Text="{Binding SearchText}"/>
@@ -17,10 +18,11 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
-            <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
+            <Button Grid.Column="1" Content="Обновить" Classes="ghost" Command="{Binding LoadCommand}"/>
         </Grid>
+        </Border>
 
-        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+        <Border Grid.Row="1" Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
                 <StackPanel Spacing="2">
                     <TextBlock Text="{Binding VisibleStudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
@@ -43,7 +45,8 @@
         </Grid>
 
         <Grid Grid.Row="3" ColumnDefinitions="*,320" ColumnSpacing="18">
-            <Grid x:Name="StudentsListHost">
+            <Border x:Name="StudentsListHost" Classes="section-panel">
+            <Grid>
                 <DataGrid MinWidth="650" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" IsVisible="{Binding #StudentsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="260"/>
@@ -60,7 +63,8 @@
                 </DataGrid>
                 <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                         BorderThickness="1"
-                        Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="8"
+                        Background="{DynamicResource SubtleBackgroundBrush}"
                         IsVisible="{Binding VisibleStudentCount, Converter={StaticResource NoDataConverter}}">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                         <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -83,8 +87,9 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
+            </Border>
 
-            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1,0,0,0" Padding="18,0,0,0">
+            <Border Grid.Column="1" Classes="side-panel">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Spacing="10">
@@ -113,10 +118,11 @@
                         <ComboBox ItemsSource="{Binding StudentStatuses}" SelectedItem="{Binding Status}" PlaceholderText="Статус" IsVisible="{Binding CanEditStudents}"/>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0" IsVisible="{Binding CanEditStudents}">
-                            <Button Content="Сохранить" Command="{Binding SaveCommand}"/>
-                            <Button Grid.Column="1" Content="Очистить" Command="{Binding ClearFormCommand}"/>
+                            <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
+                            <Button Grid.Column="1" Content="Очистить" Classes="ghost" Command="{Binding ClearFormCommand}"/>
                         </Grid>
                         <Button Content="Удалить студента"
+                                Classes="danger"
                                 HorizontalAlignment="Left"
                                 Command="{Binding DeleteSelectedStudentCommand}"
                                 IsVisible="{Binding CanEditStudents}"/>

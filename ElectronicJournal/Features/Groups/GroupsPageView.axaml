@@ -11,10 +11,10 @@
                 <TextBlock Text="Учебные группы" FontSize="24" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="Обновить" Command="{Binding LoadCommand}"/>
+            <Button Grid.Column="1" Content="Обновить" Classes="ghost" Command="{Binding LoadCommand}"/>
         </Grid>
 
-        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+        <Border Grid.Row="1" Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
                 <StackPanel Spacing="2">
                     <TextBlock Text="{Binding GroupCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
@@ -32,7 +32,8 @@
         </Border>
 
         <Grid Grid.Row="2" ColumnDefinitions="*,340" ColumnSpacing="18">
-            <Grid x:Name="GroupsListHost" RowDefinitions="Auto,*">
+            <Border x:Name="GroupsListHost" Classes="section-panel">
+            <Grid RowDefinitions="Auto,*">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Список групп" FontSize="18" FontWeight="SemiBold"/>
                     <TextBlock Grid.Column="1" Text="Нет данных" Foreground="{DynamicResource MutedTextBrush}" IsVisible="{Binding GroupCount, Converter={StaticResource NoDataConverter}}"/>
@@ -56,7 +57,8 @@
                         Margin="0,10,0,0"
                         BorderBrush="{DynamicResource BorderThemeBrush}"
                         BorderThickness="1"
-                        Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="8"
+                        Background="{DynamicResource SubtleBackgroundBrush}"
                         IsVisible="{Binding GroupCount, Converter={StaticResource NoDataConverter}}">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                         <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -82,8 +84,9 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
+            </Border>
 
-            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1,0,0,0" Padding="18,0,0,0">
+            <Border Grid.Column="1" Classes="side-panel">
                 <StackPanel Spacing="10">
                     <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerThemeBrush}" TextWrapping="Wrap" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
@@ -91,10 +94,11 @@
                     <TextBox Watermark="Курс от 1 до 6" Text="{Binding CourseNumber}"/>
                     <TextBox Watermark="Описание" Text="{Binding Description}"/>
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
-                        <Button Content="Сохранить" Command="{Binding SaveCommand}"/>
-                        <Button Grid.Column="1" Content="Новая" Command="{Binding ClearFormCommand}"/>
+                        <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
+                        <Button Grid.Column="1" Content="Новая" Classes="ghost" Command="{Binding ClearFormCommand}"/>
                     </Grid>
                     <Button Content="Удалить группу"
+                            Classes="danger"
                             HorizontalAlignment="Left"
                             Command="{Binding DeleteSelectedGroupCommand}"/>
                 </StackPanel>

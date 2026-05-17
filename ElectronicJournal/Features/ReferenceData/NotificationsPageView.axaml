@@ -5,11 +5,8 @@
              x:Class="ElectronicJournal.Views.NotificationsPageView"
              x:Name="Root"
              x:DataType="vm:NotificationsPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
-        <Border Padding="10"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0"
-                Background="Transparent">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Classes="toolbar-panel">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                 <StackPanel Spacing="3">
                     <TextBlock Text="Центр уведомлений"
@@ -31,18 +28,16 @@
                               SelectedItem="{Binding SelectedStatusFilter}"
                               PlaceholderText="Статус"/>
                     <Button Content="Обновить"
+                            Classes="ghost"
                             Command="{Binding LoadCommand}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1"
-              ColumnDefinitions="*,*,*,*"
-              ColumnSpacing="12">
-            <Border Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+        <Border Grid.Row="1" Classes="section-panel">
+        <Grid ColumnDefinitions="*,*,*,*"
+              ColumnSpacing="10">
+            <Border Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Новые"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -54,10 +49,7 @@
             </Border>
 
             <Border Grid.Column="1"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Прочитано"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -69,10 +61,7 @@
             </Border>
 
             <Border Grid.Column="2"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Закрыто"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -84,10 +73,7 @@
             </Border>
 
             <Border Grid.Column="3"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Показано"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -98,16 +84,14 @@
                 </StackPanel>
             </Border>
         </Grid>
+        </Border>
 
         <Grid Grid.Row="2"
               ColumnDefinitions="300,*"
-              ColumnSpacing="10">
-            <Border Grid.Column="1"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+              ColumnSpacing="12">
+            <Border Grid.Column="1" Classes="section-panel">
                 <Grid x:Name="NotificationsListHost" RowDefinitions="Auto,*">
-                    <StackPanel Margin="10,8,10,6" Spacing="2">
+                    <StackPanel Margin="0,0,0,10" Spacing="2">
                         <TextBlock Text="Лента уведомлений" FontSize="16" FontWeight="SemiBold"/>
                     </StackPanel>
                     <DataGrid Grid.Row="1"
@@ -152,10 +136,7 @@
                 </Grid>
             </Border>
 
-            <Border Padding="12"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+            <Border Classes="side-panel">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Уведомление" FontSize="16" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding ErrorMessage}"
@@ -164,9 +145,8 @@
                                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                     <Border Padding="12"
-                            BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="0"
-                            Background="Transparent">
+                            CornerRadius="6"
+                            Background="{DynamicResource SubtleBackgroundBrush}">
                         <StackPanel Spacing="7">
                             <TextBlock Text="{Binding SelectedNotificationTitle}"
                                        FontSize="18"
@@ -184,15 +164,19 @@
                     <TextBlock Text="Изменить статус" FontWeight="SemiBold"/>
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                         <Button Content="Новое"
+                                Classes="warning"
                                 Command="{Binding MarkAsNewCommand}"/>
                         <Button Grid.Column="1"
                                 Content="Прочитано"
+                                Classes="primary"
                                 Command="{Binding MarkAsReadCommand}"/>
                         <Button Grid.Column="2"
                                 Content="Закрыто"
+                                Classes="success"
                                 Command="{Binding MarkAsClosedCommand}"/>
                     </Grid>
                     <Button Content="Удалить уведомление"
+                            Classes="danger"
                             HorizontalAlignment="Left"
                             Command="{Binding DeleteSelectedNotificationCommand}"/>
                 </StackPanel>

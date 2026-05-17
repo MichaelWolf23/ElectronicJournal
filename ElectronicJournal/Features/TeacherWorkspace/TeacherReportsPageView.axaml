@@ -13,20 +13,22 @@
                 <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
-                    <Button Content="Печать" Command="{Binding PrintReportCommand}"/>
-                    <Button Content="Excel" Command="{Binding ExportExcelCommand}"/>
+                    <Button Content="Печать" Classes="ghost" Command="{Binding PrintReportCommand}"/>
+                    <Button Content="Excel" Classes="primary" Command="{Binding ExportExcelCommand}"/>
                 </StackPanel>
             </Grid>
-            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+            <Border Grid.Row="1" Classes="toolbar-panel">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <ComboBox Width="190" ItemsSource="{Binding GroupFilters}" SelectedItem="{Binding SelectedGroupFilter}"/>
                     <ComboBox Width="230" ItemsSource="{Binding SubjectFilters}" SelectedItem="{Binding SelectedSubjectFilter}"/>
                 </StackPanel>
-                <Button Grid.Column="1" Content="Сбросить" Command="{Binding ResetFiltersCommand}"/>
+                <Button Grid.Column="1" Content="Сбросить" Classes="ghost" Command="{Binding ResetFiltersCommand}"/>
             </Grid>
+            </Border>
         </Grid>
 
-        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+        <Border Grid.Row="1" Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="20">
                 <StackPanel Spacing="2">
                     <TextBlock Text="{Binding GradeCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
@@ -47,7 +49,8 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" x:Name="ReportListHost">
+        <Border Grid.Row="2" x:Name="ReportListHost" Classes="section-panel">
+            <Grid>
             <DataGrid MinWidth="860"
                       ItemsSource="{Binding Grades}"
                       AutoGenerateColumns="False"
@@ -66,7 +69,8 @@
             </DataGrid>
             <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                     BorderThickness="1"
-                    Background="{DynamicResource CardBackgroundBrush}"
+                    CornerRadius="8"
+                    Background="{DynamicResource SubtleBackgroundBrush}"
                     IsVisible="{Binding GradeCount, Converter={StaticResource NoDataConverter}}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                     <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -91,6 +95,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

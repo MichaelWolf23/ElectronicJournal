@@ -5,7 +5,8 @@
              x:Class="ElectronicJournal.Views.LessonsPageView"
              x:Name="Root"
              x:DataType="vm:LessonsPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Classes="toolbar-panel">
         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
             <TextBox Width="280"
                      Watermark="Поиск по теме, группе, предмету"
@@ -16,36 +17,41 @@
                       SelectedItem="{Binding SelectedScheduleDayFilter}"/>
             <Button Grid.Column="2"
                     Content="Обновить"
+                    Classes="ghost"
                     Command="{Binding LoadCommand}"/>
         </Grid>
+        </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12">
-            <Border Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+        <Border Grid.Row="1" Classes="section-panel">
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+            <Border Classes="metric-panel">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Занятий" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding LessonCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="1" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+            <Border Grid.Column="1" Classes="metric-panel">
                 <StackPanel Spacing="4">
                     <TextBlock Text="В расписании" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding ScheduleCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
                 </StackPanel>
             </Border>
-            <Border Grid.Column="2" Padding="10" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+            <Border Grid.Column="2" Classes="metric-panel">
                 <StackPanel Spacing="4">
                     <TextBlock Text="Назначений" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <TextBlock Text="{Binding AssignmentCount}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
                 </StackPanel>
             </Border>
         </Grid>
+        </Border>
 
-        <Grid Grid.Row="2" ColumnDefinitions="300,*" ColumnSpacing="10">
-        <TabControl Grid.Column="1">
+        <Grid Grid.Row="2" ColumnDefinitions="300,*" ColumnSpacing="12">
+        <Border Grid.Column="1" Classes="section-panel">
+        <TabControl>
             <TabItem Header="Занятия">
-                <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                <Border>
                     <Grid x:Name="LessonsListHost" RowDefinitions="Auto,*">
-                        <StackPanel Margin="10,8,10,6" Spacing="2">
+                        <StackPanel Margin="0,0,0,10" Spacing="2">
                             <TextBlock Text="Темы занятий" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding LessonsSummary}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                         </StackPanel>
@@ -85,9 +91,9 @@
             </TabItem>
 
             <TabItem Header="Расписание">
-                <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                <Border>
                     <Grid x:Name="ScheduleListHost" RowDefinitions="Auto,*">
-                        <StackPanel Margin="10,8,10,6" Spacing="2">
+                        <StackPanel Margin="0,0,0,10" Spacing="2">
                             <TextBlock Text="Расписание" FontSize="16" FontWeight="SemiBold"/>
                             <TextBlock Text="Фильтр дня применяется к расписанию, поиск - к расписанию и занятиям."
                                        Foreground="{DynamicResource SecondaryTextBrush}"
@@ -131,11 +137,12 @@
                 </Border>
             </TabItem>
         </TabControl>
+        </Border>
 
-        <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+        <Border Classes="side-panel">
             <StackPanel Spacing="10">
                 <TextBlock Text="Занятие" FontSize="16" FontWeight="SemiBold"/>
-                <Border Padding="9" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+                <Border Classes="metric-panel">
                     <StackPanel Spacing="7">
                         <TextBlock Text="{Binding SelectedLessonTitle}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding SelectedLessonDetails}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -176,9 +183,11 @@
                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                     <Button Grid.Column="1"
                             Content="Добавить"
+                            Classes="primary"
                             Command="{Binding AddLessonCommand}"/>
                     <Button Grid.Column="2"
                             Content="Удалить выбранное"
+                            Classes="danger"
                             Command="{Binding DeleteSelectedLessonCommand}"/>
                 </Grid>
                 <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>

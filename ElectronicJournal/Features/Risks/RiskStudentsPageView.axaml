@@ -5,6 +5,7 @@
              x:Class="ElectronicJournal.Views.RiskStudentsPageView"
              x:DataType="vm:RiskStudentsPageViewModel">
     <Grid RowDefinitions="Auto,*" RowSpacing="10">
+        <Border Classes="toolbar-panel">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
             <StackPanel Orientation="Horizontal" Spacing="18">
                 <StackPanel Spacing="2">
@@ -22,19 +23,20 @@
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                 <ComboBox Width="170" ItemsSource="{Binding GroupFilters}" SelectedItem="{Binding SelectedGroupFilter}"/>
-                <Button Content="Сбросить" Command="{Binding ClearFiltersCommand}"/>
+                <Button Content="Сбросить" Classes="ghost" Command="{Binding ClearFiltersCommand}"/>
             </StackPanel>
         </Grid>
+        </Border>
 
         <Grid Grid.Row="1" ColumnDefinitions="320,*" ColumnSpacing="10">
-            <Border Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+            <Border Classes="section-panel">
                 <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
                     <TextBlock Text="Студенты риска" FontSize="17" FontWeight="SemiBold"/>
                     <TextBox Grid.Row="1" Watermark="Поиск" Text="{Binding SearchText}"/>
                     <ListBox Grid.Row="2" ItemsSource="{Binding Risks}" SelectedItem="{Binding SelectedRisk}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="dto:StudentRiskItem">
-                                <Border Padding="10" Margin="0,0,0,7" Background="{DynamicResource DangerSoftBrush}">
+                                <Border Padding="10" Margin="0,0,0,7" CornerRadius="6" Background="{DynamicResource DangerSoftBrush}">
                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                         <StackPanel Spacing="3">
                                             <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
@@ -51,20 +53,20 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1" Padding="12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0" Background="Transparent">
+            <Border Grid.Column="1" Classes="side-panel">
                 <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
                     <StackPanel Spacing="3">
                         <TextBlock Text="{Binding RiskTitle}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding RiskDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <Border Grid.Row="1" Padding="10" Background="Transparent">
+                    <Border Grid.Row="1" Padding="10" CornerRadius="6" Background="{DynamicResource SubtleBackgroundBrush}">
                         <TextBlock Text="{Binding NotificationPreview}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </Border>
                     <StackPanel Grid.Row="2" Spacing="8" VerticalAlignment="Top">
-                        <Button Content="Уведомить куратора" Command="{Binding CreateNotificationCommand}" IsVisible="{Binding CanCreateNotification}"/>
-                        <Button Content="Открыть карточку студента" Command="{Binding OpenStudentProfileCommand}"/>
-                        <Button Content="Экспорт отчета" Command="{Binding ExportReportCommand}"/>
-                        <Button Content="Обновить список" Command="{Binding LoadCommand}"/>
+                        <Button Content="Уведомить куратора" Classes="warning" Command="{Binding CreateNotificationCommand}" IsVisible="{Binding CanCreateNotification}"/>
+                        <Button Content="Открыть карточку студента" Classes="primary" Command="{Binding OpenStudentProfileCommand}"/>
+                        <Button Content="Экспорт отчета" Classes="ghost" Command="{Binding ExportReportCommand}"/>
+                        <Button Content="Обновить список" Classes="ghost" Command="{Binding LoadCommand}"/>
                         <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                     </StackPanel>

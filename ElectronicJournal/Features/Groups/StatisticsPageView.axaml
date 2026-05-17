@@ -4,11 +4,8 @@
              x:Class="ElectronicJournal.Views.StatisticsPageView"
              x:Name="Root"
              x:DataType="vm:StatisticsPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
-        <Border Padding="10"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0"
-                Background="Transparent">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Classes="toolbar-panel">
             <Grid ColumnDefinitions="*,170" ColumnSpacing="10">
                 <StackPanel Spacing="3">
                     <TextBlock Text="Аналитика групп"
@@ -21,17 +18,15 @@
 
                 <Button Grid.Column="1"
                         Content="Обновить"
+                        Classes="ghost"
                         Command="{Binding LoadCommand}"/>
             </Grid>
         </Border>
 
         <Grid Grid.Row="1"
               ColumnDefinitions="*,*,*,*,*,*"
-              ColumnSpacing="12">
-            <Border Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+              ColumnSpacing="10">
+            <Border Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Студентов"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -43,10 +38,7 @@
             </Border>
 
             <Border Grid.Column="1"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Средний балл"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -58,10 +50,7 @@
             </Border>
 
             <Border Grid.Column="2"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Должников"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -73,10 +62,7 @@
             </Border>
 
             <Border Grid.Column="3"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Порог"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -88,10 +74,7 @@
             </Border>
 
             <Border Grid.Column="4"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Групп с риском"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -103,10 +86,7 @@
             </Border>
 
             <Border Grid.Column="5"
-                    Padding="14"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="metric-panel">
                 <StackPanel>
                     <TextBlock Text="Лучшая группа"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -121,12 +101,10 @@
 
         <Grid Grid.Row="2"
               ColumnDefinitions="*,300"
-              ColumnSpacing="10">
-            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+              ColumnSpacing="12">
+            <Border Classes="section-panel">
                 <Grid x:Name="StatisticsListHost" RowDefinitions="Auto,*">
-                    <StackPanel Margin="16,14,16,10" Spacing="2">
+                    <StackPanel Margin="0,0,0,10" Spacing="2">
                         <TextBlock Text="Группы и успеваемость" FontSize="19" FontWeight="SemiBold"/>
                         <TextBlock Text="{Binding ErrorMessage}"
                                    Foreground="{DynamicResource DangerThemeBrush}"
@@ -152,7 +130,7 @@
                     <ListBox Grid.Row="1" ItemsSource="{Binding GroupStatistics}" SelectedItem="{Binding SelectedGroupStatistics}" IsVisible="{Binding #StatisticsListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,6" ColumnSpacing="10">
                                     <TextBlock Text="{Binding GroupName}" FontWeight="SemiBold"/>
                                     <TextBlock Grid.Column="1" Text="{Binding AverageGrade, StringFormat={}{0:F2}}" Foreground="{DynamicResource SuccessThemeBrush}" FontWeight="SemiBold"/>
                                     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4">
@@ -171,10 +149,7 @@
             </Border>
 
             <Border Grid.Column="1"
-                    Padding="12"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="side-panel">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Анализ выбранной группы"
                                FontSize="19"

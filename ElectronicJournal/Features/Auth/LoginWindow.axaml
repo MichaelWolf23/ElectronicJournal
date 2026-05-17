@@ -12,10 +12,10 @@
         CanResize="False">
 
     <Grid Background="{DynamicResource AppBackgroundBrush}">
-        <Border Width="360"
+        <Border Width="380"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Padding="0">
+                Classes="section-panel">
             <Grid RowDefinitions="Auto,Auto,Auto"
                   RowSpacing="20">
                 <Grid ColumnDefinitions="*,Auto">
@@ -28,6 +28,7 @@
                     </StackPanel>
                     <Button Grid.Column="1"
                             Content="{Binding ThemeButtonText}"
+                            Classes="ghost"
                             VerticalAlignment="Top"
                             Command="{Binding ToggleThemeCommand}"/>
                 </Grid>
@@ -43,6 +44,7 @@
                                      PasswordChar="*"
                                      Text="{Binding LoginPassword}"/>
                             <Button Content="Войти"
+                                    Classes="primary"
                                     HorizontalAlignment="Stretch"
                                     Command="{Binding LoginCommand}"/>
                         </StackPanel>
@@ -73,6 +75,7 @@
                                 <TextBox Watermark="Телефон"
                                          Text="{Binding Phone}"/>
                                 <Button Content="Зарегистрироваться"
+                                        Classes="success"
                                         HorizontalAlignment="Stretch"
                                         Command="{Binding RegisterCommand}"/>
                             </StackPanel>

@@ -17,36 +17,42 @@
             </StackPanel>
             <Button Grid.Column="1"
                     Content="Обновить"
+                    Classes="ghost"
                     Command="{Binding LoadCommand}"/>
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-            <ComboBox ItemsSource="{Binding Lessons}"
-                      SelectedValue="{Binding SelectedLessonId}"
-                      SelectedValueBinding="{Binding Id}"
-                      PlaceholderText="Выберите занятие">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="dto:LookupItem">
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+        <Border Grid.Row="1" Classes="toolbar-panel">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                <ComboBox ItemsSource="{Binding Lessons}"
+                          SelectedValue="{Binding SelectedLessonId}"
+                          SelectedValueBinding="{Binding Id}"
+                          PlaceholderText="Выберите занятие">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:LookupItem">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
-            <Button Grid.Column="1"
-                    Content="Отметить всех"
-                    Command="{Binding MarkAllPresentCommand}"/>
+                <Button Grid.Column="1"
+                        Content="Отметить всех"
+                        Classes="success"
+                        Command="{Binding MarkAllPresentCommand}"/>
 
-            <ComboBox Grid.Column="2"
-                      Width="180"
-                      ItemsSource="{Binding AttendanceStatuses}"
-                      SelectedItem="{Binding BulkStatus}"/>
+                <ComboBox Grid.Column="2"
+                          Width="180"
+                          ItemsSource="{Binding AttendanceStatuses}"
+                          SelectedItem="{Binding BulkStatus}"/>
 
-            <Button Grid.Column="3"
-                    Content="Применить всем"
-                    Command="{Binding ApplyStatusToAllCommand}"/>
-        </Grid>
+                <Button Grid.Column="3"
+                        Content="Применить всем"
+                        Classes="warning"
+                        Command="{Binding ApplyStatusToAllCommand}"/>
+            </Grid>
+        </Border>
 
         <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="10">
+            <Border Classes="section-panel">
             <Grid RowDefinitions="Auto,*" RowSpacing="10">
                 <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -63,6 +69,7 @@
                                IsVisible="{Binding LessonStudentCount, Converter={StaticResource NoDataConverter}}"/>
                     <Button Grid.Column="3"
                             Content="Сохранить журнал"
+                            Classes="primary"
                             Command="{Binding SaveLessonAttendanceCommand}"/>
                 </Grid>
 
@@ -119,7 +126,8 @@
 
                     <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                             BorderThickness="1"
-                            Background="{DynamicResource CardBackgroundBrush}"
+                            CornerRadius="8"
+                            Background="{DynamicResource SubtleBackgroundBrush}"
                             IsVisible="{Binding LessonStudentCount, Converter={StaticResource NoDataConverter}}">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                             <TextBlock Text="Нет студентов" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -131,6 +139,7 @@
                     </Border>
                 </Grid>
             </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

@@ -6,6 +6,7 @@
              x:Name="Root"
              x:DataType="vm:UsersPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Border Classes="toolbar-panel">
         <Grid ColumnDefinitions="*,260,Auto" ColumnSpacing="10">
             <StackPanel Spacing="4">
                 <TextBlock Text="Пользователи" FontSize="24" FontWeight="SemiBold"/>
@@ -18,14 +19,14 @@
                      Text="{Binding SearchText}"/>
             <Button Grid.Column="2"
                     Content="Обновить"
+                    Classes="ghost"
                     VerticalAlignment="Center"
                     Command="{Binding LoadCommand}"/>
         </Grid>
+        </Border>
 
         <Border Grid.Row="1"
-                Padding="0,10"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0,1,0,1">
+                Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="22">
                 <StackPanel Spacing="2">
                     <TextBlock Text="{Binding RegistrationRequestCount}"
@@ -63,6 +64,7 @@
         </Border>
 
         <Grid Grid.Row="2" ColumnDefinitions="*,340" ColumnSpacing="18">
+            <Border Classes="section-panel">
             <Grid RowDefinitions="Auto,190,Auto,*" RowSpacing="12">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Spacing="2">
@@ -123,7 +125,8 @@
 
                     <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                             BorderThickness="1"
-                            Background="{DynamicResource CardBackgroundBrush}"
+                            CornerRadius="8"
+                            Background="{DynamicResource SubtleBackgroundBrush}"
                             IsVisible="{Binding UserCount, Converter={StaticResource NoDataConverter}}">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                             <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
@@ -150,11 +153,10 @@
                     </ListBox>
                 </Grid>
             </Grid>
+            </Border>
 
             <Border Grid.Column="1"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1,0,0,0"
-                    Padding="18,0,0,0">
+                    Classes="side-panel">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Spacing="12">
@@ -179,10 +181,12 @@
                             </ComboBox>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                 <Button Content="Активировать"
+                                        Classes="success"
                                         Command="{Binding ActivateRegistrationRequestCommand}"
                                         IsEnabled="{Binding HasSelectedRegistrationRequest}"/>
                                 <Button Grid.Column="1"
                                         Content="Отклонить"
+                                        Classes="danger"
                                         Command="{Binding RejectRegistrationRequestCommand}"
                                         IsEnabled="{Binding HasSelectedRegistrationRequest}"/>
                             </Grid>
@@ -218,12 +222,12 @@
                             <CheckBox Content="Пользователь активен" IsChecked="{Binding IsActive}"/>
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Button Content="Сохранить" Command="{Binding SaveCommand}"/>
-                                <Button Grid.Column="1" Content="Очистить" Command="{Binding ClearFormCommand}"/>
+                                <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
+                                <Button Grid.Column="1" Content="Очистить" Classes="ghost" Command="{Binding ClearFormCommand}"/>
                             </Grid>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Button Content="Вкл / выкл" Command="{Binding ToggleActiveCommand}" IsEnabled="{Binding HasSelectedUser}"/>
-                                <Button Grid.Column="1" Content="Удалить" Command="{Binding DeleteSelectedUserCommand}" IsEnabled="{Binding HasSelectedUser}"/>
+                                <Button Content="Вкл / выкл" Classes="warning" Command="{Binding ToggleActiveCommand}" IsEnabled="{Binding HasSelectedUser}"/>
+                                <Button Grid.Column="1" Content="Удалить" Classes="danger" Command="{Binding DeleteSelectedUserCommand}" IsEnabled="{Binding HasSelectedUser}"/>
                             </Grid>
                         </StackPanel>
                     </StackPanel>

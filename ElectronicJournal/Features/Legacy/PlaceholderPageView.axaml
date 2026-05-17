@@ -3,17 +3,14 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              x:Class="ElectronicJournal.Views.PlaceholderPageView"
              x:DataType="vm:PlaceholderPageViewModel">
-    <Border Padding="14"
-            BorderBrush="{DynamicResource BorderThemeBrush}"
-            BorderThickness="0"
-            Background="Transparent">
+    <Border Classes="section-panel">
         <StackPanel Spacing="10">
             <TextBlock Text="{Binding Title}"
                        FontSize="20"
                        FontWeight="SemiBold"/>
             <TextBlock Text="{Binding Description}"
                        TextWrapping="Wrap"
-                       Foreground="#555555"/>
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
         </StackPanel>
     </Border>
 </UserControl>

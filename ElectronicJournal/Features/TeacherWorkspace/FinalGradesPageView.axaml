@@ -15,15 +15,18 @@
             </StackPanel>
             <Button Grid.Column="1"
                     Content="Сохранить ведомость"
+                    Classes="primary"
                     VerticalAlignment="Top"
                     Command="{Binding SaveSheetCommand}"/>
             <Button Grid.Column="2"
                     Content="Обновить"
+                    Classes="ghost"
                     VerticalAlignment="Top"
                     Command="{Binding LoadCommand}"/>
         </Grid>
 
         <Grid Grid.Row="1" RowDefinitions="Auto,Auto" RowSpacing="12">
+            <Border Classes="toolbar-panel">
             <Grid ColumnDefinitions="*,220" ColumnSpacing="10">
                 <ComboBox ItemsSource="{Binding Assignments}"
                           SelectedValue="{Binding SelectedAssignmentId}"
@@ -47,11 +50,10 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </Grid>
+            </Border>
 
             <Border Grid.Row="1"
-                    Padding="0,10"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0,1,0,1">
+                    Classes="section-panel">
                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
                     <StackPanel Spacing="2">
                         <TextBlock Text="{Binding SheetStudentCount}"
@@ -81,7 +83,8 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="2" x:Name="FinalSheetHost">
+        <Border Grid.Row="2" x:Name="FinalSheetHost" Classes="section-panel">
+            <Grid>
             <DataGrid MinWidth="780"
                       ItemsSource="{Binding SheetRows}"
                       SelectedItem="{Binding SelectedSheetRow}"
@@ -114,7 +117,8 @@
 
             <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                     BorderThickness="1"
-                    Background="{DynamicResource CardBackgroundBrush}"
+                    CornerRadius="8"
+                    Background="{DynamicResource SubtleBackgroundBrush}"
                     IsVisible="{Binding SheetStudentCount, Converter={StaticResource NoDataConverter}}">
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -155,6 +159,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

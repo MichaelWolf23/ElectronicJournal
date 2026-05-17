@@ -7,6 +7,7 @@
              x:Name="Root"
              x:DataType="vm:AssignmentsPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+        <Border Classes="toolbar-panel">
         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
             <StackPanel Spacing="3">
                 <TextBlock Text="Назначения" FontSize="19" FontWeight="SemiBold"/>
@@ -22,10 +23,13 @@
                      Text="{Binding SearchText}"/>
             <Button Grid.Column="2"
                     Content="Обновить"
+                    Classes="ghost"
                     Command="{Binding LoadCommand}"/>
         </Grid>
+        </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
+        <Border Grid.Row="1" Classes="section-panel">
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="Преподавательских назначений:" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <TextBlock Text="{Binding TeacherAssignmentCount}" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
@@ -35,8 +39,10 @@
                 <TextBlock Text="{Binding CuratorAssignmentCount}" FontWeight="SemiBold" Foreground="{DynamicResource SuccessThemeBrush}"/>
             </StackPanel>
         </Grid>
+        </Border>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="16">
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Border Classes="section-panel">
             <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
                 <TextBlock Text="Преподаватели" FontSize="16" FontWeight="SemiBold"/>
                 <DataGrid Grid.Row="1"
@@ -101,15 +107,19 @@
                         </ComboBox>
                         <Button Grid.Column="2"
                                 Content="Назначить"
+                                Classes="primary"
                                 Command="{Binding AddTeacherAssignmentCommand}"/>
                         <Button Grid.Column="3"
                                 Content="Удалить"
+                                Classes="danger"
                                 Command="{Binding DeleteTeacherAssignmentCommand}"/>
                     </Grid>
                 </Grid>
             </Grid>
+            </Border>
 
-            <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="10">
+            <Border Grid.Column="1" Classes="section-panel">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
                 <TextBlock Text="Кураторы групп" FontSize="16" FontWeight="SemiBold"/>
                 <DataGrid Grid.Row="1"
                           ItemsSource="{Binding CuratorAssignments}"
@@ -148,12 +158,15 @@
                     </ComboBox>
                     <Button Grid.Column="2"
                             Content="Назначить"
+                            Classes="primary"
                             Command="{Binding AddCuratorAssignmentCommand}"/>
                     <Button Grid.Column="3"
                             Content="Удалить"
+                            Classes="danger"
                             Command="{Binding DeleteCuratorAssignmentCommand}"/>
                 </Grid>
             </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

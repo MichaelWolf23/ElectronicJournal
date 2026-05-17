@@ -6,33 +6,36 @@
              x:Name="Root"
              x:DataType="vm:RetakesPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-            <StackPanel Spacing="4">
+        <Border Classes="toolbar-panel">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                <StackPanel Spacing="4">
                 <TextBlock Text="Пересдачи" FontSize="22" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding ResultMessage}"
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-            </StackPanel>
-            <Button Grid.Column="1"
-                    Content="Оформить выбранную"
-                    VerticalAlignment="Top"
-                    Command="{Binding AddRetakeCommand}"
-                    IsEnabled="{Binding CanSaveSelectedRetake}"/>
-            <Button Grid.Column="2"
-                    Content="Удалить пересдачу"
-                    VerticalAlignment="Top"
-                    Command="{Binding DeleteSelectedRetakeCommand}"
-                    IsEnabled="{Binding CanDeleteSelectedRetake}"/>
-            <Button Grid.Column="3"
-                    Content="Обновить"
-                    VerticalAlignment="Top"
-                    Command="{Binding LoadCommand}"/>
-        </Grid>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Content="Оформить выбранную"
+                        Classes="primary"
+                        VerticalAlignment="Top"
+                        Command="{Binding AddRetakeCommand}"
+                        IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                <Button Grid.Column="2"
+                        Content="Удалить пересдачу"
+                        Classes="danger"
+                        VerticalAlignment="Top"
+                        Command="{Binding DeleteSelectedRetakeCommand}"
+                        IsEnabled="{Binding CanDeleteSelectedRetake}"/>
+                <Button Grid.Column="3"
+                        Content="Обновить"
+                        Classes="ghost"
+                        VerticalAlignment="Top"
+                        Command="{Binding LoadCommand}"/>
+            </Grid>
+        </Border>
 
         <Border Grid.Row="1"
-                Padding="0,10"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0,1,0,1">
+                Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
                 <StackPanel Spacing="2">
                     <TextBlock Text="{Binding AvailableGradeCount}"
@@ -61,7 +64,8 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" x:Name="RetakeTableHost">
+        <Border Grid.Row="2" x:Name="RetakeTableHost" Classes="section-panel">
+            <Grid>
             <DataGrid MinWidth="900"
                       ItemsSource="{Binding RetakeRows}"
                       SelectedItem="{Binding SelectedRetakeRow}"
@@ -124,7 +128,8 @@
 
             <Border BorderBrush="{DynamicResource BorderThemeBrush}"
                     BorderThickness="1"
-                    Background="{DynamicResource CardBackgroundBrush}"
+                    CornerRadius="8"
+                    Background="{DynamicResource SubtleBackgroundBrush}"
                     IsVisible="{Binding AvailableGradeCount, Converter={StaticResource NoDataConverter}}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                     <TextBlock Text="Нет оценок для пересдачи"
@@ -155,6 +160,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

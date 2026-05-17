@@ -10,10 +10,10 @@
                 <TextBlock Text="Настройки системы" FontSize="24" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="Обновить" VerticalAlignment="Center" Command="{Binding LoadCommand}"/>
+            <Button Grid.Column="1" Content="Обновить" Classes="ghost" VerticalAlignment="Center" Command="{Binding LoadCommand}"/>
         </Grid>
 
-        <Border Grid.Row="1" Padding="0,12" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,1">
+        <Border Grid.Row="1" Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
                 <StackPanel Spacing="2">
                     <TextBlock Text="{Binding SettingCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
@@ -31,7 +31,8 @@
         </Border>
 
         <Grid Grid.Row="2" ColumnDefinitions="*,340" ColumnSpacing="18">
-            <Grid x:Name="SettingsListHost" RowDefinitions="Auto,*">
+            <Border x:Name="SettingsListHost" Classes="section-panel">
+            <Grid RowDefinitions="Auto,*">
                 <TextBlock Text="Параметры журнала" FontSize="18" FontWeight="SemiBold"/>
                 <DataGrid Grid.Row="1" Margin="0,10,0,0" MinWidth="660" ItemsSource="{Binding Settings}" SelectedItem="{Binding SelectedSetting}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" IsVisible="{Binding #SettingsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                     <DataGrid.Columns>
@@ -51,8 +52,9 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
+            </Border>
 
-            <Border Grid.Column="1" BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="1,0,0,0" Padding="18,0,0,0">
+            <Border Grid.Column="1" Classes="side-panel">
                 <ScrollViewer>
                 <StackPanel Spacing="18">
                     <StackPanel Spacing="10">
@@ -65,7 +67,7 @@
                         <TextBlock Text="{Binding SelectedSetting.AppliesTo}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding SelectedSetting.Description}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
                         <TextBox Watermark="Значение" Text="{Binding SettingValue}"/>
-                        <Button Content="Сохранить" Command="{Binding SaveCommand}"/>
+                        <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
                     </StackPanel>
 
                     <Border BorderBrush="{DynamicResource BorderThemeBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
@@ -73,8 +75,8 @@
                             <TextBlock Text="Резерв и архив" FontSize="18" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding BackupResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                <Button Content="Резервная копия" Command="{Binding CreateBackupCommand}"/>
-                                <Button Grid.Column="1" Content="Архив" Command="{Binding ArchiveSemesterCommand}"/>
+                                <Button Content="Резервная копия" Classes="success" Command="{Binding CreateBackupCommand}"/>
+                                <Button Grid.Column="1" Content="Архив" Classes="warning" Command="{Binding ArchiveSemesterCommand}"/>
                             </Grid>
                         </StackPanel>
                     </Border>

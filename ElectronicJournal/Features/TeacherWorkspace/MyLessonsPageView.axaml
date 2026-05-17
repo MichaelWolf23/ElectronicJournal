@@ -4,7 +4,8 @@
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.MyLessonsPageView"
              x:DataType="vm:MyLessonsPageViewModel">
-    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+        <Border Classes="toolbar-panel">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
             <StackPanel Orientation="Horizontal" Spacing="24">
                 <StackPanel Spacing="2">
@@ -22,15 +23,14 @@
             </StackPanel>
             <Button Grid.Column="1"
                     Content="Обновить"
+                    Classes="ghost"
                     VerticalAlignment="Center"
                     Command="{Binding LoadCommand}"/>
         </Grid>
+        </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="320,*,280" ColumnSpacing="10">
-            <Border Padding="12"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+        <Grid Grid.Row="1" ColumnDefinitions="320,*,280" ColumnSpacing="12">
+            <Border Classes="side-panel">
                 <Grid RowDefinitions="Auto,*" RowSpacing="8">
                     <StackPanel Spacing="2">
                         <TextBlock Text="Работа с занятием"
@@ -42,10 +42,7 @@
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Spacing="8">
-                        <Border Padding="10"
-                                BorderBrush="{DynamicResource BorderThemeBrush}"
-                                BorderThickness="0"
-                                Background="Transparent">
+                        <Border Classes="metric-panel">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="{Binding SelectedLessonTitle}"
                                            FontSize="16"
@@ -61,12 +58,15 @@
                         </Border>
 
                         <Button Content="Поставить оценки"
+                                Classes="primary"
                                 HorizontalAlignment="Stretch"
                                 Command="{Binding OpenGradesCommand}"/>
                         <Button Content="Отметить посещаемость"
+                                Classes="success"
                                 HorizontalAlignment="Stretch"
                                 Command="{Binding OpenAttendanceCommand}"/>
                         <Button Content="Темы и расписание"
+                                Classes="ghost"
                                 HorizontalAlignment="Stretch"
                                 Command="{Binding OpenTopicsCommand}"/>
 
@@ -79,11 +79,9 @@
             </Border>
 
             <Border Grid.Column="1"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="section-panel">
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Margin="10,8,10,6"
+                    <TextBlock Margin="0,0,0,8"
                                Text="Мои занятия"
                                FontSize="17"
                                FontWeight="SemiBold"/>
@@ -92,11 +90,7 @@
                              SelectedItem="{Binding SelectedLesson}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="dto:LessonListItem">
-                                <Border Padding="10"
-                                        Margin="0,0,0,6"
-                                        BorderBrush="{DynamicResource BorderThemeBrush}"
-                                        BorderThickness="0"
-                                        Background="Transparent">
+                                <Border Classes="list-row">
                                     <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
                                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                             <TextBlock Text="{Binding Topic}"
@@ -129,10 +123,7 @@
             </Border>
 
             <Border Grid.Column="2"
-                    Padding="12"
-                    BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="0"
-                    Background="Transparent">
+                    Classes="section-panel">
                 <Grid RowDefinitions="Auto,*" RowSpacing="8">
                     <TextBlock Text="Расписание"
                                FontSize="17"
@@ -140,9 +131,7 @@
                     <ItemsControl Grid.Row="1" ItemsSource="{Binding ScheduleCards}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="dto:LessonScheduleCard">
-                                <Border Padding="9"
-                                        Margin="0,0,0,7"
-                                        Background="Transparent">
+                                <Border Classes="list-row">
                                     <StackPanel Spacing="3">
                                         <TextBlock Text="{Binding DayName}"
                                                    FontWeight="SemiBold"/>

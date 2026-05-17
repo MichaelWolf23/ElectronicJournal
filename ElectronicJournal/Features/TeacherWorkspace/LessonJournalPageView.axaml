@@ -6,6 +6,7 @@
              x:DataType="vm:LessonJournalPageViewModel">
     <Grid ColumnDefinitions="280,*,300"
           ColumnSpacing="18">
+        <Border Classes="section-panel">
         <Grid RowDefinitions="Auto,*">
             <TextBlock Text="Занятия"
                        FontSize="18"
@@ -35,11 +36,10 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </Grid>
+        </Border>
 
         <Border Grid.Column="1"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="1,0,1,0"
-                Padding="18,0">
+                Classes="section-panel">
             <Grid RowDefinitions="Auto,34,*">
                 <StackPanel Spacing="3">
                     <TextBlock Text="{Binding LessonTitle}"
@@ -93,8 +93,8 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Column="2"
-              RowDefinitions="Auto,Auto,*">
+        <Border Grid.Column="2" Classes="side-panel">
+        <Grid RowDefinitions="Auto,Auto,*">
             <TextBlock Text="Отметка"
                        FontSize="18"
                        FontWeight="SemiBold"/>
@@ -107,7 +107,7 @@
             <StackPanel Grid.Row="2" Spacing="8">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                     <TextBlock Text="Посещаемость" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="Сохранить" Command="{Binding SaveAttendanceCommand}"/>
+                    <Button Grid.Column="1" Content="Сохранить" Classes="primary" Command="{Binding SaveAttendanceCommand}"/>
                 </Grid>
                 <ComboBox ItemsSource="{Binding AttendanceStatuses}" SelectedItem="{Binding SelectedStatus}"/>
 
@@ -122,17 +122,18 @@
                 <TextBox Watermark="Оценка" Text="{Binding GradeValue}"/>
                 <TextBox Watermark="Комментарий" Text="{Binding Comment}"/>
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Content="Оценка" Command="{Binding SaveGradeCommand}"/>
-                    <Button Grid.Column="1" Content="Все" Command="{Binding SaveBothCommand}"/>
+                    <Button Content="Оценка" Classes="primary" Command="{Binding SaveGradeCommand}"/>
+                    <Button Grid.Column="1" Content="Все" Classes="success" Command="{Binding SaveBothCommand}"/>
                 </Grid>
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Content="Печать" Command="{Binding PrintJournalCommand}"/>
-                    <Button Grid.Column="1" Content="Excel" Command="{Binding ExportJournalExcelCommand}"/>
+                    <Button Content="Печать" Classes="ghost" Command="{Binding PrintJournalCommand}"/>
+                    <Button Grid.Column="1" Content="Excel" Classes="ghost" Command="{Binding ExportJournalExcelCommand}"/>
                 </Grid>
 
                 <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             </StackPanel>
         </Grid>
+        </Border>
     </Grid>
 </UserControl>

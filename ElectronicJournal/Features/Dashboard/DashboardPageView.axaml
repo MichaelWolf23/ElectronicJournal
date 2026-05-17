@@ -4,9 +4,9 @@
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.DashboardPageView"
              x:DataType="vm:DashboardPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="18">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
         <Grid ColumnDefinitions="*,Auto"
-              ColumnSpacing="24">
+              ColumnSpacing="16">
             <StackPanel Spacing="6">
                 <TextBlock Text="{Binding WorkdayTitle}"
                            FontSize="28"
@@ -22,8 +22,7 @@
 
             <Border Grid.Column="1"
                     Width="300"
-                    Padding="16"
-                    CornerRadius="10"
+                    Classes="metric-panel"
                     Background="{DynamicResource AccentSoftBrush}">
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding RoleText}"
@@ -36,9 +35,7 @@
         </Grid>
 
         <Border Grid.Row="1"
-                Padding="0,14"
-                BorderBrush="{DynamicResource BorderThemeBrush}"
-                BorderThickness="0,1,0,1">
+                Classes="section-panel">
             <ItemsControl ItemsSource="{Binding Metrics}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -69,7 +66,8 @@
 
         <Grid Grid.Row="2"
               ColumnDefinitions="1.25*,1.05*,0.8*"
-              ColumnSpacing="28">
+              ColumnSpacing="12">
+            <Border Classes="section-panel">
             <Grid RowDefinitions="Auto,*">
                 <TextBlock Text="Что сделать сейчас"
                            FontSize="18"
@@ -81,10 +79,9 @@
                         <DataTemplate x:DataType="dto:DashboardWorkItem">
                             <Button Command="{Binding OpenCommand}"
                                     HorizontalContentAlignment="Stretch"
-                                    Padding="0"
+                                    Padding="8,4"
                                     Margin="0,0,0,4"
-                                    Background="Transparent"
-                                    BorderThickness="0">
+                                    Classes="ghost">
                                 <Grid MinHeight="58"
                                       ColumnDefinitions="76,*,24"
                                       ColumnSpacing="14">
@@ -122,9 +119,10 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
+            </Border>
 
-            <Grid Grid.Column="1"
-                  RowDefinitions="Auto,*">
+            <Border Grid.Column="1" Classes="section-panel">
+            <Grid RowDefinitions="Auto,*">
                 <TextBlock Text="{Binding AttentionTitle}"
                            FontSize="18"
                            FontWeight="SemiBold"/>
@@ -135,10 +133,9 @@
                         <DataTemplate x:DataType="dto:DashboardWorkItem">
                             <Button Command="{Binding OpenCommand}"
                                     HorizontalContentAlignment="Stretch"
-                                    Padding="0"
+                                    Padding="8,4"
                                     Margin="0,0,0,4"
-                                    Background="Transparent"
-                                    BorderThickness="0">
+                                    Classes="ghost">
                                 <Grid MinHeight="56"
                                       ColumnDefinitions="*,78,24"
                                       ColumnSpacing="12">
@@ -164,9 +161,10 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
+            </Border>
 
-            <Grid Grid.Column="2"
-                  RowDefinitions="Auto,*">
+            <Border Grid.Column="2" Classes="section-panel">
+            <Grid RowDefinitions="Auto,*">
                 <TextBlock Text="Разделы"
                            FontSize="18"
                            FontWeight="SemiBold"/>
@@ -177,10 +175,9 @@
                         <DataTemplate x:DataType="dto:DashboardActionItem">
                             <Button Command="{Binding OpenCommand}"
                                     HorizontalContentAlignment="Stretch"
-                                    Padding="0"
+                                    Padding="8,4"
                                     Margin="0,0,0,4"
-                                    Background="Transparent"
-                                    BorderThickness="0">
+                                    Classes="ghost">
                                 <Grid MinHeight="42"
                                       ColumnDefinitions="*,24">
                                     <TextBlock Text="{Binding Title}"
@@ -199,6 +196,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
