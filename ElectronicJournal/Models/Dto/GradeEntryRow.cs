@@ -20,7 +20,13 @@ public sealed partial class GradeEntryRow : ObservableObject
         this.gradeId = gradeId;
         gradeValueText = gradeValue?.ToString("0.##") ?? string.Empty;
         this.comment = comment ?? string.Empty;
+        originalGradeValueText = gradeValueText;
+        originalComment = this.comment;
     }
+
+    private readonly string originalGradeValueText;
+
+    private readonly string originalComment;
 
     public int StudentId { get; }
 
@@ -34,15 +40,38 @@ public sealed partial class GradeEntryRow : ObservableObject
         ? GroupName
         : $"{GroupName}, билет {StudentCardNumber}";
 
-    public string StatusText => GradeId is null ? "нет оценки" : "сохранена";
+    public bool HasSavedGrade => GradeId is not null;
+
+    public bool IsDirty =>
+        GradeValueText.Trim() != originalGradeValueText ||
+        Comment.Trim() != originalComment;
+
+    public string StatusText
+    {
+        get
+        {
+            if (IsDirty)
+            {
+                return HasSavedGrade ? "изменено" : "готово к сохранению";
+            }
+
+            return HasSavedGrade ? "сохранена" : "не сохранена";
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(HasSavedGrade))]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
     private int? gradeId;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
     private string gradeValueText;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(IsDirty))]
     private string comment;
 }

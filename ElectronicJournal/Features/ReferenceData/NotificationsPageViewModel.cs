@@ -43,6 +43,9 @@ public partial class NotificationsPageViewModel : PageViewModelBase
     private int visibleNotificationCount;
 
     [ObservableProperty]
+    private string inboxSummary = "Уведомления загружаются.";
+
+    [ObservableProperty]
     private string selectedNotificationTitle = "Выберите уведомление";
 
     [ObservableProperty]
@@ -93,6 +96,11 @@ public partial class NotificationsPageViewModel : PageViewModelBase
         SelectedNotificationMessage = value.Message;
     }
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     [RelayCommand]
     private void Load()
     {
@@ -127,11 +135,20 @@ public partial class NotificationsPageViewModel : PageViewModelBase
     private void MarkAsClosed() => UpdateSelectedStatus("Закрыто");
 
     [RelayCommand]
+    private void ClearFilters()
+    {
+        SearchText = string.Empty;
+        SelectedStatusFilter = "Все";
+        ApplyFilter();
+    }
+
+    [RelayCommand]
     private async Task DeleteSelectedNotification()
     {
         if (SelectedNotification is null)
         {
             ResultMessage = "Сначала выберите уведомление.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -148,11 +165,13 @@ public partial class NotificationsPageViewModel : PageViewModelBase
             notificationRepository.DeleteNotification(SelectedNotification.NotificationId);
             SelectedNotification = null;
             ResultMessage = "Уведомление удалено.";
+            NotifySuccess(ResultMessage);
             Load();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить уведомление: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -161,6 +180,7 @@ public partial class NotificationsPageViewModel : PageViewModelBase
         if (SelectedNotification is null)
         {
             ResultMessage = "Сначала выберите уведомление.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -168,11 +188,13 @@ public partial class NotificationsPageViewModel : PageViewModelBase
         {
             notificationRepository.UpdateStatus(SelectedNotification.NotificationId, status);
             ResultMessage = $"Статус уведомления изменен на \"{status}\".";
+            NotifySuccess(ResultMessage);
             Load();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось изменить статус: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -199,6 +221,10 @@ public partial class NotificationsPageViewModel : PageViewModelBase
         var visibleNotifications = filtered.ToList();
         Notifications = new ObservableCollection<CuratorNotificationItem>(visibleNotifications);
         VisibleNotificationCount = visibleNotifications.Count;
+        InboxSummary = visibleNotifications.Count == 0
+            ? "По выбранным фильтрам уведомлений нет."
+            : $"Показано уведомлений: {visibleNotifications.Count}.";
+        SelectedNotification = visibleNotifications.FirstOrDefault();
     }
 
     private static bool Contains(string? value, string query) =>

@@ -5,96 +5,117 @@
              x:Class="ElectronicJournal.Views.AttendancePageView"
              x:Name="Root"
              x:DataType="vm:AttendancePageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-            <StackPanel Spacing="4">
-                <TextBlock Text="Журнал посещаемости" FontSize="19" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="{DynamicResource DangerThemeBrush}"
-                           TextWrapping="Wrap"
-                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-            </StackPanel>
-            <Button Grid.Column="1"
-                    Content="Обновить"
-                    Classes="ghost"
-                    Command="{Binding LoadCommand}"/>
-        </Grid>
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Border Classes="toolbar-panel">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Посещаемость" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding LessonAttendanceSummary}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
 
-        <Border Grid.Row="1" Classes="toolbar-panel">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-                <ComboBox ItemsSource="{Binding Lessons}"
+                <ComboBox Grid.Row="1"
+                          ItemsSource="{Binding Lessons}"
                           SelectedValue="{Binding SelectedLessonId}"
                           SelectedValueBinding="{Binding Id}"
                           PlaceholderText="Выберите занятие">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:LookupItem">
-                            <TextBlock Text="{Binding Name}"/>
+                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-
-                <Button Grid.Column="1"
-                        Content="Отметить всех"
-                        Classes="success"
-                        Command="{Binding MarkAllPresentCommand}"/>
-
-                <ComboBox Grid.Column="2"
-                          Width="180"
-                          ItemsSource="{Binding AttendanceStatuses}"
-                          SelectedItem="{Binding BulkStatus}"/>
-
-                <Button Grid.Column="3"
-                        Content="Применить всем"
-                        Classes="warning"
-                        Command="{Binding ApplyStatusToAllCommand}"/>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="10">
-            <Border Classes="section-panel">
-            <Grid RowDefinitions="Auto,*" RowSpacing="10">
-                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="14">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Студентов:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        <TextBlock Text="{Binding LessonStudentCount}" FontWeight="SemiBold" Foreground="{DynamicResource AccentThemeBrush}"/>
+        <Border Grid.Row="1" Classes="section-panel">
+            <UniformGrid Columns="4">
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding LessonStudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding LessonPresentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="присутствуют" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding LessonAbsentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                    <TextBlock Text="отсутствуют" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding LessonLateCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="опоздали" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </UniformGrid>
+        </Border>
+
+        <Border Grid.Row="2" x:Name="AttendanceSheetHost" Classes="section-panel">
+            <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Ведомость занятия" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="Измените статусы в списке и сохраните ведомость."
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Уже сохранено:" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        <TextBlock Text="{Binding LessonMarkedCount}" FontWeight="SemiBold" Foreground="{DynamicResource SuccessThemeBrush}"/>
-                    </StackPanel>
-                    <TextBlock Grid.Column="2"
-                               Text="Нет студентов"
-                               Foreground="{DynamicResource MutedTextBrush}"
-                               IsVisible="{Binding LessonStudentCount, Converter={StaticResource NoDataConverter}}"/>
-                    <Button Grid.Column="3"
-                            Content="Сохранить журнал"
-                            Classes="primary"
-                            Command="{Binding SaveLessonAttendanceCommand}"/>
+
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <Button Content="Все присутствуют"
+                                Margin="0,0,8,8"
+                                Classes="success"
+                                Command="{Binding MarkAllPresentCommand}"/>
+                        <ComboBox Width="180"
+                                  Margin="0,0,8,8"
+                                  ItemsSource="{Binding AttendanceStatuses}"
+                                  SelectedItem="{Binding BulkStatus}"/>
+                        <Button Content="Применить"
+                                Margin="0,0,8,8"
+                                Classes="warning"
+                                Command="{Binding ApplyStatusToAllCommand}"/>
+                        <Button Content="Очистить"
+                                Margin="0,0,8,8"
+                                Classes="ghost"
+                                Command="{Binding ClearLessonMarksCommand}"/>
+                        <Button Content="Сохранить"
+                                Margin="0,0,0,8"
+                                Classes="primary"
+                                Command="{Binding SaveLessonAttendanceCommand}"/>
+                    </WrapPanel>
                 </Grid>
 
-                <Grid Grid.Row="1" x:Name="LessonMarksHost">
+                <Grid Grid.Row="1">
                     <DataGrid ItemsSource="{Binding LessonMarks}"
                               AutoGenerateColumns="False"
                               GridLinesVisibility="Horizontal"
                               IsReadOnly="False"
-                              MinWidth="650"
-                              IsVisible="{Binding #LessonMarksHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
+                              MinWidth="680"
+                              IsVisible="{Binding #AttendanceSheetHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Студент"
                                                 Binding="{Binding StudentName}"
                                                 Width="260"
                                                 IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Группа"
-                                                Binding="{Binding GroupName}"
-                                                Width="110"
-                                                IsReadOnly="True"/>
-                            <DataGridTemplateColumn Header="Статус" Width="190">
+                            <DataGridTemplateColumn Header="Статус" Width="210">
                                 <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ComboBox ItemsSource="{Binding #Root.DataContext.AttendanceStatuses}"
-                                                  SelectedItem="{Binding Status}"
-                                                  HorizontalAlignment="Stretch"/>
+                                    <DataTemplate x:DataType="dto:AttendanceMarkItem">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                            <Border Width="10"
+                                                    Height="10"
+                                                    CornerRadius="5"
+                                                    Background="{Binding Status, Converter={StaticResource StatusBrushConverter}}"
+                                                    VerticalAlignment="Center"/>
+                                            <ComboBox Grid.Column="1"
+                                                      ItemsSource="{Binding #Root.DataContext.AttendanceStatuses}"
+                                                      SelectedItem="{Binding Status}"
+                                                      HorizontalAlignment="Stretch"/>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -105,21 +126,32 @@
                     </DataGrid>
 
                     <ListBox ItemsSource="{Binding LessonMarks}"
-                             IsVisible="{Binding #LessonMarksHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
+                             IsVisible="{Binding #AttendanceSheetHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="dto:AttendanceMarkItem">
-                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="6" Margin="0,6">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}"/>
+                                <Border Classes="list-row">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                            <StackPanel Spacing="1">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    Padding="8,4"
+                                                    CornerRadius="10"
+                                                    Background="{Binding Status, Converter={StaticResource StatusBrushConverter}}"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </Grid>
+                                        <ComboBox Grid.Row="1"
+                                                  ItemsSource="{Binding #Root.DataContext.AttendanceStatuses}"
+                                                  SelectedItem="{Binding Status}"/>
+                                        <TextBox Grid.Row="2"
+                                                 Watermark="Комментарий"
+                                                 Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}"/>
                                     </Grid>
-                                    <ComboBox Grid.Row="1"
-                                              ItemsSource="{Binding #Root.DataContext.AttendanceStatuses}"
-                                              SelectedItem="{Binding Status}"/>
-                                    <TextBox Grid.Row="2"
-                                             Watermark="Комментарий"
-                                             Text="{Binding Comment}"/>
-                                </Grid>
+                                </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
@@ -139,7 +171,6 @@
                     </Border>
                 </Grid>
             </Grid>
-            </Border>
-        </Grid>
+        </Border>
     </Grid>
 </UserControl>

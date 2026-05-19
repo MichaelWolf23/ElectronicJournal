@@ -3,127 +3,186 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.StudentProfilePageView"
+             x:Name="Root"
              x:DataType="vm:StudentProfilePageViewModel">
-    <Grid ColumnDefinitions="280,*" ColumnSpacing="12">
-        <Border Classes="side-panel">
-            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
-                <TextBlock Text="Студенты" FontSize="17" FontWeight="SemiBold"/>
-                <TextBox Grid.Row="1" Watermark="Поиск по ФИО или группе" Text="{Binding SearchText}"/>
-                <ListBox Grid.Row="2" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="dto:StudentListItem">
-                            <Border Classes="list-row">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    <TextBlock Text="{Binding Status}" Foreground="{DynamicResource MutedTextBrush}"/>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-        </Border>
-
-        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" RowSpacing="10">
-            <Border Classes="toolbar-panel">
-                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="10">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="{Binding ProfileTitle}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding ProfileDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding ContactText}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <Border Grid.Column="1" Classes="metric-panel" Background="{DynamicResource AccentSoftBrush}">
-                        <StackPanel>
-                            <TextBlock Text="Средний" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <TextBlock Text="{Binding AverageText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+    <Grid x:Name="StudentProfileHost">
+        <Grid ColumnDefinitions="300,*"
+              ColumnSpacing="14"
+              IsVisible="{Binding #StudentProfileHost.Bounds.Width, Converter={StaticResource WideDashboardConverter}}">
+            <Border Classes="section-panel">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Студенты" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding StudentCount, StringFormat='{}{0} карточек'}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
                         </StackPanel>
-                    </Border>
-                    <Border Grid.Column="2" Classes="metric-panel" Background="{DynamicResource DangerSoftBrush}">
-                        <StackPanel>
-                            <TextBlock Text="Долги" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <TextBlock Text="{Binding LowGradeCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Grid.Column="3" Classes="metric-panel" Background="{DynamicResource WarningSoftBrush}">
-                        <StackPanel>
-                            <TextBlock Text="Пропуски" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            <TextBlock Text="{Binding AbsenceCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
-                        </StackPanel>
-                    </Border>
-                    <StackPanel Grid.Column="4" Spacing="6" VerticalAlignment="Center">
-                        <Button Content="Риски" Classes="warning" Command="{Binding OpenRisksCommand}"/>
-                        <Button Content="Журнал" Classes="primary" Command="{Binding OpenLessonJournalCommand}"/>
-                    </StackPanel>
+                    </Grid>
+                    <TextBox Grid.Row="1"
+                             Watermark="Поиск по ФИО или группе"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:StudentListItem">
+                                <Border Classes="list-row">
+                                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="3">
+                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="1" Text="{Binding StudentCardNumber}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Grid.Row="1"
+                                                   Grid.Column="1"
+                                                   Text="{Binding Status}"
+                                                   Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"
+                                                   FontWeight="SemiBold"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
 
-            <TextBlock Grid.Row="1" Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-
-            <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                <Border Classes="section-panel">
-                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                        <TextBlock Text="Последние оценки" FontSize="16" FontWeight="SemiBold"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding RecentGrades}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="dto:GradeJournalItem">
-                                    <Border Classes="list-row">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <StackPanel Spacing="2">
-                                                <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding GradeType}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                <TextBlock Text="{Binding GradeDate}" Foreground="{DynamicResource MutedTextBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding GradeValue}" FontSize="20" FontWeight="Bold" Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+            <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" RowSpacing="14">
+                <Border Classes="toolbar-panel">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="{Binding ProfileTitle}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding ProfileDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding ContactText}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="Риски"
+                                Classes="warning"
+                                VerticalAlignment="Top"
+                                Command="{Binding OpenRisksCommand}"/>
                     </Grid>
                 </Border>
 
-                <Border Grid.Column="1" Classes="section-panel">
-                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                        <TextBlock Text="Посещаемость" FontSize="16" FontWeight="SemiBold"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding RecentAttendance}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="dto:AttendanceJournalItem">
-                                    <Border Classes="list-row">
-                                        <StackPanel Spacing="2">
-                                            <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding LessonDate}" Foreground="{DynamicResource MutedTextBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
+                <Border Grid.Row="1" Classes="section-panel">
+                    <UniformGrid Columns="5">
+                        <StackPanel Spacing="2" Margin="0,0,14,0">
+                            <TextBlock Text="{Binding AverageText}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                            <TextBlock Text="средний балл" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <StackPanel Spacing="2" Margin="0,0,14,0">
+                            <TextBlock Text="{Binding GradeCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                            <TextBlock Text="оценок" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <StackPanel Spacing="2" Margin="0,0,14,0">
+                            <TextBlock Text="{Binding AttendanceCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                            <TextBlock Text="посещений" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <StackPanel Spacing="2" Margin="0,0,14,0">
+                            <TextBlock Text="{Binding LowGradeCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                            <TextBlock Text="рисков" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding AbsenceCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                            <TextBlock Text="пропусков" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </UniformGrid>
                 </Border>
 
-                <Border Grid.Column="2" Classes="section-panel">
-                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                        <TextBlock Text="Долги и риски" FontSize="16" FontWeight="SemiBold"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding Debts}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="dto:DebtorItem">
-                                    <Border Classes="list-row" Background="{DynamicResource DangerSoftBrush}">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <StackPanel Spacing="2">
-                                                <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Text="{Binding TeacherName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                <TextBlock Text="{Binding GradeDate}" Foreground="{DynamicResource MutedTextBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding GradeValue}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-                </Border>
+                <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Последние оценки" FontSize="18" FontWeight="SemiBold"/>
+                            <ListBox Grid.Row="1" ItemsSource="{Binding RecentGrades}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:GradeJournalItem">
+                                        <Border Classes="list-row">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding GradeType}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                    <TextBlock Text="{Binding GradeDate}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding GradeValue}" FontSize="20" FontWeight="Bold" Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="1" Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Посещаемость" FontSize="18" FontWeight="SemiBold"/>
+                            <ListBox Grid.Row="1" ItemsSource="{Binding RecentAttendance}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:AttendanceJournalItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="3">
+                                                <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding LessonDate}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}" FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Долги и риски" FontSize="18" FontWeight="SemiBold"/>
+                            <ListBox Grid.Row="1" ItemsSource="{Binding Debts}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:DebtorItem">
+                                        <Border Classes="list-row" Background="{DynamicResource DangerSoftBrush}">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding TeacherName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                    <TextBlock Text="{Binding GradeDate}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding GradeValue}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
         </Grid>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      IsVisible="{Binding #StudentProfileHost.Bounds.Width, Converter={StaticResource CompactDashboardConverter}}">
+            <StackPanel Spacing="14">
+                <Border Classes="section-panel">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Студенты" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBox Watermark="Поиск по ФИО или группе" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                        <ListBox MaxHeight="260" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="toolbar-panel">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding ProfileTitle}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ProfileDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ContactText}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                        <Button Content="Риски" Classes="warning" HorizontalAlignment="Left" Command="{Binding OpenRisksCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="section-panel">
+                    <UniformGrid Columns="2">
+                        <StackPanel Spacing="2" Margin="0,0,14,10">
+                            <TextBlock Text="{Binding AverageText}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                            <TextBlock Text="средний балл" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <StackPanel Spacing="2" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding LowGradeCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                            <TextBlock Text="рисков" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

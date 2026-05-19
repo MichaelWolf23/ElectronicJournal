@@ -19,6 +19,7 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
     private readonly SettingsRepository settingsRepository;
     private readonly AuthenticatedUser currentUser;
     private List<DebtorItem> allDebts = new();
+    private List<CuratorNotificationItem> allNotifications = new();
 
     [ObservableProperty]
     private ObservableCollection<GroupStatisticsItem> groups = new();
@@ -31,6 +32,9 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<CuratorNotificationItem> notifications = new();
+
+    [ObservableProperty]
+    private ObservableCollection<CuratorNotificationItem> groupNotifications = new();
 
     [ObservableProperty]
     private ObservableCollection<GroupChartItem> chartItems = new();
@@ -51,7 +55,19 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
     private int totalDebtors;
 
     [ObservableProperty]
+    private int riskGroupCount;
+
+    [ObservableProperty]
+    private int newNotificationCount;
+
+    [ObservableProperty]
+    private int selectedGroupNotificationCount;
+
+    [ObservableProperty]
     private string averageText = "Нет данных";
+
+    [ObservableProperty]
+    private string groupHealthText = "Выберите группу.";
 
     [ObservableProperty]
     private string resultMessage = "Группы загружены.";
@@ -76,6 +92,11 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
 
     partial void OnSelectedGroupChanged(GroupStatisticsItem? value) => UpdateGroupDetails();
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     [RelayCommand]
     private void Load()
     {
@@ -89,14 +110,16 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
             allDebts = currentUser.RoleName == "Куратор группы"
                 ? gradeRepository.GetDebtorsForCurator(minPositiveGrade, currentUser.UserId)
                 : gradeRepository.GetDebtors(minPositiveGrade);
-            Notifications = new ObservableCollection<CuratorNotificationItem>(
-                currentUser.RoleName == "Куратор группы"
+            allNotifications = currentUser.RoleName == "Куратор группы"
                     ? notificationRepository.GetNotificationsByCurator(currentUser.UserId)
-                    : notificationRepository.GetNotifications());
+                    : notificationRepository.GetNotifications();
+            Notifications = new ObservableCollection<CuratorNotificationItem>(allNotifications);
             Groups = new ObservableCollection<GroupStatisticsItem>(loadedGroups);
             ChartItems = new ObservableCollection<GroupChartItem>(BuildChartItems(loadedGroups));
             TotalStudents = loadedGroups.Sum(group => group.StudentCount);
             TotalDebtors = loadedGroups.Sum(group => group.DebtorCount);
+            RiskGroupCount = loadedGroups.Count(group => group.DebtorCount > 0);
+            NewNotificationCount = allNotifications.Count(notification => notification.Status == "Новое");
             AverageText = loadedGroups.Where(group => group.AverageGrade is not null).Select(group => group.AverageGrade!.Value).DefaultIfEmpty().Average().ToString("F2");
             SelectedGroup = loadedGroups.FirstOrDefault();
             ResultMessage = $"Групп в работе: {loadedGroups.Count}.";
@@ -130,13 +153,22 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
             GroupDetails = "Здесь появятся студенты, риски и уведомления.";
             Students.Clear();
             GroupDebts.Clear();
+            GroupNotifications.Clear();
+            SelectedGroupNotificationCount = 0;
+            GroupHealthText = "Выберите группу.";
             return;
         }
 
         GroupTitle = SelectedGroup.GroupName;
         GroupDetails = $"Студентов: {SelectedGroup.StudentCount}. Средний балл: {SelectedGroup.AverageGrade?.ToString("F2") ?? "нет данных"}. Должников: {SelectedGroup.DebtorCount}.";
+        GroupHealthText = SelectedGroup.DebtorCount == 0
+            ? "Группа без критичных учебных рисков."
+            : $"В группе есть сигналы риска: {SelectedGroup.DebtorCount}.";
         Students = new ObservableCollection<StudentListItem>(studentRepository.GetStudentsByGroup(SelectedGroup.GroupId));
         GroupDebts = new ObservableCollection<DebtorItem>(allDebts.Where(debt => debt.GroupId == SelectedGroup.GroupId));
+        GroupNotifications = new ObservableCollection<CuratorNotificationItem>(
+            allNotifications.Where(notification => notification.GroupName == SelectedGroup.GroupName));
+        SelectedGroupNotificationCount = GroupNotifications.Count;
     }
 
     [RelayCommand]
@@ -145,6 +177,7 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
         if (SelectedGroup is null)
         {
             ResultMessage = "Выберите группу для отчета.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -188,10 +221,12 @@ public sealed partial class MyGroupsPageViewModel : PageViewModelBase
 
             ReportExportService.ShowInExplorer(reportPath);
             ResultMessage = $"Сводный отчет сохранен: {reportPath}";
+            NotifySuccess("Сводный отчет сохранен и открыт в проводнике.");
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить отчет: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 }

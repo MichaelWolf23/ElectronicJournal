@@ -38,6 +38,21 @@ public partial class SettingsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private string backupResultMessage = "Резервная копия еще не создавалась.";
 
+    [ObservableProperty]
+    private string currentPeriodInput = string.Empty;
+
+    [ObservableProperty]
+    private string minPositiveGradeInput = string.Empty;
+
+    [ObservableProperty]
+    private string minGradeScaleInput = string.Empty;
+
+    [ObservableProperty]
+    private string maxGradeScaleInput = string.Empty;
+
+    [ObservableProperty]
+    private bool curatorNotificationsEnabled = true;
+
     public SettingsPageViewModel(SettingsRepository settingsRepository, BackupService backupService)
         : base("Настройки")
     {
@@ -49,6 +64,11 @@ public partial class SettingsPageViewModel : PageViewModelBase
     partial void OnSelectedSettingChanged(SystemSetting? value)
     {
         SettingValue = value?.SettingValue ?? string.Empty;
+    }
+
+    public override void OnNavigatedTo()
+    {
+        Load();
     }
 
     [RelayCommand]
@@ -64,6 +84,11 @@ public partial class SettingsPageViewModel : PageViewModelBase
             var minGrade = Settings.FirstOrDefault(setting => setting.SettingKey == "Минимальная оценка шкалы")?.SettingValue ?? "?";
             var maxGrade = Settings.FirstOrDefault(setting => setting.SettingKey == "Максимальная оценка шкалы")?.SettingValue ?? "?";
             GradeScaleText = $"{minGrade}-{maxGrade}";
+            CurrentPeriodInput = CurrentPeriod == "Не задан" ? string.Empty : CurrentPeriod;
+            MinPositiveGradeInput = Settings.FirstOrDefault(setting => setting.SettingKey == "Минимальная положительная оценка")?.SettingValue ?? "3";
+            MinGradeScaleInput = minGrade == "?" ? "2" : minGrade;
+            MaxGradeScaleInput = maxGrade == "?" ? "5" : maxGrade;
+            CuratorNotificationsEnabled = settingsRepository.AreCuratorNotificationsEnabled();
             ResultMessage = $"Загружено настроек: {Settings.Count}.";
         }
         catch (Exception ex)
@@ -77,23 +102,92 @@ public partial class SettingsPageViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private void SaveJournalSettings()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentPeriodInput))
+        {
+            ResultMessage = "Укажите текущий учебный период.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        SaveKnownSetting("Текущий учебный период", CurrentPeriodInput.Trim(), "Период журнала сохранен.");
+    }
+
+    [RelayCommand]
+    private void SaveGradeSettings()
+    {
+        if (!double.TryParse(MinGradeScaleInput, out var minGrade) ||
+            !double.TryParse(MaxGradeScaleInput, out var maxGrade) ||
+            !double.TryParse(MinPositiveGradeInput, out var minPositiveGrade))
+        {
+            ResultMessage = "Оценочные параметры должны быть числами.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        if (minGrade < 0 || maxGrade > 100 || minGrade >= maxGrade)
+        {
+            ResultMessage = "Минимальная оценка должна быть меньше максимальной.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        if (minPositiveGrade < minGrade || minPositiveGrade > maxGrade)
+        {
+            ResultMessage = "Положительная оценка должна быть внутри шкалы оценивания.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        try
+        {
+            settingsRepository.UpdateSetting("Минимальная оценка шкалы", MinGradeScaleInput.Trim());
+            settingsRepository.UpdateSetting("Максимальная оценка шкалы", MaxGradeScaleInput.Trim());
+            settingsRepository.UpdateSetting("Минимальная положительная оценка", MinPositiveGradeInput.Trim());
+            ResultMessage = "Настройки оценивания сохранены.";
+            NotifySuccess(ResultMessage);
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось сохранить настройки оценивания: {ex.Message}";
+            NotifyError(ResultMessage);
+        }
+    }
+
+    [RelayCommand]
+    private void SaveNotificationSettings()
+    {
+        SaveKnownSetting(
+            "Автоматические уведомления кураторам",
+            CuratorNotificationsEnabled ? "Включены" : "Отключены",
+            CuratorNotificationsEnabled
+                ? "Уведомления кураторам включены."
+                : "Уведомления кураторам отключены.");
+    }
+
+    [RelayCommand]
     private void Save()
     {
         if (SelectedSetting is null)
         {
             ResultMessage = "Сначала выберите настройку.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(SettingValue))
         {
             ResultMessage = "Значение настройки не может быть пустым.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!IsSettingValueValid(SelectedSetting.SettingKey, SettingValue.Trim(), out var validationError))
         {
             ResultMessage = validationError;
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -101,6 +195,7 @@ public partial class SettingsPageViewModel : PageViewModelBase
         {
             settingsRepository.UpdateSetting(SelectedSetting.SettingKey, SettingValue.Trim());
             ResultMessage = $"Настройка \"{SelectedSetting.SettingKey}\" сохранена.";
+            NotifySuccess(ResultMessage);
             var selectedKey = SelectedSetting.SettingKey;
             Load();
 
@@ -116,6 +211,7 @@ public partial class SettingsPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить настройку: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -128,10 +224,12 @@ public partial class SettingsPageViewModel : PageViewModelBase
             var backupPath = backupService.CreateBackup();
             BackupResultMessage = $"Резервная копия создана: {backupPath}";
             ResultMessage = "База данных сохранена в отдельный файл.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             BackupResultMessage = $"Не удалось создать резервную копию: {ex.Message}";
+            NotifyError(BackupResultMessage);
         }
         finally
         {
@@ -150,10 +248,12 @@ public partial class SettingsPageViewModel : PageViewModelBase
                 ? $"Период \"{result.PeriodName}\" архивирован. Копия базы: {result.BackupPath}"
                 : $"Резервная копия создана, но период \"{result.PeriodName}\" уже был архивирован или не найден.";
             ResultMessage = "Архивирование выполнено после создания резервной копии.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             BackupResultMessage = $"Не удалось архивировать период: {ex.Message}";
+            NotifyError(BackupResultMessage);
         }
         finally
         {
@@ -182,5 +282,21 @@ public partial class SettingsPageViewModel : PageViewModelBase
         }
 
         return true;
+    }
+
+    private void SaveKnownSetting(string key, string value, string successMessage)
+    {
+        try
+        {
+            settingsRepository.UpdateSetting(key, value);
+            ResultMessage = successMessage;
+            NotifySuccess(ResultMessage);
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось сохранить настройку: {ex.Message}";
+            NotifyError(ResultMessage);
+        }
     }
 }

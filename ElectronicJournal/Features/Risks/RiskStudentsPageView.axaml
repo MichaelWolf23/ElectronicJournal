@@ -3,76 +3,219 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.RiskStudentsPageView"
+             x:Name="Root"
              x:DataType="vm:RiskStudentsPageViewModel">
-    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
         <Border Classes="toolbar-panel">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-            <StackPanel Orientation="Horizontal" Spacing="18">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Проблем" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding RiskCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
-                </StackPanel>
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding UniqueStudentCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
-                </StackPanel>
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Групп" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding AffectedGroupCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
-                </StackPanel>
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                <ComboBox Width="170" ItemsSource="{Binding GroupFilters}" SelectedItem="{Binding SelectedGroupFilter}"/>
-                <Button Content="Сбросить" Classes="ghost" Command="{Binding ClearFiltersCommand}"/>
-            </StackPanel>
-        </Grid>
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Студенты риска" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ResultMessage}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                    <TextBox Watermark="Поиск по студенту, группе, предмету"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ComboBox Grid.Column="1"
+                              Width="170"
+                              ItemsSource="{Binding GroupFilters}"
+                              SelectedItem="{Binding SelectedGroupFilter}"/>
+                    <ComboBox Grid.Column="2"
+                              Width="160"
+                              ItemsSource="{Binding RiskTypeFilters}"
+                              SelectedItem="{Binding SelectedRiskTypeFilter}"/>
+                    <Button Grid.Column="3"
+                            Content="Сбросить"
+                            Classes="ghost"
+                            Command="{Binding ClearFiltersCommand}"/>
+                </Grid>
+            </Grid>
         </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="320,*" ColumnSpacing="10">
-            <Border Classes="section-panel">
-                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
-                    <TextBlock Text="Студенты риска" FontSize="17" FontWeight="SemiBold"/>
-                    <TextBox Grid.Row="1" Watermark="Поиск" Text="{Binding SearchText}"/>
-                    <ListBox Grid.Row="2" ItemsSource="{Binding Risks}" SelectedItem="{Binding SelectedRisk}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="dto:StudentRiskItem">
-                                <Border Padding="10" Margin="0,0,0,7" CornerRadius="6" Background="{DynamicResource DangerSoftBrush}">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <StackPanel Spacing="3">
-                                            <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                            <TextBlock Text="{Binding RiskType}" Foreground="{DynamicResource DangerThemeBrush}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource MutedTextBrush}"/>
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
+        <Border Grid.Row="1" Classes="section-panel">
+            <UniformGrid Columns="5">
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding RiskCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                    <TextBlock Text="сигналов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding UniqueStudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding AffectedGroupCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="групп" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding GradeRiskCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                    <TextBlock Text="по оценкам" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding AttendanceRiskCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="по посещаемости" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </UniformGrid>
+        </Border>
 
-            <Border Grid.Column="1" Classes="side-panel">
-                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
-                    <StackPanel Spacing="3">
-                        <TextBlock Text="{Binding RiskTitle}" FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding RiskDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <Border Grid.Row="1" Padding="10" CornerRadius="6" Background="{DynamicResource SubtleBackgroundBrush}">
-                        <TextBlock Text="{Binding NotificationPreview}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <Grid Grid.Row="2" x:Name="RisksHost">
+            <Grid ColumnDefinitions="*,360"
+                  ColumnSpacing="14"
+                  IsVisible="{Binding #RisksHost.Bounds.Width, Converter={StaticResource WideDashboardConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Сигналы риска" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Выберите запись, чтобы открыть действия справа."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding RiskCount, StringFormat='{}{0} записей'}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <ListBox ItemsSource="{Binding Risks}"
+                                     SelectedItem="{Binding SelectedRisk}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:StudentRiskItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="12">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <Border Grid.Column="1"
+                                                        Padding="8,4"
+                                                        CornerRadius="10"
+                                                        Background="{Binding RiskType, Converter={StaticResource StatusBrushConverter}}">
+                                                    <TextBlock Text="{Binding RiskType}" Foreground="White" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding GroupName}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="1"
+                                                           Grid.Column="1"
+                                                           Text="{Binding ValueText}"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource DangerThemeBrush}"
+                                                           HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Row="2"
+                                                           Text="{Binding SubjectName}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="2"
+                                                           Grid.Column="1"
+                                                           Text="{Binding DateText}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource SubtleBackgroundBrush}"
+                                    IsVisible="{Binding RiskCount, Converter={StaticResource NoDataConverter}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <TextBlock Text="Рисков нет" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="По выбранным фильтрам проблемных записей не найдено."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Classes="section-panel">
+                    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding RiskTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding RiskDetails}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Border Grid.Row="1"
+                                Padding="12"
+                                CornerRadius="8"
+                                Background="{DynamicResource SubtleBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderThemeBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{Binding SelectedRiskActionTitle}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding NotificationPreview}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Row="2" Spacing="8" VerticalAlignment="Top">
+                            <Button Content="Уведомить куратора"
+                                    Classes="warning"
+                                    Command="{Binding CreateNotificationCommand}"
+                                    IsVisible="{Binding CanCreateNotification}"/>
+                            <Button Content="Открыть карточку студента"
+                                    Classes="primary"
+                                    Command="{Binding OpenStudentProfileCommand}"/>
+                            <Button Content="Экспорт отчета"
+                                    Classes="ghost"
+                                    Command="{Binding ExportReportCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          IsVisible="{Binding #RisksHost.Bounds.Width, Converter={StaticResource CompactDashboardConverter}}">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="{Binding RiskTitle}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding RiskDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                            <WrapPanel>
+                                <Button Content="Уведомить" Margin="0,0,8,8" Classes="warning" Command="{Binding CreateNotificationCommand}" IsVisible="{Binding CanCreateNotification}"/>
+                                <Button Content="Карточка" Margin="0,0,8,8" Classes="primary" Command="{Binding OpenStudentProfileCommand}"/>
+                                <Button Content="Excel" Margin="0,0,0,8" Classes="ghost" Command="{Binding ExportReportCommand}"/>
+                            </WrapPanel>
+                        </StackPanel>
                     </Border>
-                    <StackPanel Grid.Row="2" Spacing="8" VerticalAlignment="Top">
-                        <Button Content="Уведомить куратора" Classes="warning" Command="{Binding CreateNotificationCommand}" IsVisible="{Binding CanCreateNotification}"/>
-                        <Button Content="Открыть карточку студента" Classes="primary" Command="{Binding OpenStudentProfileCommand}"/>
-                        <Button Content="Экспорт отчета" Classes="ghost" Command="{Binding ExportReportCommand}"/>
-                        <Button Content="Обновить список" Classes="ghost" Command="{Binding LoadCommand}"/>
-                        <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
 
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Сигналы риска" FontSize="18" FontWeight="SemiBold"/>
+                            <ListBox Grid.Row="1" ItemsSource="{Binding Risks}" SelectedItem="{Binding SelectedRisk}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:StudentRiskItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding RiskType}" Foreground="{DynamicResource DangerThemeBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                <TextBlock Grid.Row="2" Text="{Binding SubjectName}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

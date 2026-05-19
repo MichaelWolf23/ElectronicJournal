@@ -97,6 +97,11 @@ public partial class UsersPageViewModel : PageViewModelBase
         Load();
     }
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
     partial void OnSelectedUserChanged(UserListItem? value)
@@ -167,12 +172,14 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (SelectedRegistrationRequest is null)
         {
             ResultMessage = "Сначала выберите заявку.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (SelectedRoleId == 0)
         {
             ResultMessage = "Выберите роль для пользователя.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -191,6 +198,7 @@ public partial class UsersPageViewModel : PageViewModelBase
                 null));
 
             ResultMessage = $"Пользователь {SelectedRegistrationRequest.FullName} активирован.";
+            NotifySuccess(ResultMessage);
             SelectedRegistrationRequest = null;
             ClearForm();
             Load();
@@ -198,6 +206,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось активировать заявку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -207,6 +216,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (SelectedRegistrationRequest is null)
         {
             ResultMessage = "Сначала выберите заявку.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -222,6 +232,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         {
             userRepository.DeleteUser(SelectedRegistrationRequest.UserId);
             ResultMessage = "Заявка отклонена.";
+            NotifySuccess(ResultMessage);
             SelectedRegistrationRequest = null;
             ClearForm();
             Load();
@@ -229,6 +240,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось отклонить заявку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -238,30 +250,35 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (SelectedRoleId == 0)
         {
             ResultMessage = "Выберите роль.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(FullName))
         {
             ResultMessage = "Заполните логин и ФИО.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (SelectedUser is null && string.IsNullOrWhiteSpace(Password))
         {
             ResultMessage = "Для нового пользователя нужен пароль.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!InputValidator.IsEmailValid(Email))
         {
             ResultMessage = "Email указан некорректно.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!InputValidator.IsPhoneValid(Phone))
         {
             ResultMessage = "Телефон должен содержать от 10 до 15 цифр.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -281,6 +298,7 @@ public partial class UsersPageViewModel : PageViewModelBase
                     string.Empty,
                     null));
                 ResultMessage = "Пользователь создан.";
+                NotifySuccess(ResultMessage);
             }
             else
             {
@@ -302,6 +320,7 @@ public partial class UsersPageViewModel : PageViewModelBase
                 }
 
                 ResultMessage = "Пользователь обновлен.";
+                NotifySuccess(ResultMessage);
             }
 
             ClearForm();
@@ -310,6 +329,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить пользователя: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -339,6 +359,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (SelectedUser is null)
         {
             ResultMessage = "Сначала выберите пользователя.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -352,6 +373,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (SelectedUser is null)
         {
             ResultMessage = "Сначала выберите пользователя.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -359,6 +381,7 @@ public partial class UsersPageViewModel : PageViewModelBase
         if (references > 0)
         {
             ResultMessage = "Пользователь связан с журналом. Его можно отключить, но нельзя удалить без потери истории.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -376,10 +399,12 @@ public partial class UsersPageViewModel : PageViewModelBase
             ClearForm();
             Load();
             ResultMessage = "Пользователь удален.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить пользователя: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 

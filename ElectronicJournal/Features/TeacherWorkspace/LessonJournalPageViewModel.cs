@@ -29,6 +29,9 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
     private ObservableCollection<StudentListItem> students = new();
 
     [ObservableProperty]
+    private ObservableCollection<LessonPrintRow> lessonRows = new();
+
+    [ObservableProperty]
     private ObservableCollection<LookupItem> gradeTypes = new();
 
     [ObservableProperty]
@@ -61,6 +64,18 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
     [ObservableProperty]
     private string resultMessage = "Готово к работе.";
 
+    [ObservableProperty]
+    private int lessonStudentCount;
+
+    [ObservableProperty]
+    private int markedAttendanceCount;
+
+    [ObservableProperty]
+    private int savedGradeCount;
+
+    [ObservableProperty]
+    private string lessonSnapshotSummary = "Выберите занятие, чтобы увидеть заполненность журнала.";
+
     public LessonJournalPageViewModel(
         LessonRepository lessonRepository,
         StudentRepository studentRepository,
@@ -92,6 +107,13 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         "Уважительная причина"
     };
 
+    public event Action<string>? NavigateRequested;
+
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     partial void OnSelectedLessonChanged(LessonJournalLessonItem? value)
     {
         if (value is null)
@@ -99,6 +121,8 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
             Students.Clear();
             LessonTitle = "Выберите занятие";
             LessonDetails = "После выбора появится список студентов группы.";
+            LessonRows = new ObservableCollection<LessonPrintRow>();
+            UpdateLessonCounters();
             return;
         }
 
@@ -106,6 +130,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         LessonDetails = $"{value.GroupName} · {value.SubjectName} · {value.ClassroomName ?? "аудитория не указана"}";
         Students = new ObservableCollection<StudentListItem>(studentRepository.GetStudentsByGroup(value.GroupId));
         SelectedStudent = Students.FirstOrDefault();
+        RefreshLessonSnapshot();
     }
 
     partial void OnSelectedStudentChanged(StudentListItem? value)
@@ -144,6 +169,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         if (SelectedLesson is null || SelectedStudent is null)
         {
             ResultMessage = "Выберите занятие и студента.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -152,6 +178,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
             if (!CanUseSelectedLessonScope(out var scopeError))
             {
                 ResultMessage = scopeError;
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -160,11 +187,14 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
                 SelectedStudent.StudentId,
                 SelectedStatus,
                 string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim());
+            RefreshLessonSnapshot();
             ResultMessage = $"Посещаемость сохранена: {SelectedStudent.FullName}.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить посещаемость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -174,12 +204,14 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         if (SelectedLesson is null || SelectedStudent is null || SelectedGradeType is null)
         {
             ResultMessage = "Выберите занятие, студента и тип оценки.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!IsGradeInScale(GradeValue, out var gradeError))
         {
             ResultMessage = gradeError;
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -188,6 +220,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
             if (!CanUseSelectedLessonScope(out var scopeError))
             {
                 ResultMessage = scopeError;
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -203,11 +236,14 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
                 currentUser.UserId,
                 string.Empty,
                 null));
+            RefreshLessonSnapshot();
             ResultMessage = $"Оценка сохранена: {SelectedStudent.FullName} - {GradeValue}.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -219,11 +255,38 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private void OpenGrades()
+    {
+        if (SelectedLesson is null)
+        {
+            ResultMessage = "Выберите занятие.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        NavigateRequested?.Invoke("Оценивание");
+    }
+
+    [RelayCommand]
+    private void OpenAttendance()
+    {
+        if (SelectedLesson is null)
+        {
+            ResultMessage = "Выберите занятие.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        NavigateRequested?.Invoke("Посещаемость");
+    }
+
+    [RelayCommand]
     private void PrintJournal()
     {
         if (SelectedLesson is null)
         {
             ResultMessage = "Выберите занятие для печати.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -232,6 +295,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
             if (!CanUseSelectedLessonOnly(out var scopeError))
             {
                 ResultMessage = scopeError;
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -252,10 +316,12 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
 
             ReportExportService.OpenPrintDialog(path);
             ResultMessage = $"Печатная форма открыта: {path}";
+            NotifySuccess("Печатная форма открыта.");
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось создать печатную форму: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -265,6 +331,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
         if (SelectedLesson is null)
         {
             ResultMessage = "Выберите занятие для экспорта.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -273,6 +340,7 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
             if (!CanUseSelectedLessonOnly(out var scopeError))
             {
                 ResultMessage = scopeError;
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -285,10 +353,12 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
 
             ReportExportService.ShowInExplorer(path);
             ResultMessage = $"Excel-файл создан: {path}";
+            NotifySuccess("Excel-файл создан и открыт в проводнике.");
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось экспортировать журнал: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -366,5 +436,29 @@ public sealed partial class LessonJournalPageViewModel : PageViewModelBase
 
         error = string.Empty;
         return true;
+    }
+
+    private void RefreshLessonSnapshot()
+    {
+        if (SelectedLesson is null)
+        {
+            LessonRows = new ObservableCollection<LessonPrintRow>();
+            UpdateLessonCounters();
+            return;
+        }
+
+        LessonRows = new ObservableCollection<LessonPrintRow>(
+            reportRepository.GetLessonPrintRows(SelectedLesson.LessonId));
+        UpdateLessonCounters();
+    }
+
+    private void UpdateLessonCounters()
+    {
+        LessonStudentCount = Students.Count;
+        MarkedAttendanceCount = LessonRows.Count(row => row.Status != "Не отмечен");
+        SavedGradeCount = LessonRows.Count(row => !string.IsNullOrWhiteSpace(row.Grades));
+        LessonSnapshotSummary = SelectedLesson is null
+            ? "Выберите занятие, чтобы увидеть заполненность журнала."
+            : $"Отмечено посещений: {MarkedAttendanceCount} из {LessonStudentCount}. Оценки есть у студентов: {SavedGradeCount}.";
     }
 }

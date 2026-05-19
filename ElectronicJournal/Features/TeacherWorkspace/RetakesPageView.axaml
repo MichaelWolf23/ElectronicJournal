@@ -7,30 +7,29 @@
              x:DataType="vm:RetakesPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
         <Border Classes="toolbar-panel">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
-                <StackPanel Spacing="4">
-                <TextBlock Text="Пересдачи" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding ResultMessage}"
-                           TextWrapping="Wrap"
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                </StackPanel>
-                <Button Grid.Column="1"
-                        Content="Оформить выбранную"
-                        Classes="primary"
-                        VerticalAlignment="Top"
-                        Command="{Binding AddRetakeCommand}"
-                        IsEnabled="{Binding CanSaveSelectedRetake}"/>
-                <Button Grid.Column="2"
-                        Content="Удалить пересдачу"
-                        Classes="danger"
-                        VerticalAlignment="Top"
-                        Command="{Binding DeleteSelectedRetakeCommand}"
-                        IsEnabled="{Binding CanDeleteSelectedRetake}"/>
-                <Button Grid.Column="3"
-                        Content="Обновить"
-                        Classes="ghost"
-                        VerticalAlignment="Top"
-                        Command="{Binding LoadCommand}"/>
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Пересдачи" FontSize="22" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            VerticalAlignment="Top"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnDefinitions="260,220,*" ColumnSpacing="10">
+                    <TextBox Watermark="Поиск по студенту или предмету"
+                             Text="{Binding SearchText}"/>
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding RetakeFilters}"
+                              SelectedItem="{Binding SelectedRetakeFilter}"/>
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding VisibleRetakeRowCount, StringFormat=Показано: {0}}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               VerticalAlignment="Center"/>
+                </Grid>
             </Grid>
         </Border>
 
@@ -42,125 +41,244 @@
                                FontSize="24"
                                FontWeight="Bold"
                                Foreground="{DynamicResource WarningThemeBrush}"/>
-                    <TextBlock Text="оценок в ведомости"
+                    <TextBlock Text="оценок в работе"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Spacing="2">
-                    <TextBlock Text="{Binding RetakeCount}"
+                    <TextBlock Text="{Binding PendingRetakeCount}"
                                FontSize="24"
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentThemeBrush}"/>
-                    <TextBlock Text="пересдач оформлено"
+                    <TextBlock Text="можно оформить"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Spacing="2">
-                    <TextBlock Text="{Binding SelectedRetakeStatus}"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               TextWrapping="Wrap"/>
-                    <TextBlock Text="выбранная строка"
+                    <TextBlock Text="{Binding RetakeCount}"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="пересдач оформлено"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <Border Grid.Row="2" x:Name="RetakeTableHost" Classes="section-panel">
-            <Grid>
-            <DataGrid MinWidth="900"
-                      ItemsSource="{Binding RetakeRows}"
-                      SelectedItem="{Binding SelectedRetakeRow}"
-                      AutoGenerateColumns="False"
-                      GridLinesVisibility="Horizontal"
-                      IsVisible="{Binding #RetakeTableHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="Студент" Width="240">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="dto:RetakeEntryRow">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Оценка" Width="190">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="dto:RetakeEntryRow">
-                                <StackPanel Spacing="2">
-                                    <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding GradeType}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="110"/>
-                    <DataGridTextColumn Header="Было" Binding="{Binding OldValue}" Width="70"/>
-                    <DataGridTemplateColumn Header="Новая" Width="105">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="dto:RetakeEntryRow">
-                                <TextBox Text="{Binding NewValueText, Mode=TwoWay}"
-                                         Watermark="2-5"
-                                         IsEnabled="{Binding CanCreateRetake}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Дата пересдачи" Width="140">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="dto:RetakeEntryRow">
-                                <TextBox Text="{Binding RetakeDate, Mode=TwoWay}"
-                                         Watermark="2026-02-10"
-                                         IsEnabled="{Binding CanCreateRetake}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="Причина" Width="*">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate x:DataType="dto:RetakeEntryRow">
-                                <TextBox Text="{Binding Reason, Mode=TwoWay}"
-                                         Watermark="Причина"
-                                         IsEnabled="{Binding CanCreateRetake}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Статус" Binding="{Binding StatusText}" Width="120"/>
-                </DataGrid.Columns>
-            </DataGrid>
+        <Grid Grid.Row="2" x:Name="RetakeWorkflowHost">
+            <Grid ColumnDefinitions="*,360"
+                  ColumnSpacing="18"
+                  IsVisible="{Binding #RetakeWorkflowHost.Bounds.Width, Converter={StaticResource WideRetakesConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Оценки для пересдачи" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="Выберите оценку 2, 3 или 4. На одну оценку доступна только одна пересдача."
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
 
-            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource SubtleBackgroundBrush}"
-                    IsVisible="{Binding AvailableGradeCount, Converter={StaticResource NoDataConverter}}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                    <TextBlock Text="Нет оценок для пересдачи"
-                               FontSize="18"
-                               FontWeight="SemiBold"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="Здесь появятся оценки 2, 3 и 4, а также уже оформленные пересдачи."
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               TextWrapping="Wrap"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+                        <ListBox Grid.Row="1"
+                                 ItemsSource="{Binding RetakeRows}"
+                                 SelectedItem="{Binding SelectedRetakeRow}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="dto:RetakeEntryRow">
+                                    <Border Padding="10"
+                                            Margin="0,0,0,8"
+                                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                                            BorderThickness="0,0,0,1">
+                                        <Grid RowDefinitions="Auto,Auto,Auto"
+                                              ColumnDefinitions="*,Auto"
+                                              ColumnSpacing="12"
+                                              RowSpacing="4">
+                                            <TextBlock Text="{Binding StudentName}"
+                                                       FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"/>
+                                            <Border Grid.Column="1"
+                                                    CornerRadius="5"
+                                                    Padding="8,3"
+                                                    Background="{Binding StatusText, Converter={StaticResource StatusBrushConverter}}">
+                                                <TextBlock Text="{Binding StatusText}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource CardBackgroundBrush}"/>
+                                            </Border>
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding GradeDetails}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+                                                <TextBlock Text="{Binding ResultText}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource WarningThemeBrush}"/>
+                                                <TextBlock Text="{Binding SuggestedValueText}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
 
-            <ListBox ItemsSource="{Binding RetakeRows}"
-                     SelectedItem="{Binding SelectedRetakeRow}"
-                     IsVisible="{Binding #RetakeTableHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="dto:RetakeEntryRow">
-                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,96" Margin="0,8" ColumnSpacing="10" RowSpacing="6">
-                            <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                            <TextBlock Grid.Column="1" Text="{Binding ResultText}" FontWeight="SemiBold"/>
-                            <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding StatusText}" Foreground="{DynamicResource MutedTextBrush}"/>
-                            <TextBox Grid.Row="2" Text="{Binding NewValueText, Mode=TwoWay}" Watermark="Новая оценка" IsEnabled="{Binding CanCreateRetake}"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding RetakeDate, Mode=TwoWay}" Watermark="Дата" IsEnabled="{Binding CanCreateRetake}"/>
-                            <TextBox Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding Reason, Mode=TwoWay}" Watermark="Причина" IsEnabled="{Binding CanCreateRetake}"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                <Border Grid.Column="1" Classes="side-panel">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Spacing="14">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Оформление пересдачи"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedRetakeRow.StudentName}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedRetakeRow.GradeDetails}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <Border Background="{DynamicResource SubtleBackgroundBrush}"
+                                    BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding SelectedRetakeRow.ResultText}"
+                                                   FontSize="20"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource WarningThemeBrush}"/>
+                                        <Border Grid.Column="1"
+                                                CornerRadius="5"
+                                                Padding="8,3"
+                                                Background="{Binding SelectedRetakeRow.StatusText, Converter={StaticResource StatusBrushConverter}}">
+                                            <TextBlock Text="{Binding SelectedRetakeRow.StatusText}"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource CardBackgroundBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Text="{Binding SelectedRetakeRow.RuleText}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Новая оценка" FontWeight="SemiBold"/>
+                                <TextBox Watermark="2-5"
+                                         Text="{Binding SelectedRetakeRow.NewValueText, Mode=TwoWay}"
+                                         IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                                <TextBlock Text="{Binding SelectedRetakeRow.SuggestedValueText}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <TextBox Watermark="Дата пересдачи"
+                                         Text="{Binding SelectedRetakeRow.RetakeDate, Mode=TwoWay}"
+                                         IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                                <TextBox Watermark="Причина"
+                                         Text="{Binding SelectedRetakeRow.Reason, Mode=TwoWay}"
+                                         IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button Content="Сохранить пересдачу"
+                                        Classes="primary"
+                                        Command="{Binding AddRetakeCommand}"
+                                        IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                                <Button Grid.Column="1"
+                                        Content="Удалить пересдачу"
+                                        Classes="danger"
+                                        Command="{Binding DeleteSelectedRetakeCommand}"
+                                        IsEnabled="{Binding CanDeleteSelectedRetake}"/>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
             </Grid>
-        </Border>
+
+            <ScrollViewer IsVisible="{Binding #RetakeWorkflowHost.Bounds.Width, Converter={StaticResource CompactRetakesConverter}}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Оценки для пересдачи" FontSize="18" FontWeight="SemiBold"/>
+                            <ListBox ItemsSource="{Binding RetakeRows}"
+                                     SelectedItem="{Binding SelectedRetakeRow}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:RetakeEntryRow">
+                                        <Grid RowDefinitions="Auto,Auto,Auto"
+                                              ColumnDefinitions="*,Auto"
+                                              Margin="0,7"
+                                              ColumnSpacing="8"
+                                              RowSpacing="4">
+                                            <TextBlock Text="{Binding StudentName}"
+                                                       FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding ResultText}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource WarningThemeBrush}"/>
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding GradeDetails}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <Border Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    CornerRadius="5"
+                                                    Padding="7,2"
+                                                    Background="{Binding StatusText, Converter={StaticResource StatusBrushConverter}}">
+                                                <TextBlock Text="{Binding StatusText}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource CardBackgroundBrush}"/>
+                                            </Border>
+                                            <TextBlock Grid.Row="2"
+                                                       Grid.ColumnSpan="2"
+                                                       Text="{Binding RuleText}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="side-panel">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Оформление пересдачи"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedRetakeRow.StudentName}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedRetakeRow.RuleText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                            <TextBox Watermark="Новая оценка"
+                                     Text="{Binding SelectedRetakeRow.NewValueText, Mode=TwoWay}"
+                                     IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                            <TextBox Watermark="Дата пересдачи"
+                                     Text="{Binding SelectedRetakeRow.RetakeDate, Mode=TwoWay}"
+                                     IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                            <TextBox Watermark="Причина"
+                                     Text="{Binding SelectedRetakeRow.Reason, Mode=TwoWay}"
+                                     IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                            <WrapPanel>
+                                <Button Content="Сохранить пересдачу"
+                                        Classes="primary"
+                                        Margin="0,0,8,8"
+                                        Command="{Binding AddRetakeCommand}"
+                                        IsEnabled="{Binding CanSaveSelectedRetake}"/>
+                                <Button Content="Удалить пересдачу"
+                                        Classes="danger"
+                                        Margin="0,0,8,8"
+                                        Command="{Binding DeleteSelectedRetakeCommand}"
+                                        IsEnabled="{Binding CanDeleteSelectedRetake}"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

@@ -60,6 +60,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ObservableCollection<NavigationItem> NavigationItems { get; } = new();
 
+    public ObservableCollection<AppNotification> Notifications => NotificationService.Instance.Notifications;
+
     public event Action? LogoutRequested;
 
     public MainWindowViewModel()
@@ -263,9 +265,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 currentUser),
             NavigationIcons.Grade,
             "Оценки студентов"));
-        AddNavigationItem(currentUser, new NavigationItem(
-            "Журнал занятия",
-            new LessonJournalPageViewModel(
+        var lessonJournalPage = new LessonJournalPageViewModel(
                 lessonRepository,
                 studentRepository,
                 attendanceRepository,
@@ -273,7 +273,11 @@ public partial class MainWindowViewModel : ViewModelBase
                 gradeTypeRepository,
                 settingsRepository,
                 reportRepository,
-                currentUser),
+                currentUser);
+        lessonJournalPage.NavigateRequested += SelectSection;
+        AddNavigationItem(currentUser, new NavigationItem(
+            "Журнал занятия",
+            lessonJournalPage,
             NavigationIcons.Journal,
             "Пара целиком"));
         AddNavigationItem(currentUser, new NavigationItem(

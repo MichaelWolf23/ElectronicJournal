@@ -1,136 +1,218 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ElectronicJournal.ViewModels"
+             xmlns:dto="using:ElectronicJournal.Models.Dto"
              xmlns:entities="using:ElectronicJournal.Models.Entities"
              x:Class="ElectronicJournal.Views.StudentsPageView"
              x:Name="Root"
              x:DataType="vm:StudentsPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="18">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
         <Border Classes="toolbar-panel">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <TextBox Width="280" Watermark="Поиск" Text="{Binding SearchText}"/>
-                <ComboBox Width="220" ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroupFilter}" PlaceholderText="Группа">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="entities:Group">
-                            <TextBlock Text="{Binding GroupName}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-            <Button Grid.Column="1" Content="Обновить" Classes="ghost" Command="{Binding LoadCommand}"/>
-        </Grid>
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Студенты" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding RosterSummary}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <TextBox Watermark="Поиск по ФИО"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ComboBox Grid.Column="1"
+                              Width="220"
+                              ItemsSource="{Binding Groups}"
+                              SelectedItem="{Binding SelectedGroupFilter}"
+                              PlaceholderText="Группа">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="entities:Group">
+                                <TextBlock Text="{Binding GroupName}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+            </Grid>
         </Border>
 
         <Border Grid.Row="1" Classes="section-panel">
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
-                <StackPanel Spacing="2">
+            <UniformGrid Columns="3">
+                <StackPanel Spacing="2" Margin="0,0,14,0">
                     <TextBlock Text="{Binding VisibleStudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
-                    <TextBlock Text="всего в списке" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="в списке" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="2">
+                <StackPanel Spacing="2" Margin="0,0,14,0">
                     <TextBlock Text="{Binding ActiveStudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
                     <TextBlock Text="обучаются" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="2">
+                <StackPanel Spacing="2">
                     <TextBlock Text="{Binding ProblemStatusCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
-                    <TextBlock Text="требуют внимания" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="особый статус" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
-            </Grid>
+            </UniformGrid>
         </Border>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
-            <TextBlock Text="Картотека студентов" FontSize="18" FontWeight="SemiBold"/>
-            <TextBlock Grid.Column="1" Text="Нет данных" Foreground="{DynamicResource MutedTextBrush}" IsVisible="{Binding VisibleStudentCount, Converter={StaticResource NoDataConverter}}"/>
-        </Grid>
-
-        <Grid Grid.Row="3" ColumnDefinitions="*,320" ColumnSpacing="18">
-            <Border x:Name="StudentsListHost" Classes="section-panel">
-            <Grid>
-                <DataGrid MinWidth="650" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" IsVisible="{Binding #StudentsListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="260"/>
-                        <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="120"/>
-                        <DataGridTextColumn Header="Курс" Binding="{Binding CourseNumber}" Width="80"/>
-                        <DataGridTemplateColumn Header="Статус" Width="150">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Status}" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-                <Border BorderBrush="{DynamicResource BorderThemeBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Background="{DynamicResource SubtleBackgroundBrush}"
-                        IsVisible="{Binding VisibleStudentCount, Converter={StaticResource NoDataConverter}}">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                        <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Добавьте студента справа или сбросьте фильтры."
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   TextWrapping="Wrap"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-                <ListBox ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}" IsVisible="{Binding #StudentsListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,5" ColumnSpacing="10">
-                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                <TextBlock Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}"/>
-                                <TextBlock Grid.Row="1" Text="{Binding StudentCardNumber}" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Status}" FontWeight="SemiBold" Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-            </Border>
-
-            <Border Grid.Column="1" Classes="side-panel">
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Карточка" FontSize="18" FontWeight="SemiBold"/>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="{Binding SelectedStudentName}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding SelectedStudentGroupText}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding SelectedStudentContacts}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding SelectedStudentStatus}" FontWeight="SemiBold" Foreground="{Binding SelectedStudentStatus, Converter={StaticResource StatusBrushConverter}}"/>
-                        </StackPanel>
-
-                        <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold" Margin="0,8,0,0" IsVisible="{Binding CanEditStudents}"/>
-                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerThemeBrush}" TextWrapping="Wrap" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                        <TextBox Watermark="ФИО" Text="{Binding FullName}" IsVisible="{Binding CanEditStudents}"/>
-                        <ComboBox ItemsSource="{Binding Groups}" SelectedValue="{Binding SelectedGroupId}" SelectedValueBinding="{Binding GroupId}" PlaceholderText="Группа" IsVisible="{Binding CanEditStudents}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate x:DataType="entities:Group">
-                                    <TextBlock Text="{Binding GroupName}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <TextBox Watermark="Номер студенческого" Text="{Binding StudentCardNumber}" IsVisible="{Binding CanEditStudents}"/>
-                        <TextBox Watermark="Email" Text="{Binding Email}" IsVisible="{Binding CanEditStudents}"/>
-                        <TextBox Watermark="Телефон" Text="{Binding Phone}" IsVisible="{Binding CanEditStudents}"/>
-                        <ComboBox ItemsSource="{Binding StudentStatuses}" SelectedItem="{Binding Status}" PlaceholderText="Статус" IsVisible="{Binding CanEditStudents}"/>
-
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0" IsVisible="{Binding CanEditStudents}">
-                            <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
-                            <Button Grid.Column="1" Content="Очистить" Classes="ghost" Command="{Binding ClearFormCommand}"/>
+        <Grid Grid.Row="2" x:Name="StudentsAdminHost">
+            <Grid ColumnDefinitions="*,340"
+                  ColumnSpacing="14"
+                  IsVisible="{Binding #StudentsAdminHost.Bounds.Width, Converter={StaticResource WideDashboardConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Картотека студентов" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Выберите студента для просмотра или редактирования."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding VisibleStudentCount, StringFormat='{}{0} записей'}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       VerticalAlignment="Center"/>
                         </Grid>
-                        <Button Content="Удалить студента"
-                                Classes="danger"
-                                HorizontalAlignment="Left"
-                                Command="{Binding DeleteSelectedStudentCommand}"
-                                IsVisible="{Binding CanEditStudents}"/>
 
-                        <Border Height="12" Background="Transparent"/>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+                        <Grid Grid.Row="1">
+                            <ListBox ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:StudentListItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding StudentCardNumber}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                <TextBlock Grid.Row="1"
+                                                           Grid.Column="1"
+                                                           Text="{Binding Status}"
+                                                           Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"
+                                                           FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource SubtleBackgroundBrush}"
+                                    IsVisible="{Binding VisibleStudentCount, Converter={StaticResource NoDataConverter}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <TextBlock Text="Нет студентов" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Добавьте студента справа или измените фильтры."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Classes="section-panel">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Карточка" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedStudentName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedStudentGroupText}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedStudentContacts}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SelectedStudentStatus}" FontWeight="SemiBold" Foreground="{Binding SelectedStudentStatus, Converter={StaticResource StatusBrushConverter}}"/>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{DynamicResource BorderThemeBrush}" IsVisible="{Binding CanEditStudents}"/>
+
+                            <StackPanel Spacing="10" IsVisible="{Binding CanEditStudents}">
+                                <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBox Watermark="ФИО" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"/>
+                                <ComboBox ItemsSource="{Binding Groups}" SelectedValue="{Binding SelectedGroupId}" SelectedValueBinding="{Binding GroupId}" PlaceholderText="Группа">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="entities:Group">
+                                            <TextBlock Text="{Binding GroupName}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBox Watermark="Номер студенческого" Text="{Binding StudentCardNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Watermark="Email" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Watermark="Телефон" Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"/>
+                                <ComboBox ItemsSource="{Binding StudentStatuses}" SelectedItem="{Binding Status}" PlaceholderText="Статус"/>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
+                                    <Button Grid.Column="1" Content="Новый" Classes="ghost" Command="{Binding ClearFormCommand}"/>
+                                </Grid>
+                                <Button Content="Удалить студента"
+                                        Classes="danger"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding DeleteSelectedStudentCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          IsVisible="{Binding #StudentsAdminHost.Bounds.Width, Converter={StaticResource CompactDashboardConverter}}">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <TextBlock Text="Студенты" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding VisibleStudentCount, StringFormat='{}{0} записей'}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                            <ListBox MaxHeight="320" ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:StudentListItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding StudentCardNumber}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                <TextBlock Grid.Row="1"
+                                                           Grid.Column="1"
+                                                           Text="{Binding Status}"
+                                                           Foreground="{Binding Status, Converter={StaticResource StatusBrushConverter}}"
+                                                           FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="section-panel" IsVisible="{Binding CanEditStudents}">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBox Watermark="ФИО" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox ItemsSource="{Binding Groups}" SelectedValue="{Binding SelectedGroupId}" SelectedValueBinding="{Binding GroupId}" PlaceholderText="Группа">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="entities:Group">
+                                        <TextBlock Text="{Binding GroupName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBox Watermark="Номер студенческого" Text="{Binding StudentCardNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Watermark="Email" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Watermark="Телефон" Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ComboBox ItemsSource="{Binding StudentStatuses}" SelectedItem="{Binding Status}" PlaceholderText="Статус"/>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button Content="Сохранить" Classes="primary" Command="{Binding SaveCommand}"/>
+                                <Button Grid.Column="1" Content="Новый" Classes="ghost" Command="{Binding ClearFormCommand}"/>
+                            </Grid>
+                            <Button Content="Удалить студента"
+                                    Classes="danger"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding DeleteSelectedStudentCommand}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

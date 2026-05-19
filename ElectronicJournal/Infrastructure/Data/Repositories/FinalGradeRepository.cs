@@ -121,6 +121,7 @@ public sealed class FinalGradeRepository : RepositoryBase
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT
+                fg.final_grade_id,
                 s.student_id,
                 s.full_name AS student_name,
                 g.group_name,
@@ -155,6 +156,7 @@ public sealed class FinalGradeRepository : RepositoryBase
         while (reader.Read())
         {
             rows.Add(new FinalGradeSheetRow(
+                reader.GetNullableInt32("final_grade_id"),
                 reader.GetInt32("student_id"),
                 reader.GetString("student_name"),
                 reader.GetString("group_name"),
@@ -234,6 +236,38 @@ public sealed class FinalGradeRepository : RepositoryBase
             """;
         command.Parameters.AddWithValue("$final_grade_id", finalGradeId);
         command.ExecuteNonQuery();
+    }
+
+    public void DeleteFinalGrade(int studentId, int assignmentId, int periodId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM final_grades
+            WHERE student_id = $student_id
+              AND assignment_id = $assignment_id
+              AND period_id = $period_id;
+            """;
+        command.Parameters.AddWithValue("$student_id", studentId);
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+        command.Parameters.AddWithValue("$period_id", periodId);
+        command.ExecuteNonQuery();
+    }
+
+    public int DeleteFinalGradesForSheet(int assignmentId, int periodId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM final_grades
+            WHERE assignment_id = $assignment_id
+              AND period_id = $period_id;
+            SELECT changes();
+            """;
+        command.Parameters.AddWithValue("$assignment_id", assignmentId);
+        command.Parameters.AddWithValue("$period_id", periodId);
+
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     private List<FinalGradeItem> GetFinalGradesByScope(string scopeWhere, int userId)

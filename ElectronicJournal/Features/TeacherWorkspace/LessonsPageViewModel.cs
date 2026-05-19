@@ -73,6 +73,9 @@ public partial class LessonsPageViewModel : PageViewModelBase
     private string lessonsSummary = "Занятия загружаются.";
 
     [ObservableProperty]
+    private string formTitle = "Новое занятие";
+
+    [ObservableProperty]
     private string selectedLessonTitle = "Выберите занятие";
 
     [ObservableProperty]
@@ -123,11 +126,22 @@ public partial class LessonsPageViewModel : PageViewModelBase
         SelectedLessonNote = string.IsNullOrWhiteSpace(value.Note)
             ? "Примечание не указано."
             : value.Note;
+        FormTitle = "Редактирование занятия";
+        SelectedAssignmentId = value.AssignmentId;
+        SelectedClassroomId = value.ClassroomId;
+        LessonDate = value.LessonDate;
+        Topic = value.Topic;
+        Note = value.Note ?? string.Empty;
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilters();
 
     partial void OnSelectedScheduleDayFilterChanged(string value) => ApplyFilters();
+
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
 
     [RelayCommand]
     private void Load()
@@ -159,36 +173,17 @@ public partial class LessonsPageViewModel : PageViewModelBase
     [RelayCommand]
     private void AddLesson()
     {
-        if (SelectedAssignmentId == 0)
+        if (!ValidateLessonForm(out var normalizedDate))
         {
-            ResultMessage = "Выберите назначение преподавателя.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(Topic))
-        {
-            ResultMessage = "Введите тему занятия.";
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(LessonDate) && !DateTime.TryParse(LessonDate, out _))
-        {
-            ResultMessage = "Дата занятия должна быть в понятном формате, например 2026-02-10.";
-            return;
-        }
-
-        if (!Assignments.Any(assignment => assignment.Id == SelectedAssignmentId))
-        {
-            ResultMessage = "Выбранное назначение недоступно текущему пользователю.";
             return;
         }
 
         try
         {
-            var normalizedDate = string.IsNullOrWhiteSpace(LessonDate) ? DateTime.Today.ToString("yyyy-MM-dd") : LessonDate.Trim();
             if (lessonRepository.LessonExists(SelectedAssignmentId, normalizedDate, Topic.Trim()))
             {
                 ResultMessage = "Такое занятие уже есть.";
+                NotifyInfo(ResultMessage);
                 return;
             }
 
@@ -203,14 +198,63 @@ public partial class LessonsPageViewModel : PageViewModelBase
 
             lessonRepository.AddLesson(lesson);
             ResultMessage = "Занятие добавлено.";
-            Topic = string.Empty;
-            Note = string.Empty;
+            NotifySuccess(ResultMessage);
+            ClearLessonForm();
             Load();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось добавить занятие: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
+    }
+
+    [RelayCommand]
+    private void SaveSelectedLesson()
+    {
+        if (SelectedLesson is null)
+        {
+            ResultMessage = "Выберите занятие, которое нужно изменить.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        if (!ValidateLessonForm(out var normalizedDate))
+        {
+            return;
+        }
+
+        try
+        {
+            lessonRepository.UpdateLesson(new Lesson(
+                SelectedLesson.LessonId,
+                SelectedAssignmentId,
+                null,
+                normalizedDate,
+                Topic.Trim(),
+                SelectedClassroomId,
+                string.IsNullOrWhiteSpace(Note) ? null : Note.Trim()));
+            ResultMessage = "Занятие обновлено.";
+            NotifySuccess(ResultMessage);
+            Load();
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось обновить занятие: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
+        }
+    }
+
+    [RelayCommand]
+    private void ClearLessonForm()
+    {
+        SelectedLesson = null;
+        FormTitle = "Новое занятие";
+        SelectedAssignmentId = Assignments.FirstOrDefault()?.Id ?? 0;
+        SelectedClassroomId = Classrooms.FirstOrDefault()?.Id;
+        LessonDate = DateTime.Today.ToString("yyyy-MM-dd");
+        Topic = string.Empty;
+        Note = string.Empty;
     }
 
     [RelayCommand]
@@ -219,6 +263,7 @@ public partial class LessonsPageViewModel : PageViewModelBase
         if (SelectedLesson is null)
         {
             ResultMessage = "Сначала выберите занятие.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -233,13 +278,15 @@ public partial class LessonsPageViewModel : PageViewModelBase
         try
         {
             lessonRepository.DeleteLesson(SelectedLesson.LessonId);
-            SelectedLesson = null;
+            ClearLessonForm();
             ResultMessage = "Занятие удалено.";
+            NotifySuccess(ResultMessage);
             Load();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить занятие: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -301,9 +348,50 @@ public partial class LessonsPageViewModel : PageViewModelBase
             filteredSchedule = filteredSchedule.Where(item => item.DayName == SelectedScheduleDayFilter);
         }
 
-        Lessons = new ObservableCollection<LessonListItem>(filteredLessons.ToList());
+        var selectedId = SelectedLesson?.LessonId;
+        var visibleLessons = filteredLessons.ToList();
+        Lessons = new ObservableCollection<LessonListItem>(visibleLessons);
         Schedule = new ObservableCollection<ScheduleItem>(filteredSchedule.ToList());
+        SelectedLesson = visibleLessons.FirstOrDefault(lesson => lesson.LessonId == selectedId)
+            ?? visibleLessons.FirstOrDefault();
         UpdateSummary();
+    }
+
+    private bool ValidateLessonForm(out string normalizedDate)
+    {
+        normalizedDate = string.IsNullOrWhiteSpace(LessonDate)
+            ? DateTime.Today.ToString("yyyy-MM-dd")
+            : LessonDate.Trim();
+
+        if (SelectedAssignmentId == 0)
+        {
+            ResultMessage = "Выберите группу и предмет.";
+            NotifyWarning(ResultMessage);
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(Topic))
+        {
+            ResultMessage = "Введите тему занятия.";
+            NotifyWarning(ResultMessage);
+            return false;
+        }
+
+        if (!DateTime.TryParse(normalizedDate, out _))
+        {
+            ResultMessage = "Дата занятия должна быть в формате 2026-02-10.";
+            NotifyWarning(ResultMessage);
+            return false;
+        }
+
+        if (!Assignments.Any(assignment => assignment.Id == SelectedAssignmentId))
+        {
+            ResultMessage = "Выбранное назначение недоступно текущему пользователю.";
+            NotifyWarning(ResultMessage);
+            return false;
+        }
+
+        return true;
     }
 
     private static bool Contains(string? value, string query) =>

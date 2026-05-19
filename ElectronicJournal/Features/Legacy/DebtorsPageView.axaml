@@ -168,11 +168,6 @@
                                FontSize="16"
                                FontWeight="SemiBold"/>
 
-                    <TextBlock Text="{Binding ErrorMessage}"
-                               Foreground="{DynamicResource DangerThemeBrush}"
-                               TextWrapping="Wrap"
-                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
                     <Border Classes="metric-panel">
                         <StackPanel Spacing="7">
                             <TextBlock Text="{Binding SelectedProblemTitle}"

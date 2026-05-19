@@ -20,6 +20,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
     private readonly GradeRetakeRepository gradeRetakeRepository;
     private readonly SettingsRepository settingsRepository;
     private readonly AuthenticatedUser currentUser;
+    private List<RetakeEntryRow> allRetakeRows = new();
 
     [ObservableProperty]
     private ObservableCollection<GradeRetakeItem> retakes = new();
@@ -32,6 +33,9 @@ public partial class RetakesPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<RetakeEntryRow> retakeRows = new();
+
+    [ObservableProperty]
+    private ObservableCollection<string> retakeFilters = new();
 
     [ObservableProperty]
     private RetakeEntryRow? selectedRetakeRow;
@@ -55,10 +59,22 @@ public partial class RetakesPageViewModel : PageViewModelBase
     private string resultMessage = "Выберите оценку для пересдачи.";
 
     [ObservableProperty]
+    private string searchText = string.Empty;
+
+    [ObservableProperty]
+    private string selectedRetakeFilter = "Все";
+
+    [ObservableProperty]
     private int retakeCount;
 
     [ObservableProperty]
     private int availableGradeCount;
+
+    [ObservableProperty]
+    private int pendingRetakeCount;
+
+    [ObservableProperty]
+    private int visibleRetakeRowCount;
 
     [ObservableProperty]
     private string selectedRetakeTitle = "Выберите пересдачу";
@@ -90,6 +106,15 @@ public partial class RetakesPageViewModel : PageViewModelBase
 
     public bool CanDeleteSelectedRetake => SelectedRetakeRow?.HasRetake == true;
 
+    public static IReadOnlyList<string> FilterOptions { get; } =
+    [
+        "Все",
+        "Можно оформить",
+        "Уже оформлены",
+        "Двойки",
+        "Тройки и четверки"
+    ];
+
     public RetakesPageViewModel(
         GradeRepository gradeRepository,
         GradeRetakeRepository gradeRetakeRepository,
@@ -104,6 +129,10 @@ public partial class RetakesPageViewModel : PageViewModelBase
 
         Load();
     }
+
+    partial void OnSearchTextChanged(string value) => ApplyRetakeFilter();
+
+    partial void OnSelectedRetakeFilterChanged(string value) => ApplyRetakeFilter();
 
     partial void OnSelectedGradeChanged(GradeJournalItem? value)
     {
@@ -182,9 +211,12 @@ public partial class RetakesPageViewModel : PageViewModelBase
             Retakes = new ObservableCollection<GradeRetakeItem>(LoadRetakesForCurrentUser());
             var selectedGradeId = SelectedRetakeRow?.GradeId ?? SelectedGrade?.GradeId;
             Grades = new ObservableCollection<GradeJournalItem>(LoadGradesForCurrentUser());
-            RetakeRows = new ObservableCollection<RetakeEntryRow>(BuildRetakeRows(Grades));
+            RetakeFilters = new ObservableCollection<string>(FilterOptions);
+            allRetakeRows = BuildRetakeRows(Grades);
             RetakeCount = Retakes.Count;
-            AvailableGradeCount = RetakeRows.Count;
+            AvailableGradeCount = allRetakeRows.Count;
+            PendingRetakeCount = allRetakeRows.Count(row => row.CanCreateRetake);
+            ApplyRetakeFilter();
             SelectedRetakeRow = RetakeRows.FirstOrDefault(row => row.GradeId == selectedGradeId) ?? RetakeRows.FirstOrDefault();
             SelectedGrade = Grades.FirstOrDefault(grade => grade.GradeId == selectedGradeId) ?? Grades.FirstOrDefault();
         }
@@ -204,12 +236,14 @@ public partial class RetakesPageViewModel : PageViewModelBase
         if (SelectedRetakeRow is null)
         {
             ResultMessage = "Сначала выберите оценку 2, 3 или 4.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (SelectedRetakeRow.HasRetake)
         {
             ResultMessage = "По этой оценке пересдача уже оформлена. Повторная пересдача недоступна.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -220,12 +254,14 @@ public partial class RetakesPageViewModel : PageViewModelBase
                 out var newValue))
         {
             ResultMessage = "Новая оценка должна быть числом.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!IsGradeInScale(newValue, out var gradeError))
         {
             ResultMessage = gradeError;
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -233,6 +269,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
             !DateTime.TryParse(SelectedRetakeRow.RetakeDate, out _))
         {
             ResultMessage = "Дата пересдачи должна быть в понятном формате, например 2026-02-10.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -245,12 +282,14 @@ public partial class RetakesPageViewModel : PageViewModelBase
                 !gradeRepository.CanTeacherAccessGrade(SelectedRetakeRow.GradeId, currentUser.UserId))
             {
                 ResultMessage = "Преподаватель может оформлять пересдачи только по своим предметам.";
+                NotifyWarning(ResultMessage);
                 return;
             }
 
             if (gradeRetakeRepository.HasRetakeForGrade(SelectedRetakeRow.GradeId))
             {
                 ResultMessage = "По этой оценке пересдача уже оформлена. Повторная пересдача недоступна.";
+                NotifyWarning(ResultMessage);
                 Load();
                 return;
             }
@@ -259,6 +298,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
             if (currentValue is not (2 or 3 or 4))
             {
                 ResultMessage = "Пересдачу можно назначить только для оценки 2, 3 или 4.";
+                NotifyWarning(ResultMessage);
                 Load();
                 return;
             }
@@ -275,11 +315,13 @@ public partial class RetakesPageViewModel : PageViewModelBase
 
             gradeRetakeRepository.AddRetake(retake);
             ResultMessage = "Пересдача сохранена, оценка обновлена.";
+            NotifySuccess(ResultMessage);
             Load();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить пересдачу: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
         finally
         {
@@ -293,6 +335,7 @@ public partial class RetakesPageViewModel : PageViewModelBase
         if (SelectedRetakeRow?.RetakeId is not int retakeId)
         {
             ResultMessage = "У выбранной оценки еще нет пересдачи для удаления.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -310,10 +353,12 @@ public partial class RetakesPageViewModel : PageViewModelBase
             SelectedRetake = null;
             Load();
             ResultMessage = "Пересдача удалена.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить пересдачу: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -370,5 +415,38 @@ public partial class RetakesPageViewModel : PageViewModelBase
                     retake?.Reason);
             })
             .ToList();
+    }
+
+    private void ApplyRetakeFilter()
+    {
+        IEnumerable<RetakeEntryRow> filtered = allRetakeRows;
+
+        filtered = SelectedRetakeFilter switch
+        {
+            "Можно оформить" => filtered.Where(row => row.CanCreateRetake),
+            "Уже оформлены" => filtered.Where(row => row.HasRetake),
+            "Двойки" => filtered.Where(row => Math.Abs(row.OldValue - 2) < 0.001),
+            "Тройки и четверки" => filtered.Where(row => row.OldValue is 3 or 4),
+            _ => filtered
+        };
+
+        var query = SearchText.Trim();
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            filtered = filtered.Where(row =>
+                row.StudentName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.GroupName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.SubjectName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                row.GradeType.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var visible = filtered.ToList();
+        RetakeRows = new ObservableCollection<RetakeEntryRow>(visible);
+        VisibleRetakeRowCount = visible.Count;
+
+        if (SelectedRetakeRow is not null && !visible.Any(row => row.GradeId == SelectedRetakeRow.GradeId))
+        {
+            SelectedRetakeRow = visible.FirstOrDefault();
+        }
     }
 }

@@ -14,6 +14,8 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
 {
     private readonly LessonRepository lessonRepository;
     private readonly AuthenticatedUser currentUser;
+    private List<LessonListItem> allLessons = new();
+    private List<ScheduleItem> allSchedule = new();
 
     [ObservableProperty]
     private ObservableCollection<LessonListItem> lessons = new();
@@ -31,7 +33,16 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
     private int todayLessonCount;
 
     [ObservableProperty]
+    private int upcomingLessonCount;
+
+    [ObservableProperty]
     private int scheduleCount;
+
+    [ObservableProperty]
+    private string searchText = string.Empty;
+
+    [ObservableProperty]
+    private string selectedLessonPeriodFilter = LessonPeriodFilters[0];
 
     [ObservableProperty]
     private string selectedLessonTitle = "Выберите занятие";
@@ -43,7 +54,21 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
     private string selectedLessonNote = string.Empty;
 
     [ObservableProperty]
+    private string selectedLessonActionText = "Выберите занятие, затем откройте нужное действие.";
+
+    [ObservableProperty]
+    private string scheduleSummary = "Расписание загружается.";
+
+    [ObservableProperty]
     private string resultMessage = "Занятия загружены.";
+
+    public static IReadOnlyList<string> LessonPeriodFilters { get; } =
+    [
+        "Все занятия",
+        "Сегодня",
+        "Ближайшие",
+        "Прошедшие"
+    ];
 
     public MyLessonsPageViewModel(LessonRepository lessonRepository, AuthenticatedUser currentUser)
         : base("Мои занятия")
@@ -55,6 +80,11 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
 
     public event Action<string>? NavigateRequested;
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     partial void OnSelectedLessonChanged(LessonListItem? value)
     {
         if (value is null)
@@ -62,6 +92,7 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
             SelectedLessonTitle = "Выберите занятие";
             SelectedLessonDetails = "После выбора здесь появятся группа, предмет, аудитория и примечание.";
             SelectedLessonNote = string.Empty;
+            SelectedLessonActionText = "Выберите занятие, затем откройте нужное действие.";
             return;
         }
 
@@ -70,7 +101,12 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
         SelectedLessonNote = string.IsNullOrWhiteSpace(value.Note)
             ? "Примечаний нет."
             : value.Note;
+        SelectedLessonActionText = "Откройте журнал, оценки или посещаемость для выбранного занятия.";
     }
+
+    partial void OnSearchTextChanged(string value) => ApplyFilters();
+
+    partial void OnSelectedLessonPeriodFilterChanged(string value) => ApplyFilters();
 
     [RelayCommand]
     private void Load()
@@ -80,22 +116,24 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
             IsBusy = true;
             ErrorMessage = null;
 
-            var loadedLessons = currentUser.RoleName == "Преподаватель"
+            allLessons = currentUser.RoleName == "Преподаватель"
                 ? lessonRepository.GetLessonsForTeacher(currentUser.UserId)
                 : lessonRepository.GetLessons();
-            var loadedSchedule = currentUser.RoleName == "Преподаватель"
+            allSchedule = currentUser.RoleName == "Преподаватель"
                 ? lessonRepository.GetScheduleForTeacher(currentUser.UserId)
                 : lessonRepository.GetSchedule();
 
-            Lessons = new ObservableCollection<LessonListItem>(loadedLessons);
-            ScheduleCards = new ObservableCollection<LessonScheduleCard>(loadedSchedule.Select(ToScheduleCard));
-            LessonCount = loadedLessons.Count;
-            TodayLessonCount = loadedLessons.Count(IsToday);
-            ScheduleCount = loadedSchedule.Count;
-            SelectedLesson = loadedLessons.FirstOrDefault();
-            ResultMessage = loadedLessons.Count == 0
+            TodayLessonCount = allLessons.Count(IsToday);
+            UpcomingLessonCount = allLessons.Count(IsUpcoming);
+            ScheduleCount = allSchedule.Count;
+            ScheduleCards = new ObservableCollection<LessonScheduleCard>(allSchedule.Select(ToScheduleCard));
+            ScheduleSummary = ScheduleCount == 0
+                ? "Расписание пока не заполнено."
+                : $"Записей расписания: {ScheduleCount}.";
+            ApplyFilters();
+            ResultMessage = allLessons.Count == 0
                 ? "Занятий пока нет. Добавьте тему через раздел тем и расписания."
-                : $"Показано занятий: {loadedLessons.Count}.";
+                : $"Показано занятий: {Lessons.Count}.";
         }
         catch (Exception ex)
         {
@@ -108,13 +146,60 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    private void OpenGrades() => NavigateRequested?.Invoke("Журнал занятия");
+    private void OpenJournal() => OpenSelectedLessonSection("Журнал занятия");
 
     [RelayCommand]
-    private void OpenAttendance() => NavigateRequested?.Invoke("Посещаемость");
+    private void OpenGrades() => OpenSelectedLessonSection("Оценивание");
+
+    [RelayCommand]
+    private void OpenAttendance() => OpenSelectedLessonSection("Посещаемость");
 
     [RelayCommand]
     private void OpenTopics() => NavigateRequested?.Invoke("Темы и расписание");
+
+    private void OpenSelectedLessonSection(string section)
+    {
+        if (SelectedLesson is null)
+        {
+            NotifyWarning("Сначала выберите занятие.");
+            return;
+        }
+
+        NavigateRequested?.Invoke(section);
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<LessonListItem> filtered = allLessons;
+        var query = SearchText.Trim();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            filtered = filtered.Where(lesson =>
+                Contains(lesson.Topic, query) ||
+                Contains(lesson.GroupName, query) ||
+                Contains(lesson.SubjectName, query) ||
+                Contains(lesson.ClassroomName, query) ||
+                Contains(lesson.Note, query));
+        }
+
+        filtered = SelectedLessonPeriodFilter switch
+        {
+            "Сегодня" => filtered.Where(IsToday),
+            "Ближайшие" => filtered.Where(IsUpcoming),
+            "Прошедшие" => filtered.Where(IsPast),
+            _ => filtered
+        };
+
+        var selectedId = SelectedLesson?.LessonId;
+        var visible = filtered.ToList();
+        Lessons = new ObservableCollection<LessonListItem>(visible);
+        LessonCount = visible.Count;
+        SelectedLesson = visible.FirstOrDefault(lesson => lesson.LessonId == selectedId) ?? visible.FirstOrDefault();
+        ResultMessage = visible.Count == 0
+            ? "Нет занятий по выбранным условиям."
+            : $"Показано занятий: {visible.Count}.";
+    }
 
     private static LessonScheduleCard ToScheduleCard(ScheduleItem item)
     {
@@ -131,6 +216,21 @@ public sealed partial class MyLessonsPageViewModel : PageViewModelBase
         return DateTime.TryParse(lesson.LessonDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             && date.Date == DateTime.Today;
     }
+
+    private static bool IsUpcoming(LessonListItem lesson)
+    {
+        return DateTime.TryParse(lesson.LessonDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            && date.Date >= DateTime.Today;
+    }
+
+    private static bool IsPast(LessonListItem lesson)
+    {
+        return DateTime.TryParse(lesson.LessonDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            && date.Date < DateTime.Today;
+    }
+
+    private static bool Contains(string? value, string query) =>
+        value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
 
     private static string GetDayName(int dayOfWeek)
     {

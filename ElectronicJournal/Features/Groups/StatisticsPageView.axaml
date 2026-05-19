@@ -106,10 +106,6 @@
                 <Grid x:Name="StatisticsListHost" RowDefinitions="Auto,*">
                     <StackPanel Margin="0,0,0,10" Spacing="2">
                         <TextBlock Text="Группы и успеваемость" FontSize="19" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   Foreground="{DynamicResource DangerThemeBrush}"
-                                   TextWrapping="Wrap"
-                                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                     </StackPanel>
 
                     <DataGrid Grid.Row="1"

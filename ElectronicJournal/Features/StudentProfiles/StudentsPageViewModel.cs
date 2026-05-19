@@ -114,6 +114,11 @@ public partial class StudentsPageViewModel : PageViewModelBase
 
     partial void OnSearchTextChanged(string value) => ApplyFilters();
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     partial void OnSelectedStudentChanged(StudentListItem? value)
     {
         if (value is null)
@@ -217,10 +222,12 @@ public partial class StudentsPageViewModel : PageViewModelBase
             if (SelectedStudent is null)
             {
                 studentRepository.AddStudent(student);
+                NotifySuccess("Студент добавлен.");
             }
             else
             {
                 studentRepository.UpdateStudent(student);
+                NotifySuccess("Карточка студента обновлена.");
             }
 
             ClearForm();
@@ -281,6 +288,7 @@ public partial class StudentsPageViewModel : PageViewModelBase
             ClearForm();
             Load();
             ErrorMessage = null;
+            NotifySuccess("Студент удален.");
         }
         catch (Exception ex)
         {

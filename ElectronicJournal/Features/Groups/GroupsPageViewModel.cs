@@ -66,6 +66,11 @@ public partial class GroupsPageViewModel : PageViewModelBase
         ResultMessage = $"Выбрана группа: {value.GroupName}.";
     }
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     [RelayCommand]
     private void Load()
     {
@@ -94,6 +99,7 @@ public partial class GroupsPageViewModel : PageViewModelBase
         if (string.IsNullOrWhiteSpace(GroupName))
         {
             ResultMessage = "Введите название группы.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -103,6 +109,7 @@ public partial class GroupsPageViewModel : PageViewModelBase
             if (!int.TryParse(CourseNumber, out var course) || course < 1 || course > 6)
             {
                 ResultMessage = "Курс должен быть числом от 1 до 6.";
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -121,11 +128,13 @@ public partial class GroupsPageViewModel : PageViewModelBase
             {
                 groupRepository.AddGroup(group);
                 ResultMessage = "Группа создана.";
+                NotifySuccess(ResultMessage);
             }
             else
             {
                 groupRepository.UpdateGroup(group);
                 ResultMessage = "Группа обновлена.";
+                NotifySuccess(ResultMessage);
             }
 
             var selectedName = group.GroupName;
@@ -136,6 +145,7 @@ public partial class GroupsPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить группу: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -157,6 +167,7 @@ public partial class GroupsPageViewModel : PageViewModelBase
         if (SelectedGroup is null)
         {
             ResultMessage = "Сначала выберите группу.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -164,6 +175,7 @@ public partial class GroupsPageViewModel : PageViewModelBase
         if (blockingReferences > 0)
         {
             ResultMessage = "Группу нельзя удалить: в ней есть студенты или назначенные предметы.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -181,10 +193,12 @@ public partial class GroupsPageViewModel : PageViewModelBase
             ClearForm();
             Load();
             ResultMessage = "Группа удалена.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить группу: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 

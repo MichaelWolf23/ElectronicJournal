@@ -89,6 +89,11 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
 
     partial void OnSelectedPeriodIdChanged(int value) => LoadSheet();
 
+    partial void OnSelectedSheetRowChanged(FinalGradeSheetRow? value)
+    {
+        SaveSelectedSheetRowCommand.NotifyCanExecuteChanged();
+    }
+
     public FinalGradesPageViewModel(
         FinalGradeRepository finalGradeRepository,
         StudentRepository studentRepository,
@@ -112,6 +117,7 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         if (SelectedFinalGrade is null)
         {
             ResultMessage = "Сначала выберите итоговую оценку.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -133,10 +139,12 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
                 ? "Нет данных"
                 : FinalGrades.Average(grade => grade.FinalValue).ToString("F2");
             ResultMessage = "Итоговая оценка удалена.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить итоговую оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -191,24 +199,148 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
     [RelayCommand]
     private void SaveSheet()
     {
+        var rowsToSave = SheetRows
+            .Where(row => (row.IsDirty || !row.HasSavedFinalGrade) && !string.IsNullOrWhiteSpace(row.FinalValueText))
+            .ToList();
+        if (rowsToSave.Count == 0)
+        {
+            ResultMessage = "Нет строк для сохранения.";
+            NotifyInfo(ResultMessage);
+            return;
+        }
+
+        SaveRows(rowsToSave, "Ведомость сохранена");
+    }
+
+    [RelayCommand]
+    private void SaveSheetRow(FinalGradeSheetRow? row)
+    {
+        if (row is null)
+        {
+            ResultMessage = "Сначала выберите строку ведомости.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        SaveRows(new List<FinalGradeSheetRow> { row }, "Строка сохранена");
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveSelectedSheetRow))]
+    private void SaveSelectedSheetRow()
+    {
+        if (SelectedSheetRow is null)
+        {
+            ResultMessage = "Сначала выберите строку ведомости.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        SaveRows(new List<FinalGradeSheetRow> { SelectedSheetRow }, "Строка сохранена");
+    }
+
+    [RelayCommand]
+    private async Task DeleteSheetRowFinalGrade(FinalGradeSheetRow? row)
+    {
+        if (row is null)
+        {
+            ResultMessage = "Сначала выберите строку ведомости.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        if (!row.HasSavedFinalGrade)
+        {
+            ResultMessage = "У выбранного студента нет сохраненного итога.";
+            NotifyInfo(ResultMessage);
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить итог",
+            $"Удалить итоговую оценку у студента {row.StudentName}?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            finalGradeRepository.DeleteFinalGrade(row.StudentId, SelectedAssignmentId, SelectedPeriodId);
+            ReloadFinalGradesAndSheet();
+            ResultMessage = "Итоговая оценка удалена.";
+            NotifySuccess(ResultMessage);
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить итоговую оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteAllSheetFinalGrades()
+    {
         if (SelectedAssignmentId == 0 || SelectedPeriodId == 0)
         {
             ResultMessage = "Выберите предмет и период.";
+            NotifyWarning(ResultMessage);
+            return;
+        }
+
+        var savedCount = SheetRows.Count(row => row.HasSavedFinalGrade);
+        if (savedCount == 0)
+        {
+            ResultMessage = "В ведомости нет сохраненных итогов.";
+            NotifyInfo(ResultMessage);
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить все итоги",
+            $"Удалить все сохраненные итоговые оценки в этой ведомости? Количество: {savedCount}.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var deleted = finalGradeRepository.DeleteFinalGradesForSheet(SelectedAssignmentId, SelectedPeriodId);
+            ReloadFinalGradesAndSheet();
+            ResultMessage = $"Удалено итоговых оценок: {deleted}.";
+            NotifySuccess(ResultMessage);
+        }
+        catch (Exception ex)
+        {
+            ResultMessage = $"Не удалось удалить итоговые оценки: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
+        }
+    }
+
+    private bool CanSaveSelectedSheetRow() => SelectedSheetRow is not null;
+
+    private bool CanDeleteSelectedSheetFinalGrade() => SelectedSheetRow?.HasSavedFinalGrade == true;
+
+    private void SaveRows(IReadOnlyCollection<FinalGradeSheetRow> rowsToSave, string successPrefix)
+    {
+        if (SelectedAssignmentId == 0 || SelectedPeriodId == 0)
+        {
+            ResultMessage = "Выберите предмет и период.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!Assignments.Any(assignment => assignment.Id == SelectedAssignmentId))
         {
             ResultMessage = "Выбранный предмет недоступен текущему пользователю.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
-        var rowsToSave = SheetRows
-            .Where(row => !string.IsNullOrWhiteSpace(row.FinalValueText))
-            .ToList();
         if (rowsToSave.Count == 0)
         {
-            ResultMessage = "В ведомости нет заполненных итоговых оценок.";
+            ResultMessage = "Нет строк для сохранения.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -217,15 +349,24 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
             var saved = 0;
             foreach (var row in rowsToSave)
             {
+                if (string.IsNullOrWhiteSpace(row.FinalValueText))
+                {
+                    ResultMessage = $"{row.StudentName}: укажите итоговую оценку.";
+                    NotifyWarning(ResultMessage);
+                    return;
+                }
+
                 if (!double.TryParse(row.FinalValueText.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
                 {
                     ResultMessage = $"Проверьте итоговую оценку у студента {row.StudentName}.";
+                    NotifyWarning(ResultMessage);
                     return;
                 }
 
                 if (!IsGradeInScale(value, out var gradeError))
                 {
                     ResultMessage = $"{row.StudentName}: {gradeError}";
+                    NotifyWarning(ResultMessage);
                     return;
                 }
 
@@ -242,17 +383,14 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
                 saved++;
             }
 
-            FinalGrades = new ObservableCollection<FinalGradeItem>(LoadFinalGradesForCurrentUser());
-            FinalGradeCount = FinalGrades.Count;
-            FinalAverageText = FinalGrades.Count == 0
-                ? "Нет данных"
-                : FinalGrades.Average(grade => grade.FinalValue).ToString("F2");
-            LoadSheet();
-            ResultMessage = $"Ведомость сохранена. Итогов записано: {saved}.";
+            ReloadFinalGradesAndSheet();
+            ResultMessage = $"{successPrefix}. Итогов записано: {saved}.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить ведомость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -262,12 +400,14 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         if (SelectedStudentId == 0 || SelectedAssignmentId == 0)
         {
             ResultMessage = "Выберите студента и предмет.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!CanUseSelectedScope(out var scopeError))
         {
             ResultMessage = scopeError;
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -276,11 +416,13 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         {
             FinalValue = string.Empty;
             ResultMessage = "Для выбранного студента и предмета пока нет оценок.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
         FinalValue = Math.Round(CalculatedAverage.Value, 0, MidpointRounding.AwayFromZero).ToString();
         ResultMessage = $"Средний балл рассчитан: {CalculatedAverage:F2}. Итоговая оценка предложена автоматически.";
+        NotifySuccess(ResultMessage);
     }
 
     [RelayCommand]
@@ -289,24 +431,28 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         if (SelectedStudentId == 0 || SelectedAssignmentId == 0 || SelectedPeriodId == 0)
         {
             ResultMessage = "Выберите студента, предмет и период.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!CanUseSelectedScope(out var scopeError))
         {
             ResultMessage = scopeError;
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!double.TryParse(FinalValue, out var value))
         {
             ResultMessage = "Итоговая оценка должна быть числом.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!IsGradeInScale(value, out var gradeError))
         {
             ResultMessage = gradeError;
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -324,6 +470,7 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
                 null));
 
             ResultMessage = "Итоговая оценка сохранена.";
+            NotifySuccess(ResultMessage);
             Comment = string.Empty;
             FinalGrades = new ObservableCollection<FinalGradeItem>(LoadFinalGradesForCurrentUser());
             FinalGradeCount = FinalGrades.Count;
@@ -334,6 +481,7 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить итоговую оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -402,6 +550,16 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         return true;
     }
 
+    private void ReloadFinalGradesAndSheet()
+    {
+        FinalGrades = new ObservableCollection<FinalGradeItem>(LoadFinalGradesForCurrentUser());
+        FinalGradeCount = FinalGrades.Count;
+        FinalAverageText = FinalGrades.Count == 0
+            ? "Нет данных"
+            : FinalGrades.Average(grade => grade.FinalValue).ToString("F2");
+        LoadSheet();
+    }
+
     private void LoadSheet()
     {
         if (SelectedAssignmentId == 0 || SelectedPeriodId == 0)
@@ -428,6 +586,7 @@ public partial class FinalGradesPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось загрузить ведомость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 

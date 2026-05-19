@@ -96,6 +96,35 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
+    partial void OnSelectedTeacherAssignmentChanged(TeacherAssignmentItem? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        SelectedTeacherId = Teachers.FirstOrDefault(item => item.Name == value.TeacherName)?.Id ?? SelectedTeacherId;
+        SelectedTeacherGroupId = Groups.FirstOrDefault(item => item.GroupName == value.GroupName)?.GroupId ?? SelectedTeacherGroupId;
+        SelectedSubjectId = Subjects.FirstOrDefault(item => item.SubjectName == value.SubjectName)?.SubjectId ?? SelectedSubjectId;
+        SelectedPeriodId = Periods.FirstOrDefault(item => item.Name == value.PeriodName)?.Id ?? SelectedPeriodId;
+    }
+
+    partial void OnSelectedCuratorAssignmentChanged(GroupCuratorItem? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        SelectedCuratorId = Curators.FirstOrDefault(item => item.Name == value.CuratorName)?.Id ?? SelectedCuratorId;
+        SelectedCuratorGroupId = Groups.FirstOrDefault(item => item.GroupName == value.GroupName)?.GroupId ?? SelectedCuratorGroupId;
+    }
+
     [RelayCommand]
     private void Load()
     {
@@ -138,6 +167,7 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
         if (SelectedTeacherId == 0 || SelectedTeacherGroupId == 0 || SelectedSubjectId == 0 || SelectedPeriodId == 0)
         {
             ResultMessage = "Выберите преподавателя, группу, предмет и период.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -150,6 +180,7 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
                 SelectedPeriodId))
             {
                 ResultMessage = "Такое назначение преподавателя уже есть.";
+                NotifyInfo(ResultMessage);
                 return;
             }
 
@@ -159,11 +190,13 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
                 SelectedSubjectId,
                 SelectedPeriodId);
             ResultMessage = "Преподаватель назначен.";
+            NotifySuccess(ResultMessage);
             ReloadAssignments();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось назначить преподавателя: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -173,6 +206,7 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
         if (SelectedTeacherAssignment is null)
         {
             ResultMessage = "Выберите назначение преподавателя.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -189,11 +223,13 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
             assignmentRepository.DeleteTeacherAssignment(SelectedTeacherAssignment.AssignmentId);
             SelectedTeacherAssignment = null;
             ResultMessage = "Назначение преподавателя удалено.";
+            NotifySuccess(ResultMessage);
             ReloadAssignments();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить назначение: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -203,6 +239,7 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
         if (SelectedCuratorId == 0 || SelectedCuratorGroupId == 0)
         {
             ResultMessage = "Выберите куратора и группу.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -211,16 +248,19 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
             if (assignmentRepository.CuratorAssignmentExists(SelectedCuratorGroupId, SelectedCuratorId))
             {
                 ResultMessage = "Этот куратор уже назначен на выбранную группу.";
+                NotifyInfo(ResultMessage);
                 return;
             }
 
             assignmentRepository.AddGroupCurator(SelectedCuratorGroupId, SelectedCuratorId);
             ResultMessage = "Куратор назначен.";
+            NotifySuccess(ResultMessage);
             ReloadAssignments();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось назначить куратора: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -230,6 +270,7 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
         if (SelectedCuratorAssignment is null)
         {
             ResultMessage = "Выберите назначение куратора.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -246,11 +287,13 @@ public partial class AssignmentsPageViewModel : PageViewModelBase
             assignmentRepository.DeleteGroupCurator(SelectedCuratorAssignment.GroupCuratorId);
             SelectedCuratorAssignment = null;
             ResultMessage = "Назначение куратора удалено.";
+            NotifySuccess(ResultMessage);
             ReloadAssignments();
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить куратора: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 

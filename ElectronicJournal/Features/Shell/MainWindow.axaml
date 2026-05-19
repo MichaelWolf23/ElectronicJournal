@@ -178,5 +178,44 @@
                 </Border>
             </Grid>
         </Grid>
+
+        <ItemsControl ItemsSource="{Binding Notifications}"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Margin="0,70,24,0"
+                      IsHitTestVisible="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="8"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Width="340"
+                            MinHeight="62"
+                            CornerRadius="8"
+                            Background="{Binding Kind, Converter={StaticResource NotificationBrushConverter}, ConverterParameter=background}"
+                            BorderBrush="{Binding Kind, Converter={StaticResource NotificationBrushConverter}, ConverterParameter=border}"
+                            BorderThickness="1"
+                            BoxShadow="0 8 24 0 #22000000">
+                        <Grid ColumnDefinitions="5,*"
+                              ClipToBounds="True">
+                            <Border Background="{Binding Kind, Converter={StaticResource NotificationBrushConverter}, ConverterParameter=border}"/>
+                            <StackPanel Grid.Column="1"
+                                        Margin="14,10,14,12"
+                                        Spacing="3">
+                                <TextBlock Text="{Binding Title}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding Kind, Converter={StaticResource NotificationBrushConverter}, ConverterParameter=foreground}"/>
+                                <TextBlock Text="{Binding Message}"
+                                           TextWrapping="Wrap"
+                                           MaxLines="3"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </Window>

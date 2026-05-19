@@ -23,6 +23,9 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
     private ObservableCollection<GradeJournalItem> grades = new();
 
     [ObservableProperty]
+    private ObservableCollection<GradeJournalItem> attentionGrades = new();
+
+    [ObservableProperty]
     private ObservableCollection<string> groupFilters = new();
 
     [ObservableProperty]
@@ -44,7 +47,16 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
     private int debtorCount;
 
     [ObservableProperty]
+    private int lowGradeCount;
+
+    [ObservableProperty]
     private string averageText = "Нет данных";
+
+    [ObservableProperty]
+    private string reportScopeText = "Все группы · все предметы";
+
+    [ObservableProperty]
+    private string attentionSummary = "Проблемных оценок нет.";
 
     [ObservableProperty]
     private string resultMessage = "Сформируйте отчет по успеваемости.";
@@ -109,6 +121,7 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
         if (Grades.Count == 0)
         {
             ResultMessage = "Нет данных для печати.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -129,10 +142,12 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
 
             ReportExportService.OpenPrintDialog(path);
             ResultMessage = $"Печатный отчет открыт: {path}";
+            NotifySuccess("Печатный отчет открыт.");
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось создать отчет: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -142,6 +157,7 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
         if (Grades.Count == 0)
         {
             ResultMessage = "Нет данных для экспорта.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -155,10 +171,12 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
 
             ReportExportService.ShowInExplorer(path);
             ResultMessage = $"Excel-отчет создан: {path}";
+            NotifySuccess("Excel-отчет создан и открыт в проводнике.");
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось экспортировать отчет: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -176,14 +194,28 @@ public sealed partial class TeacherReportsPageViewModel : PageViewModelBase
         }
 
         var visible = filtered.ToList();
+        var minPositiveGrade = settingsRepository.GetMinPositiveGrade();
+        var attention = visible
+            .Where(item => item.GradeValue < minPositiveGrade)
+            .OrderBy(item => item.GroupName)
+            .ThenBy(item => item.StudentName)
+            .ThenBy(item => item.SubjectName)
+            .ThenBy(item => item.GradeDate)
+            .ToList();
+
         Grades = new ObservableCollection<GradeJournalItem>(visible);
+        AttentionGrades = new ObservableCollection<GradeJournalItem>(attention);
         GradeCount = visible.Count;
         StudentCount = CountStudentsInReportScope();
-        var minPositiveGrade = settingsRepository.GetMinPositiveGrade();
-        DebtorCount = visible.Where(item => item.GradeValue < minPositiveGrade).Select(item => item.StudentName).Distinct().Count();
+        LowGradeCount = attention.Count;
+        DebtorCount = attention.Select(item => item.StudentName).Distinct().Count();
         AverageText = visible.Count == 0
             ? "Нет данных"
             : visible.Average(item => item.GradeValue).ToString("F2");
+        ReportScopeText = $"{SelectedGroupFilter} · {SelectedSubjectFilter}";
+        AttentionSummary = attention.Count == 0
+            ? "По текущим фильтрам нет оценок ниже положительной."
+            : $"Низких оценок: {LowGradeCount}. Студентов с риском: {DebtorCount}.";
     }
 
     private int CountStudentsInReportScope()

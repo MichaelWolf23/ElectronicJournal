@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ElectronicJournal.Models.Dto;
 using ElectronicJournal.Repositories;
@@ -52,13 +53,17 @@ public sealed partial class DashboardPageViewModel : PageViewModelBase
 
     public string Description { get; }
 
-    public string WorkdayTitle { get; private set; } = "Рабочий день";
+    [ObservableProperty]
+    private string workdayTitle = "Рабочий день";
 
-    public string PrimaryScenarioTitle { get; private set; } = "Начать работу";
+    [ObservableProperty]
+    private string primaryScenarioTitle = "Начать работу";
 
-    public string PrimaryScenarioText { get; private set; } = "Выберите действие, которое нужно выполнить сейчас.";
+    [ObservableProperty]
+    private string primaryScenarioText = "Выберите действие, которое нужно выполнить сейчас.";
 
-    public string AttentionTitle { get; private set; } = "Требует внимания";
+    [ObservableProperty]
+    private string attentionTitle = "Требует внимания";
 
     public ObservableCollection<DashboardMetricItem> Metrics { get; } = new();
 
@@ -73,6 +78,13 @@ public sealed partial class DashboardPageViewModel : PageViewModelBase
     public override void OnNavigatedTo()
     {
         ReloadDashboard();
+    }
+
+    [RelayCommand]
+    private void Reload()
+    {
+        ReloadDashboard();
+        NotifySuccess("Главная обновлена.");
     }
 
     private void ReloadDashboard()

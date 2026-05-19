@@ -48,6 +48,15 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
     private string contactText = string.Empty;
 
     [ObservableProperty]
+    private int studentCount;
+
+    [ObservableProperty]
+    private int gradeCount;
+
+    [ObservableProperty]
+    private int attendanceCount;
+
+    [ObservableProperty]
     private string averageText = "Нет данных";
 
     [ObservableProperty]
@@ -78,6 +87,11 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
 
     public event Action<string>? NavigateRequested;
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     partial void OnSelectedStudentChanged(StudentListItem? value) => UpdateProfile();
 
     partial void OnSearchTextChanged(string value) => ApplySearch();
@@ -95,6 +109,7 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
                 _ => studentRepository.GetStudents()
             };
             Students = new ObservableCollection<StudentListItem>(loadedStudents);
+            StudentCount = loadedStudents.Count;
             allGrades = currentUser.RoleName switch
             {
                 "Преподаватель" => gradeRepository.GetJournalForTeacher(currentUser.UserId),
@@ -138,12 +153,6 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
         NavigateRequested?.Invoke("Студенты риска");
     }
 
-    [RelayCommand]
-    private void OpenLessonJournal()
-    {
-        NavigateRequested?.Invoke("Журнал занятия");
-    }
-
     private void ApplySearch()
     {
         var source = currentUser.RoleName switch
@@ -175,6 +184,11 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
             RecentGrades.Clear();
             RecentAttendance.Clear();
             Debts.Clear();
+            AverageText = "Нет данных";
+            GradeCount = 0;
+            AttendanceCount = 0;
+            LowGradeCount = 0;
+            AbsenceCount = 0;
             return;
         }
 
@@ -194,6 +208,8 @@ public sealed partial class StudentProfilePageViewModel : PageViewModelBase
         ProfileDetails = $"{SelectedStudent.GroupName} · курс {SelectedStudent.CourseNumber?.ToString() ?? "не указан"} · {SelectedStudent.Status}";
         ContactText = $"Email: {SelectedStudent.Email ?? "не указан"} · Телефон: {SelectedStudent.Phone ?? "не указан"}";
         AverageText = grades.Count == 0 ? "Нет данных" : grades.Average(grade => grade.GradeValue).ToString("F2");
+        GradeCount = grades.Count;
+        AttendanceCount = attendance.Count;
         LowGradeCount = debts.Count;
         AbsenceCount = attendance.Count(item => item.Status.Contains("отсутств", StringComparison.OrdinalIgnoreCase));
         RecentGrades = new ObservableCollection<GradeJournalItem>(grades.Take(6));

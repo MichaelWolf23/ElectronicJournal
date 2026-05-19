@@ -6,27 +6,47 @@
              x:Name="Root"
              x:DataType="vm:TeacherReportsPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
-        <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                <StackPanel Spacing="2">
-                <TextBlock Text="Отчет по успеваемости" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding ResultMessage}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
-                    <Button Content="Печать" Classes="ghost" Command="{Binding PrintReportCommand}"/>
-                    <Button Content="Excel" Classes="primary" Command="{Binding ExportExcelCommand}"/>
-                </StackPanel>
+        <Border Classes="toolbar-panel">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Отчет по успеваемости" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ReportScopeText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Обновить" Classes="ghost" Command="{Binding LoadCommand}"/>
+                </Grid>
+
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                    <WrapPanel>
+                        <ComboBox Width="190"
+                                  Margin="0,0,10,8"
+                                  ItemsSource="{Binding GroupFilters}"
+                                  SelectedItem="{Binding SelectedGroupFilter}"/>
+                        <ComboBox Width="240"
+                                  Margin="0,0,10,8"
+                                  ItemsSource="{Binding SubjectFilters}"
+                                  SelectedItem="{Binding SelectedSubjectFilter}"/>
+                    </WrapPanel>
+
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <Button Content="Сбросить"
+                                Margin="0,0,8,8"
+                                Classes="ghost"
+                                Command="{Binding ResetFiltersCommand}"/>
+                        <Button Content="Печать"
+                                Margin="0,0,8,8"
+                                Classes="ghost"
+                                Command="{Binding PrintReportCommand}"/>
+                        <Button Content="Excel"
+                                Margin="0,0,0,8"
+                                Classes="primary"
+                                Command="{Binding ExportExcelCommand}"/>
+                    </WrapPanel>
+                </Grid>
             </Grid>
-            <Border Grid.Row="1" Classes="toolbar-panel">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <ComboBox Width="190" ItemsSource="{Binding GroupFilters}" SelectedItem="{Binding SelectedGroupFilter}"/>
-                    <ComboBox Width="230" ItemsSource="{Binding SubjectFilters}" SelectedItem="{Binding SelectedSubjectFilter}"/>
-                </StackPanel>
-                <Button Grid.Column="1" Content="Сбросить" Classes="ghost" Command="{Binding ResetFiltersCommand}"/>
-            </Grid>
-            </Border>
-        </Grid>
+        </Border>
 
         <Border Grid.Row="1" Classes="section-panel">
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="20">
@@ -44,58 +64,227 @@
                 </StackPanel>
                 <StackPanel Grid.Column="3" Spacing="2">
                     <TextBlock Text="{Binding DebtorCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource DangerThemeBrush}"/>
-                    <TextBlock Text="должников" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="студентов с риском" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <Border Grid.Row="2" x:Name="ReportListHost" Classes="section-panel">
-            <Grid>
-            <DataGrid MinWidth="860"
-                      ItemsSource="{Binding Grades}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      GridLinesVisibility="Horizontal"
-                      IsVisible="{Binding #ReportListHost.Bounds.Width, Converter={StaticResource WideTableConverter}}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
-                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="100"/>
-                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="170"/>
-                    <DataGridTextColumn Header="Тип" Binding="{Binding GradeType}" Width="120"/>
-                    <DataGridTextColumn Header="Вес" Binding="{Binding GradeWeight}" Width="70"/>
-                    <DataGridTextColumn Header="Оценка" Binding="{Binding GradeValue}" Width="80"/>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="110"/>
-                </DataGrid.Columns>
-            </DataGrid>
-            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Background="{DynamicResource SubtleBackgroundBrush}"
-                    IsVisible="{Binding GradeCount, Converter={StaticResource NoDataConverter}}">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                    <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Оценки появятся после заполнения журнала."
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               TextWrapping="Wrap"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+        <Grid Grid.Row="2" x:Name="ReportContentHost">
+            <Grid ColumnDefinitions="340,*"
+                  ColumnSpacing="14"
+                  IsVisible="{Binding #ReportContentHost.Bounds.Width, Converter={StaticResource WideReportsConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Требуют внимания" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding AttentionSummary}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
 
-            <ListBox ItemsSource="{Binding Grades}"
-                     IsVisible="{Binding #ReportListHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="dto:GradeJournalItem">
-                        <Grid MinHeight="62" RowDefinitions="Auto,Auto" Margin="0,4">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                <TextBlock Grid.Column="1" Text="{Binding GradeValue}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="Bold"/>
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource DangerSoftBrush}"
+                                BorderBrush="{DynamicResource DangerThemeBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10"
+                                IsVisible="{Binding LowGradeCount, Converter={StaticResource HasDataConverter}}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <TextBlock Text="{Binding LowGradeCount}"
+                                           FontSize="22"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource DangerThemeBrush}"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="оценок ниже положительной"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource DangerThemeBrush}"/>
                             </Grid>
-                            <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                        </Border>
+
+                        <Grid Grid.Row="2">
+                            <Border Background="{DynamicResource SuccessSoftBrush}"
+                                    BorderBrush="{DynamicResource SuccessThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12"
+                                    IsVisible="{Binding LowGradeCount, Converter={StaticResource NoDataConverter}}">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Проблемных оценок нет" FontWeight="SemiBold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                                    <TextBlock Text="По выбранным фильтрам все оценки положительные."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <ListBox ItemsSource="{Binding AttentionGrades}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:GradeJournalItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding GradeValue}"
+                                                           FontSize="18"
+                                                           FontWeight="Bold"
+                                                           Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}"/>
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding SubjectName}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="2"
+                                                           Text="{Binding GradeType}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Ведомость" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Показаны оценки по выбранным фильтрам."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding GradeCount, StringFormat='{}{0} записей'}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <DataGrid MinWidth="820"
+                                      ItemsSource="{Binding Grades}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      GridLinesVisibility="Horizontal">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Студент" Binding="{Binding StudentName}" Width="220"/>
+                                    <DataGridTextColumn Header="Группа" Binding="{Binding GroupName}" Width="90"/>
+                                    <DataGridTextColumn Header="Предмет" Binding="{Binding SubjectName}" Width="170"/>
+                                    <DataGridTextColumn Header="Тип" Binding="{Binding GradeType}" Width="120"/>
+                                    <DataGridTextColumn Header="Вес" Binding="{Binding GradeWeight}" Width="70"/>
+                                    <DataGridTextColumn Header="Оценка" Binding="{Binding GradeValue}" Width="80"/>
+                                    <DataGridTextColumn Header="Дата" Binding="{Binding GradeDate}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource SubtleBackgroundBrush}"
+                                    IsVisible="{Binding GradeCount, Converter={StaticResource NoDataConverter}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Измените фильтры или заполните журнал."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
             </Grid>
-        </Border>
+
+            <ScrollViewer IsVisible="{Binding #ReportContentHost.Bounds.Width, Converter={StaticResource CompactReportsConverter}}"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Требуют внимания" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding AttentionSummary}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <Border Background="{DynamicResource SuccessSoftBrush}"
+                                    BorderBrush="{DynamicResource SuccessThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12"
+                                    IsVisible="{Binding LowGradeCount, Converter={StaticResource NoDataConverter}}">
+                                <TextBlock Text="Проблемных оценок нет" FontWeight="SemiBold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                            </Border>
+
+                            <ListBox ItemsSource="{Binding AttentionGrades}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:GradeJournalItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding GradeValue}"
+                                                           FontWeight="Bold"
+                                                           Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}"/>
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding SubjectName}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Ведомость" FontSize="18" FontWeight="SemiBold"/>
+                            <Grid Grid.Row="1">
+                                <ListBox ItemsSource="{Binding Grades}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="dto:GradeJournalItem">
+                                            <Border Classes="list-row">
+                                                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding GradeValue}"
+                                                               FontSize="18"
+                                                               FontWeight="Bold"
+                                                               Foreground="{Binding GradeValue, Converter={StaticResource GradeBrushConverter}}"/>
+                                                    <TextBlock Grid.Row="1"
+                                                               Text="{Binding SubjectName}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                    <TextBlock Grid.Row="2"
+                                                               Text="{Binding GradeType}"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource SubtleBackgroundBrush}"
+                                        MinHeight="180"
+                                        IsVisible="{Binding GradeCount, Converter={StaticResource NoDataConverter}}">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                        <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Измените фильтры или заполните журнал."
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

@@ -21,6 +21,8 @@ public sealed class LessonRepository : RepositoryBase
         command.CommandText = """
             SELECT
                 l.lesson_id,
+                l.assignment_id,
+                l.classroom_id,
                 l.lesson_date,
                 l.topic,
                 g.group_name,
@@ -44,6 +46,8 @@ public sealed class LessonRepository : RepositoryBase
         {
             lessons.Add(new LessonListItem(
                 reader.GetInt32("lesson_id"),
+                reader.GetInt32("assignment_id"),
+                reader.GetNullableInt32("classroom_id"),
                 reader.GetString("lesson_date"),
                 reader.GetString("topic"),
                 reader.GetString("group_name"),
@@ -63,6 +67,8 @@ public sealed class LessonRepository : RepositoryBase
         command.CommandText = """
             SELECT
                 l.lesson_id,
+                l.assignment_id,
+                l.classroom_id,
                 l.lesson_date,
                 l.topic,
                 g.group_name,
@@ -88,6 +94,8 @@ public sealed class LessonRepository : RepositoryBase
         {
             lessons.Add(new LessonListItem(
                 reader.GetInt32("lesson_id"),
+                reader.GetInt32("assignment_id"),
+                reader.GetNullableInt32("classroom_id"),
                 reader.GetString("lesson_date"),
                 reader.GetString("topic"),
                 reader.GetString("group_name"),
@@ -229,6 +237,30 @@ public sealed class LessonRepository : RepositoryBase
         command.Parameters.AddWithValue("$topic", topic.Trim());
 
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+
+    public void UpdateLesson(Lesson lesson)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE lessons
+            SET assignment_id = $assignment_id,
+                lesson_date = $lesson_date,
+                topic = $topic,
+                classroom_id = $classroom_id,
+                note = $note,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE lesson_id = $lesson_id;
+            """;
+        command.Parameters.AddWithValue("$lesson_id", lesson.LessonId);
+        command.Parameters.AddWithValue("$assignment_id", lesson.AssignmentId);
+        command.Parameters.AddWithValue("$lesson_date", lesson.LessonDate);
+        command.Parameters.AddWithValue("$topic", lesson.Topic);
+        command.Parameters.AddWithValue("$classroom_id", (object?)lesson.ClassroomId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$note", (object?)lesson.Note ?? DBNull.Value);
+
+        command.ExecuteNonQuery();
     }
 
     public void DeleteLesson(int lessonId)

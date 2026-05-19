@@ -2,6 +2,8 @@ namespace ElectronicJournal.Models.Dto;
 
 public sealed record LessonListItem(
     int LessonId,
+    int AssignmentId,
+    int? ClassroomId,
     string LessonDate,
     string Topic,
     string GroupName,

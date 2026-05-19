@@ -101,6 +101,18 @@ public partial class AttendancePageViewModel : PageViewModelBase
     [ObservableProperty]
     private int lessonMarkedCount;
 
+    [ObservableProperty]
+    private int lessonPresentCount;
+
+    [ObservableProperty]
+    private int lessonAbsentCount;
+
+    [ObservableProperty]
+    private int lessonLateCount;
+
+    [ObservableProperty]
+    private string lessonAttendanceSummary = "Выберите занятие.";
+
     public static IReadOnlyList<string> AttendanceStatuses { get; } =
     [
         "Присутствовал",
@@ -135,6 +147,11 @@ public partial class AttendancePageViewModel : PageViewModelBase
     partial void OnDateFilterChanged(string value) => ApplyFilters();
 
     partial void OnSelectedLessonIdChanged(int value) => RefreshLessonAttendance();
+
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
 
     partial void OnSelectedAttendanceItemChanged(AttendanceJournalItem? value)
     {
@@ -187,6 +204,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         if (SelectedAttendanceItem is null)
         {
             ResultMessage = "Сначала выберите запись посещаемости.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -206,10 +224,12 @@ public partial class AttendancePageViewModel : PageViewModelBase
             RefreshLessonAttendance();
             ApplyFilters();
             ResultMessage = "Отметка посещаемости удалена.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось удалить отметку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -219,6 +239,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         if (SelectedLessonId == 0 || SelectedStudentId == 0)
         {
             ResultMessage = "Выберите занятие и студента.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -227,6 +248,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
             if (!CanUseSelectedAttendanceScope(out var scopeError))
             {
                 ResultMessage = scopeError;
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -237,6 +259,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
                 string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim());
 
             ResultMessage = "Посещаемость сохранена.";
+            NotifySuccess(ResultMessage);
             Comment = string.Empty;
             allAttendance = LoadAttendanceForCurrentUser();
             ApplyFilters();
@@ -244,6 +267,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить посещаемость: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -253,6 +277,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         if (LessonMarks.Count == 0)
         {
             ResultMessage = "В выбранном занятии нет студентов.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -262,7 +287,9 @@ public partial class AttendancePageViewModel : PageViewModelBase
             mark.Comment = string.Empty;
         }
 
-        SaveLessonAttendance();
+        UpdateLessonCounters();
+        ResultMessage = "Все студенты отмечены присутствующими. Нажмите \"Сохранить\".";
+        NotifyInfo(ResultMessage);
     }
 
     [RelayCommand]
@@ -271,6 +298,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         if (LessonMarks.Count == 0)
         {
             ResultMessage = "В выбранном занятии нет студентов.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -279,7 +307,30 @@ public partial class AttendancePageViewModel : PageViewModelBase
             mark.Status = BulkStatus;
         }
 
-        ResultMessage = $"В таблице всем студентам выбран статус \"{BulkStatus}\". Нажмите \"Сохранить журнал\".";
+        UpdateLessonCounters();
+        ResultMessage = $"Всем студентам выбран статус \"{BulkStatus}\". Нажмите \"Сохранить\".";
+        NotifyInfo(ResultMessage);
+    }
+
+    [RelayCommand]
+    private void ClearLessonMarks()
+    {
+        if (LessonMarks.Count == 0)
+        {
+            ResultMessage = "В выбранном занятии нет студентов.";
+            NotifyInfo(ResultMessage);
+            return;
+        }
+
+        foreach (var mark in LessonMarks)
+        {
+            mark.Status = "Присутствовал";
+            mark.Comment = string.Empty;
+        }
+
+        UpdateLessonCounters();
+        ResultMessage = "Ведомость очищена: всем установлен статус \"Присутствовал\", комментарии удалены. Нажмите \"Сохранить\".";
+        NotifyInfo(ResultMessage);
     }
 
     [RelayCommand]
@@ -288,12 +339,14 @@ public partial class AttendancePageViewModel : PageViewModelBase
         if (SelectedLessonId == 0)
         {
             ResultMessage = "Выберите занятие.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (LessonMarks.Count == 0)
         {
             ResultMessage = "В выбранном занятии нет студентов.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -303,6 +356,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
                 !attendanceRepository.CanTeacherAccessLesson(SelectedLessonId, currentUser.UserId))
             {
                 ResultMessage = "Преподаватель может отмечать посещаемость только на своих занятиях.";
+                NotifyWarning(ResultMessage);
                 return;
             }
 
@@ -311,12 +365,14 @@ public partial class AttendancePageViewModel : PageViewModelBase
                 if (!AttendanceStatuses.Contains(mark.Status))
                 {
                     ResultMessage = $"У студента {mark.StudentName} выбран некорректный статус.";
+                    NotifyWarning(ResultMessage);
                     return;
                 }
 
                 if (!attendanceRepository.CanStudentAttendLesson(SelectedLessonId, mark.StudentId))
                 {
                     ResultMessage = $"Студент {mark.StudentName} не относится к группе выбранного занятия.";
+                    NotifyWarning(ResultMessage);
                     return;
                 }
 
@@ -328,6 +384,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
             }
 
             ResultMessage = $"Журнал занятия сохранен. В таблице обновлено студентов: {LessonMarks.Count}.";
+            NotifySuccess(ResultMessage);
             allAttendance = LoadAttendanceForCurrentUser();
             RefreshLessonAttendance();
             ApplyFilters();
@@ -335,6 +392,7 @@ public partial class AttendancePageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить журнал занятия: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -410,8 +468,12 @@ public partial class AttendancePageViewModel : PageViewModelBase
         LessonMarks = SelectedLessonId > 0
             ? new ObservableCollection<AttendanceMarkItem>(attendanceRepository.GetLessonAttendanceMarks(SelectedLessonId))
             : new ObservableCollection<AttendanceMarkItem>();
-        LessonStudentCount = LessonMarks.Count;
-        LessonMarkedCount = LessonMarks.Count(mark => mark.AttendanceId is not null);
+        foreach (var mark in LessonMarks)
+        {
+            mark.PropertyChanged += (_, _) => UpdateLessonCounters();
+        }
+
+        UpdateLessonCounters();
     }
 
     private List<Group> LoadGroupsForCurrentUser()
@@ -474,5 +536,17 @@ public partial class AttendancePageViewModel : PageViewModelBase
         AttendanceSummary = visibleItems.Count == 0
             ? "По выбранным фильтрам записей посещаемости нет."
             : $"Показано записей: {VisibleAttendanceCount}. Присутствовали: {PresentCount}. Отсутствовали: {AbsentCount}.";
+    }
+
+    private void UpdateLessonCounters()
+    {
+        LessonStudentCount = LessonMarks.Count;
+        LessonMarkedCount = LessonMarks.Count(mark => mark.AttendanceId is not null);
+        LessonPresentCount = LessonMarks.Count(mark => mark.Status == "Присутствовал");
+        LessonAbsentCount = LessonMarks.Count(mark => mark.Status == "Отсутствовал");
+        LessonLateCount = LessonMarks.Count(mark => mark.Status == "Опоздал");
+        LessonAttendanceSummary = LessonMarks.Count == 0
+            ? "В выбранном занятии нет студентов."
+            : $"Студентов: {LessonStudentCount}. Сохраненных отметок: {LessonMarkedCount}.";
     }
 }

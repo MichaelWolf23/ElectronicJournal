@@ -3,137 +3,239 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.LessonJournalPageView"
+             x:Name="Root"
              x:DataType="vm:LessonJournalPageViewModel">
-    <Grid ColumnDefinitions="280,*,300"
-          ColumnSpacing="18">
-        <Border Classes="section-panel">
-        <Grid RowDefinitions="Auto,*">
-            <TextBlock Text="Занятия"
-                       FontSize="18"
-                       FontWeight="SemiBold"/>
-            <ListBox Grid.Row="1"
-                     Margin="0,10,0,0"
-                     ItemsSource="{Binding Lessons}"
-                     SelectedItem="{Binding SelectedLesson}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="dto:LessonJournalLessonItem">
-                        <Grid MinHeight="62"
-                              Margin="4,0"
-                              ColumnDefinitions="*,Auto"
-                              ColumnSpacing="8">
-                            <StackPanel VerticalAlignment="Center" Spacing="2">
-                                <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding GroupName}" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding LessonDate}"
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource AccentThemeBrush}"
-                                       FontWeight="SemiBold"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
-        </Border>
-
-        <Border Grid.Column="1"
-                Classes="section-panel">
-            <Grid RowDefinitions="Auto,34,*">
-                <StackPanel Spacing="3">
-                    <TextBlock Text="{Binding LessonTitle}"
-                               FontSize="20"
-                               FontWeight="SemiBold"
-                               TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding LessonDetails}"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
-
-                <Grid Grid.Row="1"
-                      Margin="0,16,0,0"
-                      ColumnDefinitions="*,120">
-                    <TextBlock Text="Студент"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Grid.Column="1"
-                               Text="Статус"
-                               HorizontalAlignment="Right"
-                               VerticalAlignment="Center"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Border Classes="toolbar-panel">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Журнал занятия" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding LessonTitle}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            Command="{Binding LoadCommand}"/>
                 </Grid>
 
-                <ListBox Grid.Row="2"
-                         ItemsSource="{Binding Students}"
-                         SelectedItem="{Binding SelectedStudent}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="dto:StudentListItem">
-                            <Grid MinHeight="46"
-                                  ColumnDefinitions="*,120"
-                                  ColumnSpacing="8">
-                                <StackPanel VerticalAlignment="Center" Spacing="1">
-                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding StudentCardNumber, StringFormat=Билет: {0}}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                </StackPanel>
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding Status}"
-                                           HorizontalAlignment="Right"
-                                           VerticalAlignment="Center"
-                                           Foreground="{DynamicResource AccentThemeBrush}"
-                                           FontWeight="SemiBold"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <ComboBox ItemsSource="{Binding Lessons}"
+                              SelectedItem="{Binding SelectedLesson}"
+                              PlaceholderText="Выберите занятие">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:LessonJournalLessonItem">
+                                <Grid RowDefinitions="Auto,Auto">
+                                    <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding LessonDate}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <Button Content="Оценивание"
+                                Margin="0,0,8,8"
+                                Classes="primary"
+                                Command="{Binding OpenGradesCommand}"/>
+                        <Button Content="Посещаемость"
+                                Margin="0,0,8,8"
+                                Classes="success"
+                                Command="{Binding OpenAttendanceCommand}"/>
+                        <Button Content="Печать"
+                                Margin="0,0,8,8"
+                                Classes="ghost"
+                                Command="{Binding PrintJournalCommand}"/>
+                        <Button Content="Excel"
+                                Margin="0,0,0,8"
+                                Classes="ghost"
+                                Command="{Binding ExportJournalExcelCommand}"/>
+                    </WrapPanel>
+                </Grid>
             </Grid>
         </Border>
 
-        <Border Grid.Column="2" Classes="side-panel">
-        <Grid RowDefinitions="Auto,Auto,*">
-            <TextBlock Text="Отметка"
-                       FontSize="18"
-                       FontWeight="SemiBold"/>
-            <TextBlock Grid.Row="1"
-                       Margin="0,10,0,14"
-                       Text="{Binding StudentDetails}"
-                       TextWrapping="Wrap"
-                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-
-            <StackPanel Grid.Row="2" Spacing="8">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <TextBlock Text="Посещаемость" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="Сохранить" Classes="primary" Command="{Binding SaveAttendanceCommand}"/>
-                </Grid>
-                <ComboBox ItemsSource="{Binding AttendanceStatuses}" SelectedItem="{Binding SelectedStatus}"/>
-
-                <TextBlock Text="Оценка" FontWeight="SemiBold" Margin="0,10,0,0"/>
-                <ComboBox ItemsSource="{Binding GradeTypes}" SelectedItem="{Binding SelectedGradeType}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="dto:LookupItem">
-                            <TextBlock Text="{Binding Name}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <TextBox Watermark="Оценка" Text="{Binding GradeValue}"/>
-                <TextBox Watermark="Комментарий" Text="{Binding Comment}"/>
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Content="Оценка" Classes="primary" Command="{Binding SaveGradeCommand}"/>
-                    <Button Grid.Column="1" Content="Все" Classes="success" Command="{Binding SaveBothCommand}"/>
-                </Grid>
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Content="Печать" Classes="ghost" Command="{Binding PrintJournalCommand}"/>
-                    <Button Grid.Column="1" Content="Excel" Classes="ghost" Command="{Binding ExportJournalExcelCommand}"/>
-                </Grid>
-
-                <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource DangerThemeBrush}" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-            </StackPanel>
-        </Grid>
+        <Border Grid.Row="1" Classes="section-panel">
+            <UniformGrid Columns="3">
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding LessonStudentCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding MarkedAttendanceCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="посещаемость" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding SavedGradeCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="с оценками" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </UniformGrid>
         </Border>
+
+        <Grid Grid.Row="2" x:Name="LessonJournalHost">
+            <Grid ColumnDefinitions="*,340"
+                  ColumnSpacing="14"
+                  IsVisible="{Binding #LessonJournalHost.Bounds.Width, Converter={StaticResource WideLessonJournalConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Состояние занятия" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding LessonDetails}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding LessonSnapshotSummary}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="360"
+                                       VerticalAlignment="Top"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <ListBox ItemsSource="{Binding LessonRows}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LessonPrintRow">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="5" ColumnSpacing="12">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <Border Grid.Column="1"
+                                                        CornerRadius="10"
+                                                        Padding="8,4"
+                                                        Background="{Binding Status, Converter={StaticResource StatusBrushConverter}}">
+                                                    <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding Grades, TargetNullValue=Оценок нет, FallbackValue=Оценок нет}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="2"
+                                                           Grid.ColumnSpan="2"
+                                                           Text="{Binding Comment}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource SubtleBackgroundBrush}"
+                                    IsVisible="{Binding LessonStudentCount, Converter={StaticResource NoDataConverter}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <TextBlock Text="Нет данных" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Выберите занятие, чтобы увидеть состав и заполненность журнала."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Classes="section-panel">
+                    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Контроль занятия" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding LessonSnapshotSummary}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource SubtleBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderThemeBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Что делать здесь" FontWeight="SemiBold"/>
+                                <TextBlock Text="Этот экран показывает состояние занятия. Для внесения данных используйте отдельные ведомости оценок и посещаемости."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Row="2" Spacing="8">
+                            <Button Content="Перейти к оцениванию"
+                                    Classes="primary"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenGradesCommand}"/>
+                            <Button Content="Перейти к посещаемости"
+                                    Classes="success"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenAttendanceCommand}"/>
+                            <Button Content="Печать журнала"
+                                    Classes="ghost"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding PrintJournalCommand}"/>
+                            <Button Content="Экспорт в Excel"
+                                    Classes="ghost"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding ExportJournalExcelCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <ScrollViewer IsVisible="{Binding #LessonJournalHost.Bounds.Width, Converter={StaticResource CompactLessonJournalConverter}}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Контроль занятия" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding LessonDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                            <WrapPanel>
+                                <Button Content="Оценки" Margin="0,0,8,8" Classes="primary" Command="{Binding OpenGradesCommand}"/>
+                                <Button Content="Посещаемость" Margin="0,0,8,8" Classes="success" Command="{Binding OpenAttendanceCommand}"/>
+                                <Button Content="Печать" Margin="0,0,8,8" Classes="ghost" Command="{Binding PrintJournalCommand}"/>
+                                <Button Content="Excel" Margin="0,0,0,8" Classes="ghost" Command="{Binding ExportJournalExcelCommand}"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Состояние занятия" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding LessonSnapshotSummary}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ListBox Grid.Row="1" ItemsSource="{Binding LessonRows}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LessonPrintRow">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="5" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <Border Grid.Column="1"
+                                                        CornerRadius="10"
+                                                        Padding="8,4"
+                                                        Background="{Binding Status, Converter={StaticResource StatusBrushConverter}}">
+                                                    <TextBlock Text="{Binding Status}" Foreground="White" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding Grades, TargetNullValue=Оценок нет, FallbackValue=Оценок нет}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

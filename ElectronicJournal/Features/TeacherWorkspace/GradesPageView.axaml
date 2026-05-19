@@ -5,24 +5,22 @@
              x:Class="ElectronicJournal.Views.GradesPageView"
              x:Name="Root"
              x:DataType="vm:GradesPageViewModel">
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
-            <StackPanel Spacing="4">
-                <TextBlock Text="Оценивание" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding LessonGradeSummary}"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           TextWrapping="Wrap"/>
-            </StackPanel>
-            <Button Grid.Column="1"
-                    Content="Обновить"
-                    Classes="ghost"
-                    VerticalAlignment="Top"
-                    Command="{Binding LoadCommand}"/>
-        </Grid>
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+        <Border Classes="toolbar-panel">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="Оценивание" FontSize="22" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            VerticalAlignment="Top"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
 
-        <Border Grid.Row="1" Classes="toolbar-panel">
-            <Grid ColumnDefinitions="*,220,Auto" ColumnSpacing="10">
-                <ComboBox ItemsSource="{Binding LessonChoices}"
+                <Grid Grid.Row="1" ColumnDefinitions="2*,220,*" ColumnSpacing="10">
+                    <ComboBox ItemsSource="{Binding LessonChoices}"
                           SelectedItem="{Binding SelectedLessonForGrading}"
                           PlaceholderText="Занятие">
                     <ComboBox.ItemTemplate>
@@ -37,7 +35,7 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <ComboBox Grid.Column="1"
+                    <ComboBox Grid.Column="1"
                           ItemsSource="{Binding GradeTypes}"
                           SelectedValue="{Binding SelectedGradeTypeId}"
                           SelectedValueBinding="{Binding Id}"
@@ -48,48 +46,61 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-
-                <Button Grid.Column="2"
-                        Content="Сохранить оценки"
-                        Classes="primary"
-                        Command="{Binding SaveLessonGradesCommand}"/>
+                </Grid>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,260" ColumnSpacing="18">
+        <Border Grid.Row="1"
+                Classes="section-panel">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding LessonStudentCount}"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="студентов в ведомости"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="{Binding FilledLessonGradeCount}"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="оценок заполнено"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                    <TextBlock Text="{Binding AverageGradeText}"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="средний по журналу"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
             <Border x:Name="GradeSheetHost" Classes="section-panel">
-                <Grid RowDefinitions="Auto,*">
-                    <Border Padding="0,0,0,12"
-                            BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="0,0,0,1">
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24">
+                <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                         <StackPanel Spacing="2">
-                            <TextBlock Text="{Binding LessonStudentCount}"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource AccentThemeBrush}"/>
-                            <TextBlock Text="студентов" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Text="Ведомость занятия"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="2">
-                            <TextBlock Text="{Binding FilledLessonGradeCount}"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource SuccessThemeBrush}"/>
-                            <TextBlock Text="оценок заполнено" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" Spacing="2">
-                            <TextBlock Text="{Binding AverageGradeText}"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource WarningThemeBrush}"/>
-                            <TextBlock Text="средний по журналу" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                            <Button Content="Сохранить"
+                                    Classes="primary"
+                                    Command="{Binding SaveLessonGradesCommand}"/>
+                            <Button Content="Удалить всё"
+                                    Classes="danger"
+                                    Command="{Binding DeleteAllLessonGradesCommand}"/>
                         </StackPanel>
                     </Grid>
-                    </Border>
 
                     <DataGrid Grid.Row="1"
-                              Margin="0,12,0,0"
-                              MinWidth="680"
+                              MinWidth="820"
                               ItemsSource="{Binding GradeEntryRows}"
                               AutoGenerateColumns="False"
                               GridLinesVisibility="Horizontal"
@@ -121,7 +132,36 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Статус" Binding="{Binding StatusText}" Width="120"/>
+                        <DataGridTemplateColumn Header="Статус" Width="160">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="dto:GradeEntryRow">
+                                    <Border CornerRadius="5"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Left"
+                                            Background="{Binding StatusText, Converter={StaticResource StatusBrushConverter}}">
+                                        <TextBlock Text="{Binding StatusText}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource CardBackgroundBrush}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Действия" Width="180">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="dto:GradeEntryRow">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Button Content="Сохранить"
+                                                Classes="primary"
+                                                Command="{Binding #Root.DataContext.SaveLessonGradeRowCommand}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Content="Удалить"
+                                                Classes="danger"
+                                                Command="{Binding #Root.DataContext.DeleteLessonGradeRowCommand}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                     </DataGrid>
 
@@ -147,7 +187,7 @@
                              IsVisible="{Binding #GradeSheetHost.Bounds.Width, Converter={StaticResource CompactTableConverter}}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:GradeEntryRow">
-                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,90" Margin="0,6" ColumnSpacing="10">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,90" Margin="0,6" ColumnSpacing="10">
                                 <TextBlock Text="{Binding StudentName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding GradeValueText, Mode=TwoWay}"
@@ -158,35 +198,21 @@
                                          Margin="0,6,0,0"
                                          Text="{Binding Comment, Mode=TwoWay}"
                                          Watermark="Комментарий"/>
+                                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" Margin="0,6,0,0">
+                                    <Button Content="Сохранить"
+                                            Classes="primary"
+                                            Command="{Binding #Root.DataContext.SaveLessonGradeRowCommand}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Content="Удалить"
+                                            Classes="danger"
+                                            Command="{Binding #Root.DataContext.DeleteLessonGradeRowCommand}"
+                                            CommandParameter="{Binding}"/>
+                                </StackPanel>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                     </ListBox>
                 </Grid>
-            </Border>
-
-            <Border Grid.Column="1"
-                    Classes="side-panel">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="Как работать" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Выберите занятие и тип оценки, затем заполните оценки в таблице. Пустые строки не сохраняются."
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
-                    <TextBlock Text="{Binding LessonGradeResult}"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               TextWrapping="Wrap"/>
-
-                    <Border Padding="0,12,0,0"
-                            BorderBrush="{DynamicResource BorderThemeBrush}"
-                            BorderThickness="0,1,0,0">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="История" FontSize="16" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding JournalSummary}"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
             </Border>
         </Grid>
     </Grid>

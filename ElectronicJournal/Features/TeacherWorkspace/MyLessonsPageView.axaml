@@ -3,47 +3,74 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.MyLessonsPageView"
+             x:Name="Root"
              x:DataType="vm:MyLessonsPageViewModel">
-    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
         <Border Classes="toolbar-panel">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-            <StackPanel Orientation="Horizontal" Spacing="24">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Занятий" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding LessonCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
-                </StackPanel>
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Сегодня" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding TodayLessonCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
-                </StackPanel>
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Расписание" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Text="{Binding ScheduleCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
-                </StackPanel>
-            </StackPanel>
-            <Button Grid.Column="1"
-                    Content="Обновить"
-                    Classes="ghost"
-                    VerticalAlignment="Center"
-                    Command="{Binding LoadCommand}"/>
-        </Grid>
-        </Border>
-
-        <Grid Grid.Row="1" ColumnDefinitions="320,*,280" ColumnSpacing="12">
-            <Border Classes="side-panel">
-                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                     <StackPanel Spacing="2">
-                        <TextBlock Text="Работа с занятием"
-                                   FontSize="17"
-                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="Мои занятия" FontSize="22" FontWeight="SemiBold"/>
                         <TextBlock Text="{Binding ResultMessage}"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    TextWrapping="Wrap"/>
                     </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Обновить"
+                            Classes="ghost"
+                            Command="{Binding LoadCommand}"/>
+                </Grid>
 
-                    <StackPanel Grid.Row="1" Spacing="8">
-                        <Border Classes="metric-panel">
-                            <StackPanel Spacing="6">
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <TextBox Width="320"
+                             Watermark="Поиск по теме, группе, предмету"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <ComboBox Grid.Column="1"
+                              Width="180"
+                              ItemsSource="{Binding LessonPeriodFilters}"
+                              SelectedItem="{Binding SelectedLessonPeriodFilter}"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Classes="section-panel">
+            <UniformGrid Columns="4">
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding LessonCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="показано занятий" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding TodayLessonCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SuccessThemeBrush}"/>
+                    <TextBlock Text="сегодня" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2" Margin="0,0,14,0">
+                    <TextBlock Text="{Binding UpcomingLessonCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource WarningThemeBrush}"/>
+                    <TextBlock Text="ближайшие" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding ScheduleCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource AccentThemeBrush}"/>
+                    <TextBlock Text="в расписании" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </UniformGrid>
+        </Border>
+
+        <Grid Grid.Row="2" x:Name="MyLessonsHost">
+            <Grid ColumnDefinitions="340,*,300"
+                  ColumnSpacing="14"
+                  IsVisible="{Binding #MyLessonsHost.Bounds.Width, Converter={StaticResource WideDashboardConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Выбранное занятие" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding SelectedLessonActionText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <Border Grid.Row="1"
+                                Classes="metric-panel"
+                                Background="{DynamicResource SubtleBackgroundBrush}">
+                            <StackPanel Spacing="7">
                                 <TextBlock Text="{Binding SelectedLessonTitle}"
                                            FontSize="16"
                                            FontWeight="SemiBold"
@@ -57,100 +84,205 @@
                             </StackPanel>
                         </Border>
 
-                        <Button Content="Поставить оценки"
-                                Classes="primary"
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding OpenGradesCommand}"/>
-                        <Button Content="Отметить посещаемость"
-                                Classes="success"
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding OpenAttendanceCommand}"/>
-                        <Button Content="Темы и расписание"
-                                Classes="ghost"
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding OpenTopicsCommand}"/>
+                        <StackPanel Grid.Row="2" Spacing="8">
+                            <TextBlock Text="Действия" FontSize="16" FontWeight="SemiBold"/>
+                            <Button Content="Открыть журнал занятия"
+                                    Classes="primary"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenJournalCommand}"/>
+                            <Button Content="Поставить оценки"
+                                    Classes="success"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenGradesCommand}"/>
+                            <Button Content="Отметить посещаемость"
+                                    Classes="ghost"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenAttendanceCommand}"/>
+                            <Button Content="Темы и расписание"
+                                    Classes="ghost"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenTopicsCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   Foreground="{DynamicResource DangerThemeBrush}"
-                                   TextWrapping="Wrap"
-                                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                <Border Grid.Column="1" Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Список занятий" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Выберите занятие, чтобы открыть действия слева."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding LessonCount, StringFormat='{}{0} записей'}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
 
-            <Border Grid.Column="1"
-                    Classes="section-panel">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Margin="0,0,0,8"
-                               Text="Мои занятия"
-                               FontSize="17"
-                               FontWeight="SemiBold"/>
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Lessons}"
-                             SelectedItem="{Binding SelectedLesson}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="dto:LessonListItem">
-                                <Border Classes="list-row">
-                                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
-                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                            <TextBlock Text="{Binding Topic}"
-                                                       FontSize="15"
-                                                       FontWeight="SemiBold"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                            <Border Grid.Column="1"
-                                                    Padding="7,3"
-                                                    Background="{DynamicResource AccentSoftBrush}">
-                                                <TextBlock Text="{Binding LessonDate}"
-                                                           FontSize="12"
+                        <Grid Grid.Row="1">
+                            <ListBox ItemsSource="{Binding Lessons}"
+                                     SelectedItem="{Binding SelectedLesson}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LessonListItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="10">
+                                                <TextBlock Text="{Binding Topic}"
                                                            FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource AccentThemeBrush}"/>
-                                            </Border>
-                                        </Grid>
-                                        <TextBlock Grid.Row="1"
-                                                   Text="{Binding GroupName, StringFormat=Группа: {0}}"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Grid.Row="2"
-                                                   Text="{Binding SubjectName, StringFormat=Предмет: {0}}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
+                                                           TextWrapping="Wrap"/>
+                                                <Border Grid.Column="1"
+                                                        Padding="8,3"
+                                                        CornerRadius="10"
+                                                        Background="{DynamicResource AccentSoftBrush}"
+                                                        VerticalAlignment="Top">
+                                                    <TextBlock Text="{Binding LessonDate}"
+                                                               FontSize="12"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                                                </Border>
+                                                <TextBlock Grid.Row="1"
+                                                           Text="{Binding GroupName}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="1"
+                                                           Grid.Column="1"
+                                                           Text="{Binding ClassroomName}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           TextWrapping="Wrap"
+                                                           HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Row="2"
+                                                           Text="{Binding SubjectName}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
 
-            <Border Grid.Column="2"
-                    Classes="section-panel">
-                <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                    <TextBlock Text="Расписание"
-                               FontSize="17"
-                               FontWeight="SemiBold"/>
-                    <ItemsControl Grid.Row="1" ItemsSource="{Binding ScheduleCards}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="dto:LessonScheduleCard">
-                                <Border Classes="list-row">
-                                    <StackPanel Spacing="3">
-                                        <TextBlock Text="{Binding DayName}"
-                                                   FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding TimeRange}"
-                                                   Foreground="{DynamicResource AccentThemeBrush}"
-                                                   FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding GroupName}"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding SubjectName}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
-            </Border>
+                            <Border BorderBrush="{DynamicResource BorderThemeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource SubtleBackgroundBrush}"
+                                    IsVisible="{Binding LessonCount, Converter={StaticResource NoDataConverter}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                    <TextBlock Text="Нет занятий" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Измените фильтр или создайте занятие в разделе тем и расписания."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Расписание" FontSize="18" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding ScheduleSummary}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding ScheduleCards}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="dto:LessonScheduleCard">
+                                    <Border Classes="list-row">
+                                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="3" ColumnSpacing="8">
+                                            <TextBlock Text="{Binding DayName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding TimeRange}"
+                                                       Foreground="{DynamicResource AccentThemeBrush}"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding SubjectName}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2"
+                                                       Text="{Binding GroupName}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Row="2"
+                                                       Grid.Column="1"
+                                                       Text="{Binding ClassroomName}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       HorizontalAlignment="Right"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          IsVisible="{Binding #MyLessonsHost.Bounds.Width, Converter={StaticResource CompactDashboardConverter}}">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Выбранное занятие" FontSize="18" FontWeight="SemiBold"/>
+                            <Border Classes="metric-panel" Background="{DynamicResource SubtleBackgroundBrush}">
+                                <StackPanel Spacing="7">
+                                    <TextBlock Text="{Binding SelectedLessonTitle}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding SelectedLessonDetails}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding SelectedLessonNote}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            <WrapPanel>
+                                <Button Content="Журнал" Margin="0,0,8,8" Classes="primary" Command="{Binding OpenJournalCommand}"/>
+                                <Button Content="Оценки" Margin="0,0,8,8" Classes="success" Command="{Binding OpenGradesCommand}"/>
+                                <Button Content="Посещаемость" Margin="0,0,8,8" Classes="ghost" Command="{Binding OpenAttendanceCommand}"/>
+                                <Button Content="Темы" Margin="0,0,0,8" Classes="ghost" Command="{Binding OpenTopicsCommand}"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Список занятий" FontSize="18" FontWeight="SemiBold"/>
+                            <ListBox Grid.Row="1"
+                                     ItemsSource="{Binding Lessons}"
+                                     SelectedItem="{Binding SelectedLesson}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LessonListItem">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="8">
+                                                <TextBlock Text="{Binding Topic}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding LessonDate}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding GroupName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="2" Text="{Binding SubjectName}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                            <TextBlock Text="Расписание" FontSize="18" FontWeight="SemiBold"/>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ScheduleCards}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:LessonScheduleCard">
+                                        <Border Classes="list-row">
+                                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="3">
+                                                <TextBlock Text="{Binding DayName}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding TimeRange}" Foreground="{DynamicResource AccentThemeBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Grid.Row="1" Text="{Binding SubjectName}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GroupName}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

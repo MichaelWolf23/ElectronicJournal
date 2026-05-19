@@ -222,6 +222,22 @@ public sealed class GradeRepository : RepositoryBase
         command.ExecuteNonQuery();
     }
 
+    public int DeleteLessonGrades(int lessonId, int gradeTypeId)
+    {
+        using var connection = DatabaseService.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM grades
+            WHERE lesson_id = $lesson_id
+              AND grade_type_id = $grade_type_id;
+            SELECT changes();
+            """;
+        command.Parameters.AddWithValue("$lesson_id", lessonId);
+        command.Parameters.AddWithValue("$grade_type_id", gradeTypeId);
+
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
     public bool GradeExists(int studentId, int assignmentId, int gradeTypeId, string gradeDate, int? lessonId)
     {
         using var connection = DatabaseService.CreateConnection();

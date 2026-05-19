@@ -229,30 +229,155 @@ public partial class GradesPageViewModel : PageViewModelBase
     [RelayCommand]
     private void SaveLessonGrades()
     {
+        var rowsToSave = GradeEntryRows
+            .Where(row => (row.IsDirty || !row.HasSavedGrade) && !string.IsNullOrWhiteSpace(row.GradeValueText))
+            .ToList();
+        if (rowsToSave.Count == 0)
+        {
+            LessonGradeResult = "Нет строк для сохранения.";
+            NotifyInfo(LessonGradeResult);
+            return;
+        }
+
+        SaveGradeRows(rowsToSave, "Оценки сохранены");
+    }
+
+    [RelayCommand]
+    private void SaveLessonGradeRow(GradeEntryRow? row)
+    {
+        if (row is null)
+        {
+            LessonGradeResult = "Сначала выберите строку.";
+            NotifyWarning(LessonGradeResult);
+            return;
+        }
+
+        SaveGradeRows(new List<GradeEntryRow> { row }, "Оценка сохранена");
+    }
+
+    [RelayCommand]
+    private async Task DeleteLessonGradeRow(GradeEntryRow? row)
+    {
+        if (row is null)
+        {
+            LessonGradeResult = "Сначала выберите строку.";
+            NotifyWarning(LessonGradeResult);
+            return;
+        }
+
+        if (row.GradeId is not int gradeId)
+        {
+            LessonGradeResult = "У выбранного студента нет сохраненной оценки.";
+            NotifyInfo(LessonGradeResult);
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить оценку",
+            $"Удалить оценку у студента {row.StudentName}?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            if (currentUser.RoleName == "Преподаватель" &&
+                !gradeRepository.CanTeacherAccessGrade(gradeId, currentUser.UserId))
+            {
+                LessonGradeResult = "Нельзя удалить оценку, которая не относится к вашим предметам.";
+                NotifyWarning(LessonGradeResult);
+                return;
+            }
+
+            gradeRepository.DeleteGrade(gradeId);
+            ReloadJournalAndRows();
+            LessonGradeResult = "Оценка удалена.";
+            NotifySuccess(LessonGradeResult);
+        }
+        catch (Exception ex)
+        {
+            LessonGradeResult = $"Не удалось удалить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(LessonGradeResult);
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteAllLessonGrades()
+    {
+        if (SelectedLessonForGrading is null || SelectedGradeTypeId == 0)
+        {
+            LessonGradeResult = "Выберите занятие и тип оценки.";
+            NotifyWarning(LessonGradeResult);
+            return;
+        }
+
+        var savedCount = GradeEntryRows.Count(row => row.HasSavedGrade);
+        if (savedCount == 0)
+        {
+            LessonGradeResult = "В ведомости нет сохраненных оценок.";
+            NotifyInfo(LessonGradeResult);
+            return;
+        }
+
+        var confirmed = await ConfirmationDialogService.ConfirmAsync(
+            "Удалить оценки",
+            $"Удалить все оценки выбранного типа за это занятие? Количество: {savedCount}.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            if (!CanUseSelectedGradeScope(out var scopeError))
+            {
+                LessonGradeResult = scopeError;
+                NotifyWarning(LessonGradeResult);
+                return;
+            }
+
+            var deleted = gradeRepository.DeleteLessonGrades(
+                SelectedLessonForGrading.LessonId,
+                SelectedGradeTypeId);
+            ReloadJournalAndRows();
+            LessonGradeResult = $"Удалено оценок: {deleted}.";
+            NotifySuccess(LessonGradeResult);
+        }
+        catch (Exception ex)
+        {
+            LessonGradeResult = $"Не удалось удалить оценки: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(LessonGradeResult);
+        }
+    }
+
+    private void SaveGradeRows(IReadOnlyCollection<GradeEntryRow> rowsToSave, string successPrefix)
+    {
         if (SelectedLessonForGrading is null)
         {
             LessonGradeResult = "Выберите занятие.";
+            NotifyWarning(LessonGradeResult);
             return;
         }
 
         if (SelectedGradeTypeId == 0)
         {
             LessonGradeResult = "Выберите тип оценки.";
+            NotifyWarning(LessonGradeResult);
             return;
         }
 
-        var rowsToSave = GradeEntryRows
-            .Where(row => !string.IsNullOrWhiteSpace(row.GradeValueText))
-            .ToList();
         if (rowsToSave.Count == 0)
         {
-            LessonGradeResult = "Заполните хотя бы одну оценку.";
+            LessonGradeResult = "Нет строк для сохранения.";
+            NotifyInfo(LessonGradeResult);
             return;
         }
 
         if (!CanUseSelectedGradeScope(out var scopeError))
         {
             LessonGradeResult = scopeError;
+            NotifyWarning(LessonGradeResult);
             return;
         }
 
@@ -267,12 +392,14 @@ public partial class GradesPageViewModel : PageViewModelBase
                 if (!double.TryParse(row.GradeValueText.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
                 {
                     LessonGradeResult = $"Проверьте оценку у студента {row.StudentName}.";
+                    NotifyWarning(LessonGradeResult);
                     return;
                 }
 
                 if (!IsGradeInScale(value, out var gradeError))
                 {
                     LessonGradeResult = $"{row.StudentName}: {gradeError}";
+                    NotifyWarning(LessonGradeResult);
                     return;
                 }
 
@@ -292,11 +419,13 @@ public partial class GradesPageViewModel : PageViewModelBase
             allGrades = LoadJournalForCurrentUser();
             LoadLessonGradeRows();
             ApplyFilters();
-            LessonGradeResult = $"Сохранено оценок: {saved}.";
+            LessonGradeResult = $"{successPrefix}. Записано: {saved}.";
+            NotifySuccess(LessonGradeResult);
         }
         catch (Exception ex)
         {
             LessonGradeResult = $"Не удалось сохранить оценки: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(LessonGradeResult);
         }
         finally
         {
@@ -366,6 +495,7 @@ public partial class GradesPageViewModel : PageViewModelBase
             allGrades = LoadJournalForCurrentUser();
             ApplyFilters();
             CalculateAverage();
+            NotifySuccess("Оценка добавлена.");
         }
         catch (Exception ex)
         {
@@ -383,12 +513,14 @@ public partial class GradesPageViewModel : PageViewModelBase
         if (SelectedGrade is null)
         {
             EditResult = "Сначала выберите оценку в таблице.";
+            NotifyWarning(EditResult);
             return;
         }
 
         if (!IsGradeInScale(GradeValue, out var gradeError))
         {
             EditResult = gradeError;
+            NotifyWarning(EditResult);
             return;
         }
 
@@ -397,6 +529,7 @@ public partial class GradesPageViewModel : PageViewModelBase
             if (!CanEditSelectedGrade(SelectedGrade.GradeId))
             {
                 EditResult = "Нельзя изменить оценку, которая не относится к вашим предметам.";
+                NotifyWarning(EditResult);
                 return;
             }
 
@@ -408,10 +541,12 @@ public partial class GradesPageViewModel : PageViewModelBase
             allGrades = LoadJournalForCurrentUser();
             ApplyFilters();
             EditResult = "Оценка обновлена.";
+            NotifySuccess(EditResult);
         }
         catch (Exception ex)
         {
             EditResult = $"Не удалось обновить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(EditResult);
         }
     }
 
@@ -421,12 +556,14 @@ public partial class GradesPageViewModel : PageViewModelBase
         if (SelectedGrade is null)
         {
             EditResult = "Сначала выберите оценку в таблице.";
+            NotifyWarning(EditResult);
             return;
         }
 
         if (!CanEditSelectedGrade(SelectedGrade.GradeId))
         {
             EditResult = "Нельзя удалить оценку, которая не относится к вашим предметам.";
+            NotifyWarning(EditResult);
             return;
         }
 
@@ -445,10 +582,12 @@ public partial class GradesPageViewModel : PageViewModelBase
             allGrades = LoadJournalForCurrentUser();
             ApplyFilters();
             EditResult = "Оценка удалена.";
+            NotifySuccess(EditResult);
         }
         catch (Exception ex)
         {
             EditResult = $"Не удалось удалить оценку: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(EditResult);
         }
     }
 
@@ -694,7 +833,15 @@ public partial class GradesPageViewModel : PageViewModelBase
         catch (Exception ex)
         {
             LessonGradeResult = $"Не удалось загрузить студентов занятия: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(LessonGradeResult);
         }
+    }
+
+    private void ReloadJournalAndRows()
+    {
+        allGrades = LoadJournalForCurrentUser();
+        LoadLessonGradeRows();
+        ApplyFilters();
     }
 
     private void UpdateLessonGradeSummary()

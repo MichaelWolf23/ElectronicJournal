@@ -3,39 +3,49 @@
              xmlns:vm="using:ElectronicJournal.ViewModels"
              xmlns:dto="using:ElectronicJournal.Models.Dto"
              x:Class="ElectronicJournal.Views.DashboardPageView"
+             x:Name="Root"
              x:DataType="vm:DashboardPageViewModel">
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
-        <Grid ColumnDefinitions="*,Auto"
-              ColumnSpacing="16">
-            <StackPanel Spacing="6">
-                <TextBlock Text="{Binding WorkdayTitle}"
-                           FontSize="28"
-                           FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding Greeting}"
-                           FontSize="14"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding PrimaryScenarioText}"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           TextWrapping="Wrap"/>
-            </StackPanel>
-
-            <Border Grid.Column="1"
-                    Width="300"
-                    Classes="metric-panel"
-                    Background="{DynamicResource AccentSoftBrush}">
-                <StackPanel Spacing="5">
-                    <TextBlock Text="{Binding RoleText}"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource AccentThemeBrush}"/>
-                    <TextBlock Text="{Binding PrimaryScenarioTitle}"
+        <Border Classes="toolbar-panel">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding WorkdayTitle}"
+                               FontSize="24"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Greeting}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding PrimaryScenarioText}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
-            </Border>
-        </Grid>
 
-        <Border Grid.Row="1"
-                Classes="section-panel">
+                <StackPanel Grid.Column="1"
+                            MinWidth="210"
+                            Spacing="8"
+                            HorizontalAlignment="Right">
+                    <Border Background="{DynamicResource AccentSoftBrush}"
+                            BorderBrush="{DynamicResource BorderThemeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding RoleText}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentThemeBrush}"/>
+                            <TextBlock Text="{Binding PrimaryScenarioTitle}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Button Content="Обновить"
+                            Classes="ghost"
+                            HorizontalAlignment="Right"
+                            Command="{Binding ReloadCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Classes="section-panel">
             <ItemsControl ItemsSource="{Binding Metrics}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -46,14 +56,15 @@
                     <DataTemplate x:DataType="dto:DashboardMetricItem">
                         <Grid ColumnDefinitions="Auto,*"
                               ColumnSpacing="12"
-                              Margin="0,0,20,0">
+                              Margin="0,0,18,0"
+                              MinHeight="58">
                             <TextBlock Text="{Binding Value}"
                                        VerticalAlignment="Center"
                                        FontSize="26"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource AccentThemeBrush}"/>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding Description}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            TextWrapping="Wrap"/>
@@ -64,139 +75,238 @@
             </ItemsControl>
         </Border>
 
-        <Grid Grid.Row="2"
-              ColumnDefinitions="1.25*,1.05*,0.8*"
-              ColumnSpacing="12">
-            <Border Classes="section-panel">
-            <Grid RowDefinitions="Auto,*">
-                <TextBlock Text="Что сделать сейчас"
-                           FontSize="18"
-                           FontWeight="SemiBold"/>
-                <ItemsControl Grid.Row="1"
-                              Margin="0,10,0,0"
-                              ItemsSource="{Binding PriorityItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="dto:DashboardWorkItem">
-                            <Button Command="{Binding OpenCommand}"
-                                    HorizontalContentAlignment="Stretch"
-                                    Padding="8,4"
-                                    Margin="0,0,0,4"
-                                    Classes="ghost">
-                                <Grid MinHeight="58"
-                                      ColumnDefinitions="76,*,24"
-                                      ColumnSpacing="14">
-                                    <Border Width="58"
-                                            Height="28"
-                                            CornerRadius="14"
-                                            Background="{DynamicResource PillBackgroundBrush}"
-                                            VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Badge}"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource AccentThemeBrush}"/>
-                                    </Border>
-                                    <StackPanel Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                Spacing="2">
-                                        <TextBlock Text="{Binding Title}"
-                                                   FontWeight="SemiBold"
-                                                   TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding Description}"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="2"
-                                               Text=">"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Right"
-                                               Foreground="{DynamicResource AccentThemeBrush}"
-                                               FontWeight="SemiBold"/>
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
-            </Border>
+        <Grid Grid.Row="2" x:Name="DashboardContentHost">
+            <Grid ColumnDefinitions="1.25*,0.95*"
+                  ColumnSpacing="14"
+                  IsVisible="{Binding #DashboardContentHost.Bounds.Width, Converter={StaticResource WideDashboardConverter}}">
+                <Border Classes="section-panel">
+                    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Работа сейчас" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Основные действия для вашей роли."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
 
-            <Border Grid.Column="1" Classes="section-panel">
-            <Grid RowDefinitions="Auto,*">
-                <TextBlock Text="{Binding AttentionTitle}"
-                           FontSize="18"
-                           FontWeight="SemiBold"/>
-                <ItemsControl Grid.Row="1"
-                              Margin="0,10,0,0"
-                              ItemsSource="{Binding AttentionItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="dto:DashboardWorkItem">
-                            <Button Command="{Binding OpenCommand}"
-                                    HorizontalContentAlignment="Stretch"
-                                    Padding="8,4"
-                                    Margin="0,0,0,4"
-                                    Classes="ghost">
-                                <Grid MinHeight="56"
-                                      ColumnDefinitions="*,78,24"
-                                      ColumnSpacing="12">
-                                    <StackPanel VerticalAlignment="Center" Spacing="2">
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding Description}" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding Badge}"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Right"
-                                               Foreground="{DynamicResource AccentThemeBrush}"
-                                               FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="2"
-                                               Text=">"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Right"
-                                               Foreground="{DynamicResource AccentThemeBrush}"
-                                               FontWeight="SemiBold"/>
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
-            </Border>
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding PriorityItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="dto:DashboardWorkItem">
+                                    <Button Command="{Binding OpenCommand}"
+                                            HorizontalContentAlignment="Stretch"
+                                            Padding="0"
+                                            Margin="0,0,0,6"
+                                            Classes="ghost">
+                                        <Border Classes="list-row">
+                                            <Grid MinHeight="62"
+                                                  ColumnDefinitions="92,*,Auto"
+                                                  ColumnSpacing="12">
+                                                <Border Width="74"
+                                                        Height="30"
+                                                        CornerRadius="15"
+                                                        Background="{DynamicResource PillBackgroundBrush}"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Badge}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="12"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding Description}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2"
+                                                           Text=">"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource AccentThemeBrush}"
+                                                           FontWeight="SemiBold"/>
+                                            </Grid>
+                                        </Border>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
 
-            <Border Grid.Column="2" Classes="section-panel">
-            <Grid RowDefinitions="Auto,*">
-                <TextBlock Text="Разделы"
-                           FontSize="18"
-                           FontWeight="SemiBold"/>
-                <ItemsControl Grid.Row="1"
-                              Margin="0,10,0,0"
-                              ItemsSource="{Binding Actions}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="dto:DashboardActionItem">
-                            <Button Command="{Binding OpenCommand}"
-                                    HorizontalContentAlignment="Stretch"
-                                    Padding="8,4"
-                                    Margin="0,0,0,4"
-                                    Classes="ghost">
-                                <Grid MinHeight="42"
-                                      ColumnDefinitions="*,24">
-                                    <TextBlock Text="{Binding Title}"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text=">"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Right"
-                                               Foreground="{DynamicResource AccentThemeBrush}"
-                                               FontWeight="SemiBold"/>
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="14">
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding AttentionTitle}" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="Сигналы, которые стоит проверить."
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding AttentionItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:DashboardWorkItem">
+                                        <Button Command="{Binding OpenCommand}"
+                                                HorizontalContentAlignment="Stretch"
+                                                Padding="0"
+                                                Margin="0,0,0,6"
+                                                Classes="ghost">
+                                            <Border Classes="list-row">
+                                                <Grid MinHeight="56" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Badge}"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text=">"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                            <TextBlock Text="Быстрый переход" FontSize="18" FontWeight="SemiBold"/>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding Actions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:DashboardActionItem">
+                                        <Button Command="{Binding OpenCommand}"
+                                                HorizontalContentAlignment="Stretch"
+                                                Padding="0"
+                                                Margin="0,0,0,4"
+                                                Classes="ghost">
+                                            <Border Classes="list-row">
+                                                <Grid MinHeight="42" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <StackPanel VerticalAlignment="Center" Spacing="1">
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text=">"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
-            </Border>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          IsVisible="{Binding #DashboardContentHost.Bounds.Width, Converter={StaticResource CompactDashboardConverter}}">
+                <StackPanel Spacing="14">
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                            <TextBlock Text="Работа сейчас" FontSize="18" FontWeight="SemiBold"/>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding PriorityItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:DashboardWorkItem">
+                                        <Button Command="{Binding OpenCommand}"
+                                                HorizontalContentAlignment="Stretch"
+                                                Padding="0"
+                                                Margin="0,0,0,6"
+                                                Classes="ghost">
+                                            <Border Classes="list-row">
+                                                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Badge}"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Grid.Row="1"
+                                                               Text="{Binding Description}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                            <TextBlock Text="{Binding AttentionTitle}" FontSize="18" FontWeight="SemiBold"/>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding AttentionItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:DashboardWorkItem">
+                                        <Button Command="{Binding OpenCommand}"
+                                                HorizontalContentAlignment="Stretch"
+                                                Padding="0"
+                                                Margin="0,0,0,6"
+                                                Classes="ghost">
+                                            <Border Classes="list-row">
+                                                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Badge}"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                    <TextBlock Grid.Row="1"
+                                                               Text="{Binding Description}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+
+                    <Border Classes="section-panel">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                            <TextBlock Text="Быстрый переход" FontSize="18" FontWeight="SemiBold"/>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding Actions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:DashboardActionItem">
+                                        <Button Command="{Binding OpenCommand}"
+                                                HorizontalContentAlignment="Stretch"
+                                                Padding="0"
+                                                Margin="0,0,0,4"
+                                                Classes="ghost">
+                                            <Border Classes="list-row">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text=">"
+                                                               Foreground="{DynamicResource AccentThemeBrush}"
+                                                               FontWeight="SemiBold"/>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

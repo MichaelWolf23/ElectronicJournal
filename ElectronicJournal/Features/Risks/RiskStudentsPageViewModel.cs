@@ -28,10 +28,16 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
     private ObservableCollection<string> groupFilters = new();
 
     [ObservableProperty]
+    private ObservableCollection<string> riskTypeFilters = new();
+
+    [ObservableProperty]
     private StudentRiskItem? selectedRisk;
 
     [ObservableProperty]
     private string selectedGroupFilter = "Все группы";
+
+    [ObservableProperty]
+    private string selectedRiskTypeFilter = "Все риски";
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -46,6 +52,12 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
     private int affectedGroupCount;
 
     [ObservableProperty]
+    private int gradeRiskCount;
+
+    [ObservableProperty]
+    private int attendanceRiskCount;
+
+    [ObservableProperty]
     private string riskTitle = "Выберите студента риска";
 
     [ObservableProperty]
@@ -53,6 +65,9 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string notificationPreview = "Выберите запись, чтобы подготовить сообщение куратору.";
+
+    [ObservableProperty]
+    private string selectedRiskActionTitle = "Что произошло";
 
     [ObservableProperty]
     private string resultMessage = "Готово к проверке студентов риска.";
@@ -77,9 +92,16 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
 
     public event Action<int>? StudentProfileRequested;
 
+    public override void OnNavigatedTo()
+    {
+        Load();
+    }
+
     partial void OnSelectedRiskChanged(StudentRiskItem? value) => UpdateSelectedRisk();
 
     partial void OnSelectedGroupFilterChanged(string value) => ApplyFilters();
+
+    partial void OnSelectedRiskTypeFilterChanged(string value) => ApplyFilters();
 
     partial void OnSearchTextChanged(string value) => ApplyFilters();
 
@@ -107,7 +129,10 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
 
             GroupFilters = new ObservableCollection<string>(
                 new[] { "Все группы" }.Concat(allRisks.Select(risk => risk.GroupName).Distinct().OrderBy(name => name)));
+            RiskTypeFilters = new ObservableCollection<string>(
+                new[] { "Все риски" }.Concat(allRisks.Select(risk => risk.RiskType).Distinct().OrderBy(name => name)));
             SelectedGroupFilter = "Все группы";
+            SelectedRiskTypeFilter = "Все риски";
             ApplyFilters();
             ResultMessage = allRisks.Count == 0
                 ? "Студентов риска не найдено."
@@ -124,6 +149,7 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
     {
         SearchText = string.Empty;
         SelectedGroupFilter = "Все группы";
+        SelectedRiskTypeFilter = "Все риски";
         ApplyFilters();
     }
 
@@ -133,12 +159,14 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         if (SelectedRisk is null)
         {
             ResultMessage = "Выберите студента риска.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
         if (!settingsRepository.AreCuratorNotificationsEnabled())
         {
             ResultMessage = "Уведомления кураторам отключены в настройках журнала.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -146,6 +174,7 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         if (curator is null)
         {
             ResultMessage = "В системе нет активного куратора.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -165,10 +194,12 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
             ResultMessage = curator.IsAssignedToGroup
                 ? $"Уведомление создано для куратора: {curator.FullName}."
                 : $"У группы нет назначенного куратора. Уведомление отправлено активному куратору: {curator.FullName}.";
+            NotifySuccess(ResultMessage);
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось создать уведомление: {UserMessageHelper.ToFriendlyDatabaseError(ex)}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -178,6 +209,7 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         if (SelectedRisk is null)
         {
             ResultMessage = "Выберите студента риска.";
+            NotifyWarning(ResultMessage);
             return;
         }
 
@@ -190,6 +222,7 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         if (Risks.Count == 0)
         {
             ResultMessage = "Нет данных для отчета.";
+            NotifyInfo(ResultMessage);
             return;
         }
 
@@ -212,10 +245,12 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
 
             ReportExportService.ShowInExplorer(reportPath);
             ResultMessage = $"Отчет сохранен: {reportPath}";
+            NotifySuccess("Отчет сохранен и открыт в проводнике.");
         }
         catch (Exception ex)
         {
             ResultMessage = $"Не удалось сохранить отчет: {ex.Message}";
+            NotifyError(ResultMessage);
         }
     }
 
@@ -226,6 +261,11 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         if (SelectedGroupFilter != "Все группы")
         {
             filtered = filtered.Where(risk => risk.GroupName == SelectedGroupFilter);
+        }
+
+        if (SelectedRiskTypeFilter != "Все риски")
+        {
+            filtered = filtered.Where(risk => risk.RiskType == SelectedRiskTypeFilter);
         }
 
         if (!string.IsNullOrWhiteSpace(SearchText))
@@ -242,6 +282,8 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
         RiskCount = visible.Count;
         UniqueStudentCount = visible.Select(risk => risk.StudentId).Distinct().Count();
         AffectedGroupCount = visible.Select(risk => risk.GroupId).Distinct().Count();
+        GradeRiskCount = visible.Count(risk => risk.RiskType == "Низкая оценка");
+        AttendanceRiskCount = visible.Count(risk => risk.RiskType != "Низкая оценка");
         SelectedRisk = visible.FirstOrDefault();
     }
 
@@ -252,11 +294,17 @@ public sealed partial class RiskStudentsPageViewModel : PageViewModelBase
             RiskTitle = "Выберите студента риска";
             RiskDetails = "Здесь будет причина риска, предмет и преподаватель.";
             NotificationPreview = "Выберите запись, чтобы подготовить сообщение куратору.";
+            SelectedRiskActionTitle = currentUser.RoleName == "Куратор группы"
+                ? "Что произошло"
+                : "Сообщение куратору";
             return;
         }
 
         RiskTitle = $"{SelectedRisk.StudentName} · {SelectedRisk.GroupName}";
         RiskDetails = $"{SelectedRisk.RiskType}: {SelectedRisk.ValueText} от {SelectedRisk.DateText}. Предмет: {SelectedRisk.SubjectName}.";
+        SelectedRiskActionTitle = currentUser.RoleName == "Куратор группы"
+            ? "Что произошло"
+            : "Сообщение куратору";
         NotificationPreview =
             $"Студент {SelectedRisk.StudentName} из группы {SelectedRisk.GroupName}: {SelectedRisk.RiskType.ToLower()} ({SelectedRisk.ValueText}) по предмету {SelectedRisk.SubjectName}. " +
             "Нужно обратить внимание и при необходимости связаться со студентом.";

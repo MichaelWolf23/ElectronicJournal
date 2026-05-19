@@ -61,11 +61,19 @@ public sealed partial class RetakeEntryRow : ObservableObject
         ? "не было"
         : $"{LastRetakeValue:0.##} от {LastRetakeDate}";
 
-    public string StatusText => HasRetake ? "завершено" : "ожидает";
+    public string StatusText => HasRetake ? "уже оформлена" : "можно оформить";
 
     public string ResultText => HasRetake
         ? $"{OldValue:0.##} -> {LastRetakeValue:0.##}"
         : $"{OldValue:0.##} -> ?";
+
+    public string GradeDetails => $"{GroupName} · {SubjectName} · {GradeType} · {GradeDate}";
+
+    public string SuggestedValueText => OldValue < 4 ? "Предложение: 4" : "Предложение: 5";
+
+    public string RuleText => HasRetake
+        ? "Пересдача уже оформлена. Повторная недоступна."
+        : "Доступна одна пересдача для оценки 2, 3 или 4.";
 
     [ObservableProperty]
     private string newValueText;

@@ -15,8 +15,20 @@
         <ResourceDictionary>
             <utilities:GradeBrushConverter x:Key="GradeBrushConverter"/>
             <utilities:StatusBrushConverter x:Key="StatusBrushConverter"/>
+            <utilities:NotificationBrushConverter x:Key="NotificationBrushConverter"/>
+            <utilities:BooleanStatusTextConverter x:Key="BooleanStatusTextConverter"/>
+            <utilities:BooleanStatusForegroundConverter x:Key="BooleanStatusForegroundConverter"/>
+            <utilities:BooleanStatusBackgroundConverter x:Key="BooleanStatusBackgroundConverter"/>
             <utilities:WidthThresholdConverter x:Key="WideTableConverter" Threshold="760"/>
             <utilities:WidthThresholdConverter x:Key="CompactTableConverter" Threshold="760" IsLessThan="True"/>
+            <utilities:WidthThresholdConverter x:Key="WideLessonJournalConverter" Threshold="1080"/>
+            <utilities:WidthThresholdConverter x:Key="CompactLessonJournalConverter" Threshold="1080" IsLessThan="True"/>
+            <utilities:WidthThresholdConverter x:Key="WideRetakesConverter" Threshold="1020"/>
+            <utilities:WidthThresholdConverter x:Key="CompactRetakesConverter" Threshold="1020" IsLessThan="True"/>
+            <utilities:WidthThresholdConverter x:Key="WideReportsConverter" Threshold="1080"/>
+            <utilities:WidthThresholdConverter x:Key="CompactReportsConverter" Threshold="1080" IsLessThan="True"/>
+            <utilities:WidthThresholdConverter x:Key="WideDashboardConverter" Threshold="980"/>
+            <utilities:WidthThresholdConverter x:Key="CompactDashboardConverter" Threshold="980" IsLessThan="True"/>
             <utilities:NumberStateConverter x:Key="HasDataConverter"/>
             <utilities:NumberStateConverter x:Key="NoDataConverter" IsZero="True"/>
 
@@ -316,6 +328,12 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <Style Selector="Border.status-pill">
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="7,3"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
         <Style Selector="ListBox">
